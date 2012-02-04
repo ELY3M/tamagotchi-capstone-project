@@ -19,7 +19,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private static final String TAG = GameView.class.getSimpleName();
 
     private GameLoopThread thread;
-    private GameObject tama;
+    private GameObject tama, fixed1;
     private int startX = 50, startY = 50;
     private Context context = null;
     public final String PREFS_NAME = "GRAPHICS";
@@ -40,6 +40,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	// create tama and load bitmap
 	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher), startX, startY);
+	
+	fixed1 = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher), 30, 30);
 
 	// create the game loop thread
 	thread = new GameLoopThread(getHolder(), this);
@@ -72,7 +74,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	Log.d(TAG, "Surface is being destroyed");
 	try
 	{
-	    thread.interrupt();
+	    thread.setRunning(false);
 	} catch (Exception e)
 	{
 
@@ -127,6 +129,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	if (canvas != null)
 	{
 	    canvas.drawColor(Color.BLACK);
+	    
+	    fixed1.draw(canvas);
+	    
 	    tama.draw(canvas);
 	}
     }
