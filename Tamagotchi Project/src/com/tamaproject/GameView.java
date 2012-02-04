@@ -1,4 +1,4 @@
-package org.tamaproject;
+package com.tamaproject;
 
 import android.app.Activity;
 import android.content.Context;

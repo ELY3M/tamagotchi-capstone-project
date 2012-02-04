@@ -1,4 +1,4 @@
-package org.tamaproject;
+package com.tamaproject;
 
 import android.graphics.Canvas;
 import android.util.Log;
