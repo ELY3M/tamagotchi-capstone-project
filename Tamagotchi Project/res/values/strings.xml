@@ -3,5 +3,7 @@
 
     <string name="hello">Hello World, TamagotchiProjectActivity!</string>
     <string name="app_name">Tamagotchi</string>
+    <string name="Username">username</string>
+    <string name="username">Username</string>
 
 </resources>
