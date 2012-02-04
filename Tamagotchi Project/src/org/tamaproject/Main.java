@@ -1,6 +1,7 @@
 package org.tamaproject;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -44,6 +45,8 @@ public class Main extends Activity
 		{
 		    // display the username and the password in string format
 		    Toast.makeText(Main.this, "Username: " + sUserName + ", Password: " + sPassword, Toast.LENGTH_SHORT).show();
+		    Intent goToGame = new Intent(Main.this, Game.class);
+		    startActivity(goToGame);
 		}
 	    }
 	}
