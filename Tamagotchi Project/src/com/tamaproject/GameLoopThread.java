@@ -27,29 +27,34 @@ public class GameLoopThread extends Thread
     {
 	Canvas canvas;
 	Log.d(TAG, "Starting game loop");
-	while (running)
+	try
 	{
-	    canvas = null;
-	    // try locking the canvas for exclusive pixel editing on the surface
-	    try
+	    while (running)
 	    {
-		canvas = this.surfaceHolder.lockCanvas();
-		synchronized (surfaceHolder)
+		canvas = null;
+		// try locking the canvas for exclusive pixel editing on the surface
+		try
 		{
-		    // update game state
-		    // draws the canvas on the panel
-		    this.gameView.onDraw(canvas);
-		}
-	    } finally
-	    {
-		// in case of an exception the surface is not left in
-		// an inconsistent state
-		if (canvas != null)
+		    canvas = this.surfaceHolder.lockCanvas();
+		    synchronized (surfaceHolder)
+		    {
+			// update game state
+			// draws the canvas on the panel
+			this.gameView.onDraw(canvas);
+		    }
+		} finally
 		{
-		    surfaceHolder.unlockCanvasAndPost(canvas);
-		}
-	    } // end finally
+		    // in case of an exception the surface is not left in
+		    // an inconsistent state
+		    if (canvas != null)
+		    {
+			surfaceHolder.unlockCanvasAndPost(canvas);
+		    }
+		} // end finally
+	    }
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
 	}
     }
-
 }

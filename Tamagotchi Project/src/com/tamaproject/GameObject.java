@@ -85,4 +85,10 @@ public class GameObject
 
     }
 
+    @Override
+    public String toString()
+    {
+	return "GameObject [bitmap=" + bitmap + ", x=" + x + ", y=" + y + ", touched=" + touched + "]";
+    }
+
 }

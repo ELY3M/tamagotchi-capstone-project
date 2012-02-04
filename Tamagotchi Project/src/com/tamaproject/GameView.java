@@ -2,6 +2,7 @@ package com.tamaproject;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -11,6 +12,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Toast;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback
 {
@@ -18,6 +20,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     private GameLoopThread thread;
     private GameObject tama;
+    private int startX = 50, startY = 50;
+    private Context context = null;
+    public final String PREFS_NAME = "GRAPHICS";
+    private SharedPreferences settings;
 
     public GameView(Context context)
     {
@@ -25,8 +31,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	// adding the callback (this) to the surface holder to intercept events
 	getHolder().addCallback(this);
 
+	this.context = context;
+
+	settings = context.getSharedPreferences(PREFS_NAME, 0);
+	
+	// load last location of tama
+	LoadPreferences();
+
 	// create tama and load bitmap
-	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher), 50, 50);
+	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher), startX, startY);
 
 	// create the game loop thread
 	thread = new GameLoopThread(getHolder(), this);
@@ -49,23 +62,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	thread.start();
     }
 
+    
     @Override
     public void surfaceDestroyed(SurfaceHolder holder)
     {
+	Toast.makeText(this.context, tama.toString(), Toast.LENGTH_SHORT).show();
+	SavePreferences("x", tama.getX() + "");
+	SavePreferences("y", tama.getY() + "");
 	Log.d(TAG, "Surface is being destroyed");
-	// tell the thread to shut down and wait for it to finish
-	// this is a clean shutdown
-	boolean retry = true;
-	while (retry)
+	try
 	{
-	    try
-	    {
-		thread.join();
-		retry = false;
-	    } catch (InterruptedException e)
-	    {
-		// try again shutting down the thread
-	    }
+	    thread.interrupt();
+	} catch (Exception e)
+	{
+
 	}
 	Log.d(TAG, "Thread was shut down cleanly");
     }
@@ -114,7 +124,30 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     protected void onDraw(Canvas canvas)
     {
 	// fills the canvas with black
-	canvas.drawColor(Color.BLACK);
-	tama.draw(canvas);
+	if (canvas != null)
+	{
+	    canvas.drawColor(Color.BLACK);
+	    tama.draw(canvas);
+	}
     }
+    
+    private void SavePreferences(String key, String value)
+    {
+	SharedPreferences.Editor editor = settings.edit();
+	editor.putString(key, value);
+	editor.commit();
+    }
+
+    private void LoadPreferences()
+    {
+	try
+	{
+	    this.startX = Integer.parseInt(settings.getString("x", ""));
+	    this.startY = Integer.parseInt(settings.getString("y", ""));
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
 }
