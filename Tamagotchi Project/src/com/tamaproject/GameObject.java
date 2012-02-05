@@ -48,6 +48,12 @@ public class GameObject
     {
 	this.y = y;
     }
+    
+    public void setXY(int x, int y)
+    {
+	setX(x);
+	setY(y);
+    }
 
     public boolean isTouched()
     {
