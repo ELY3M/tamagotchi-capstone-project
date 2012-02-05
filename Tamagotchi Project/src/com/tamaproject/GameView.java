@@ -34,14 +34,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	this.context = context;
 
 	settings = context.getSharedPreferences(PREFS_NAME, 0);
-	
+
 	// load last location of tama
 	LoadPreferences();
 
 	// create tama and load bitmap
-	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher), startX, startY);
-	
-	fixed1 = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher), 30, 30);
+	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), startX, startY);
+
+	fixed1 = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.tama), 270, 402);
 
 	// create the game loop thread
 	thread = new GameLoopThread(getHolder(), this);
@@ -64,7 +64,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	thread.start();
     }
 
-    
     @Override
     public void surfaceDestroyed(SurfaceHolder holder)
     {
@@ -129,13 +128,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	if (canvas != null)
 	{
 	    canvas.drawColor(Color.BLACK);
-	    
+
 	    fixed1.draw(canvas);
-	    
+
 	    tama.draw(canvas);
 	}
     }
-    
+
     private void SavePreferences(String key, String value)
     {
 	SharedPreferences.Editor editor = settings.edit();
