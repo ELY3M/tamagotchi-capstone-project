@@ -1,5 +1,7 @@
 package com.tamaproject;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -8,10 +10,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback
@@ -19,11 +23,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private static final String TAG = GameView.class.getSimpleName();
 
     private GameLoopThread thread;
-    private GameObject tama, fixed1;
+    private GameObject tama;
     private int startX = 50, startY = 50;
     private Context context = null;
     public final String PREFS_NAME = "GRAPHICS";
     private SharedPreferences settings;
+    private ArrayList<GameObject> items = new ArrayList<GameObject>();
 
     public GameView(Context context)
     {
@@ -37,11 +42,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	// load last location of tama
 	LoadPreferences();
+	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+	Display display = wm.getDefaultDisplay();
 
 	// create tama and load bitmap
-	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), startX, startY);
+	for (int i = 0; i < 6; i++)
+	{
+	    GameObject item = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 50 * (i+1), 50);
+	    items.add(item);
+	}
 
-	fixed1 = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.tama), 270, 402);
+	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
 
 	// create the game loop thread
 	thread = new GameLoopThread(getHolder(), this);
@@ -88,6 +99,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	{
 	    // delegating event handling to the droid
 	    tama.handleActionDown((int) event.getX(), (int) event.getY());
+	    for (GameObject item : items)
+	    {
+		item.handleActionDown((int) event.getX(), (int) event.getY());
+	    }
 
 	    // check if in the lower part of the screen we exit
 	    if (event.getY() > getHeight() - 50)
@@ -109,6 +124,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		tama.setX((int) event.getX());
 		tama.setY((int) event.getY());
 	    }
+	    else
+	    {
+		for (GameObject item : items)
+		{
+		    if (item.isTouched())
+		    {
+			item.setX((int) event.getX());
+			item.setY((int) event.getY());
+		    }
+		}
+	    }
 	}
 	if (event.getAction() == MotionEvent.ACTION_UP)
 	{
@@ -117,8 +143,37 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    {
 		tama.setTouched(false);
 	    }
+	    else
+	    {
+		for (GameObject item : items)
+		{
+		    if (item.isTouched())
+		    {
+			item.setTouched(false);
+		    }
+		}
+	    }
+
+	    for (GameObject item : items)
+	    {
+		giveItem(tama, item);
+	    }
+
 	}
 	return true;
+    }
+
+    // this method is to demonstrate collisions
+    protected void giveItem(GameObject tama, GameObject item)
+    {
+	if (tama.getX() >= (item.getX() - item.getBitmap().getWidth() / 2) && (tama.getX() <= (item.getX() + item.getBitmap().getWidth() / 2)))
+	{
+	    if (tama.getY() >= (item.getY() - item.getBitmap().getWidth() / 2) && (tama.getY() <= (item.getY() + item.getBitmap().getWidth() / 2)))
+	    {
+		tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
+		items.remove(item);
+	    }
+	}
     }
 
     @Override
@@ -128,10 +183,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	if (canvas != null)
 	{
 	    canvas.drawColor(Color.BLACK);
-
-	    fixed1.draw(canvas);
-
 	    tama.draw(canvas);
+	    for (GameObject item : items)
+	    {
+		item.draw(canvas);
+	    }
+
 	}
     }
 
