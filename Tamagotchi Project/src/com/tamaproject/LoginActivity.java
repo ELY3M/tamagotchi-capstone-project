@@ -53,7 +53,7 @@ public class LoginActivity extends Activity
 		{
 		    // display the username and the password in string format
 		    Toast.makeText(LoginActivity.this, "Username: " + sUserName + ", Password: " + sPassword, Toast.LENGTH_SHORT).show();
-		    Intent goToGame = new Intent(LoginActivity.this, Game.class);
+		    Intent goToGame = new Intent(LoginActivity.this, GameActivity.class);
 		    SavePreferences(USERNAME, sUserName);
 		    SavePreferences(PASSWORD, sPassword);
 		    startActivity(goToGame);

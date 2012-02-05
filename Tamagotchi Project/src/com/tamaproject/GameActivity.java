@@ -6,9 +6,9 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class Game extends Activity
+public class GameActivity extends Activity
 {
-    private static final String TAG = Game.class.getSimpleName();
+    private static final String TAG = GameActivity.class.getSimpleName();
 
     public void onCreate(Bundle savedInstanceState)
     {

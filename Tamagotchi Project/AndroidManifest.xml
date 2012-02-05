@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.tamaproject.Game"
+            android:name=".GameActivity"
             android:label="Game"
             android:screenOrientation="portrait" >
         </activity>
