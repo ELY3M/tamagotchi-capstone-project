@@ -2,6 +2,8 @@ package com.tamaproject;
 
 import java.util.ArrayList;
 
+import com.tamaproject.util.GameObjectUtil;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -29,6 +31,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     public final String PREFS_NAME = "GRAPHICS";
     private SharedPreferences settings;
     private ArrayList<GameObject> items = new ArrayList<GameObject>();
+    private Display display = null;
 
     public GameView(Context context)
     {
@@ -43,12 +46,23 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	// load last location of tama
 	LoadPreferences();
 	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-	Display display = wm.getDefaultDisplay();
+	display = wm.getDefaultDisplay();
 
 	// create tama and load bitmap
-	for (int i = 0; i < 6; i++)
+	int a = 1;
+	int b = 1;
+	for (int i = 1; i < 12; i++)
 	{
-	    GameObject item = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 50 * (i + 1), 50);
+	    GameObject item;
+	    
+	    item = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 50 * a++, 50 * b);
+
+	    if ((50 * a) > display.getWidth() - 50)
+	    {
+		a=1;
+		b++;		
+	    }	  
+
 	    items.add(item);
 	}
 
@@ -151,7 +165,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		    if (item.isTouched())
 		    {
 			item.setTouched(false);
-			if(giveItem(tama, item))
+			if (giveItem(tama, item))
 			    break;
 		    }
 		}
@@ -166,27 +180,31 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     // this method is to demonstrate collisions
     protected boolean giveItem(GameObject tama, GameObject item)
     {
-	if (tama.getX() >= (item.getX() - item.getBitmap().getWidth() / 2) && (tama.getX() <= (item.getX() + item.getBitmap().getWidth() / 2)))
+	if (GameObjectUtil.isTouching(tama, item))
 	{
-	    if (tama.getY() >= (item.getY() - item.getBitmap().getWidth() / 2) && (tama.getY() <= (item.getY() + item.getBitmap().getWidth() / 2)))
-	    {
-		tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
-		items.remove(item);
-		return true;
-	    }
+	    tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
+	    items.remove(item);
+	    return true;
 	}
+
 	return false;
     }
 
     protected void refreshItems()
     {
 	int i = 1;
+	int j = 1;
 	synchronized (items)
 	{
 	    for (GameObject item : items)
 	    {
-		item.setXY(50 * i, 50);
+		item.setXY(50 * i, 50 * j);
 		i++;
+		if ((50 * i) > display.getWidth() - 50)
+		{
+		    i = 1;
+		    j++;
+		}
 	    }
 	}
     }
