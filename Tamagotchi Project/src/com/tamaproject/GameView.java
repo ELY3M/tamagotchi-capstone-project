@@ -51,17 +51,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	// create tama and load bitmap
 	int a = 1;
 	int b = 1;
-	for (int i = 1; i < 12; i++)
+	for (int i = 1; i < 50; i++)
 	{
 	    GameObject item;
-	    
+
 	    item = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 50 * a++, 50 * b);
 
 	    if ((50 * a) > display.getWidth() - 50)
 	    {
-		a=1;
-		b++;		
-	    }	  
+		a = 1;
+		b++;
+	    }
 
 	    items.add(item);
 	}
@@ -140,13 +140,27 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    }
 	    else
 	    {
-		for (GameObject item : items)
+		synchronized (items)
 		{
-		    if (item.isTouched())
+		    for (GameObject item : items)
 		    {
-			item.setX((int) event.getX());
-			item.setY((int) event.getY());
-			break;
+			if (item.isTouched())
+			{
+			    item.setX((int) event.getX());
+			    item.setY((int) event.getY());
+
+			    // check if item is touching tama
+			    if (GameObjectUtil.isTouching(item, tama))
+			    {
+				tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
+			    }
+			    else
+			    {
+				tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
+			    }
+
+			    break;
+			}
 		    }
 		}
 	    }
@@ -160,13 +174,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    }
 	    else
 	    {
-		for (GameObject item : items)
+		synchronized (items)
 		{
-		    if (item.isTouched())
+		    for (GameObject item : items)
 		    {
-			item.setTouched(false);
-			if (giveItem(tama, item))
-			    break;
+			if (item.isTouched())
+			{
+			    item.setTouched(false);
+			    if (giveItem(tama, item))
+				break;
+			}
 		    }
 		}
 	    }
@@ -180,10 +197,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     // this method is to demonstrate collisions
     protected boolean giveItem(GameObject tama, GameObject item)
     {
+	tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
 	if (GameObjectUtil.isTouching(tama, item))
 	{
-	    tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
-	    items.remove(item);
+	    synchronized (items)
+	    {
+		items.remove(item);
+	    }
 	    return true;
 	}
 
@@ -217,11 +237,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	{
 	    canvas.drawColor(Color.BLACK);
 	    tama.draw(canvas);
-	    for (GameObject item : items)
-	    {
-		item.draw(canvas);
-	    }
 
+	    synchronized (items)
+	    {
+		for (GameObject item : items)
+		{
+		    item.draw(canvas);
+		}
+	    }
 	}
     }
 
