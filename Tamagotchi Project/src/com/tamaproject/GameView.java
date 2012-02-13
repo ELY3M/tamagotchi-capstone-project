@@ -75,12 +75,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	setFocusable(true);
     }
 
-    @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
     {
     }
 
-    @Override
     public void surfaceCreated(SurfaceHolder holder)
     {
 	// at this point the surface is created and
@@ -89,7 +87,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	thread.start();
     }
 
-    @Override
     public void surfaceDestroyed(SurfaceHolder holder)
     {
 	Toast.makeText(this.context, tama.toString(), Toast.LENGTH_SHORT).show();
