@@ -2,6 +2,9 @@ package com.tamaproject;
 
 import java.util.ArrayList;
 
+import com.tamaproject.gameobjects.Backpack;
+import com.tamaproject.gameobjects.Item;
+import com.tamaproject.gameobjects.Tamagotchi;
 import com.tamaproject.util.GameObjectUtil;
 
 import android.app.Activity;
@@ -25,13 +28,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private static final String TAG = GameView.class.getSimpleName();
 
     private GameLoopThread thread;
-    private GameObject tama;
+    private Tamagotchi tama;
     private int startX = 50, startY = 50;
     private Context context = null;
     public final String PREFS_NAME = "GRAPHICS";
     private SharedPreferences settings;
-    private ArrayList<GameObject> items = new ArrayList<GameObject>();
+    private ArrayList<Item> items = new ArrayList<Item>();
     private Display display = null;
+
+    private Backpack bp;
 
     public GameView(Context context)
     {
@@ -53,9 +58,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	int b = 1;
 	for (int i = 1; i < 50; i++)
 	{
-	    GameObject item;
+	    Item item;
 
-	    item = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 50 * a++, 50 * b);
+	    item = new Item(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 50 * a++, 50 * b);
 
 	    if ((50 * a) > display.getWidth() - 50)
 	    {
@@ -66,7 +71,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    items.add(item);
 	}
 
-	tama = new GameObject(BitmapFactory.decodeResource(getResources(), R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
+	bp = new Backpack(items, display);
+
+	tama = new Tamagotchi(BitmapFactory.decodeResource(getResources(), R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
 
 	// create the game loop thread
 	thread = new GameLoopThread(getHolder(), this);
@@ -108,12 +115,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	if (event.getAction() == MotionEvent.ACTION_DOWN)
 	{
-	    // delegating event handling to the droid
 	    tama.handleActionDown((int) event.getX(), (int) event.getY());
-	    for (GameObject item : items)
-	    {
-		item.handleActionDown((int) event.getX(), (int) event.getY());
-	    }
+	    bp.handleActionDown((int) event.getX(), (int) event.getY());
 
 	    // check if in the lower part of the screen we exit
 	    if (event.getY() > getHeight() - 50)
@@ -132,34 +135,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    if (tama.isTouched())
 	    {
 		// the tama was picked up and is being dragged
-		tama.setX((int) event.getX());
-		tama.setY((int) event.getY());
+		tama.handleActionDown((int) event.getX(), (int) event.getY());
 	    }
 	    else
 	    {
-		synchronized (items)
-		{
-		    for (GameObject item : items)
-		    {
-			if (item.isTouched())
-			{
-			    item.setX((int) event.getX());
-			    item.setY((int) event.getY());
+		Item temp = bp.handleActionMove((int) event.getX(), (int) event.getY());
+		if (GameObjectUtil.isTouching(temp, tama))
+                {
+                    tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
+                }
+                else
+                {
+                    tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
+                }
 
-			    // check if item is touching tama
-			    if (GameObjectUtil.isTouching(item, tama))
-			    {
-				tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
-			    }
-			    else
-			    {
-				tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
-			    }
-
-			    break;
-			}
-		    }
-		}
 	    }
 	}
 	if (event.getAction() == MotionEvent.ACTION_UP)
@@ -171,59 +160,23 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    }
 	    else
 	    {
-		synchronized (items)
-		{
-		    for (GameObject item : items)
-		    {
-			if (item.isTouched())
-			{
-			    item.setTouched(false);
-			    if (giveItem(tama, item))
-				break;
-			}
-		    }
-		}
+		giveItem(tama, bp.handleActionUp());
 	    }
-
-	    refreshItems();
-
 	}
 	return true;
     }
 
     // this method is to demonstrate collisions
-    protected boolean giveItem(GameObject tama, GameObject item)
+    protected boolean giveItem(GameObject tama, Item item)
     {
 	tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
 	if (GameObjectUtil.isTouching(tama, item))
 	{
-	    synchronized (items)
-	    {
-		items.remove(item);
-	    }
+	    bp.removeItem(item);
 	    return true;
 	}
 
 	return false;
-    }
-
-    protected void refreshItems()
-    {
-	int i = 1;
-	int j = 1;
-	synchronized (items)
-	{
-	    for (GameObject item : items)
-	    {
-		item.setXY(50 * i, 50 * j);
-		i++;
-		if ((50 * i) > display.getWidth() - 50)
-		{
-		    i = 1;
-		    j++;
-		}
-	    }
-	}
     }
 
     @Override
@@ -234,14 +187,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	{
 	    canvas.drawColor(Color.BLACK);
 	    tama.draw(canvas);
-
-	    synchronized (items)
-	    {
-		for (GameObject item : items)
-		{
-		    item.draw(canvas);
-		}
-	    }
+	    bp.draw(canvas);
 	}
     }
 

@@ -70,7 +70,7 @@ public class GameObject
 	canvas.drawBitmap(bitmap, x - (bitmap.getWidth() / 2), y - (bitmap.getHeight() / 2), null);
     }
 
-    public void handleActionDown(int eventX, int eventY)
+    public boolean handleActionDown(int eventX, int eventY)
     {
 	if (eventX >= (x - bitmap.getWidth() / 2) && (eventX <= (x + bitmap.getWidth() / 2)))
 	{
@@ -78,15 +78,18 @@ public class GameObject
 	    {
 		// droid touched
 		setTouched(true);
+		return true;
 	    }
 	    else
 	    {
 		setTouched(false);
+		return false;
 	    }
 	}
 	else
 	{
 	    setTouched(false);
+	    return false;
 	}
 
     }
