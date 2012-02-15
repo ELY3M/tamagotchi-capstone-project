@@ -132,36 +132,27 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	if (event.getAction() == MotionEvent.ACTION_MOVE)
 	{
 	    // the gestures
-	    if (tama.isTouched())
+
+	    // the tama was picked up and is being dragged
+	    tama.handleActionMove((int) event.getX(), (int) event.getY());
+	    Item temp = bp.handleActionMove((int) event.getX(), (int) event.getY());
+
+	    if (GameObjectUtil.isTouching(temp, tama))
 	    {
-		// the tama was picked up and is being dragged
-		tama.handleActionDown((int) event.getX(), (int) event.getY());
+		tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
 	    }
 	    else
 	    {
-		Item temp = bp.handleActionMove((int) event.getX(), (int) event.getY());
-		if (GameObjectUtil.isTouching(temp, tama))
-                {
-                    tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
-                }
-                else
-                {
-                    tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
-                }
-
+		tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
 	    }
+
 	}
 	if (event.getAction() == MotionEvent.ACTION_UP)
 	{
 	    // touch was released
-	    if (tama.isTouched())
-	    {
-		tama.setTouched(false);
-	    }
-	    else
-	    {
-		giveItem(tama, bp.handleActionUp());
-	    }
+	    tama.handleActionUp();
+	    giveItem(tama, bp.handleActionUp());
+	    bp.refreshItems();
 	}
 	return true;
     }
@@ -169,11 +160,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     // this method is to demonstrate collisions
     protected boolean giveItem(GameObject tama, Item item)
     {
-	tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
-	if (GameObjectUtil.isTouching(tama, item))
+	if (tama != null && item != null)
 	{
-	    bp.removeItem(item);
-	    return true;
+	    tama.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tama));
+	    if (GameObjectUtil.isTouching(tama, item))
+	    {
+		bp.removeItem(item);
+		return true;
+	    }
 	}
 
 	return false;

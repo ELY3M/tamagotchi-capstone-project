@@ -10,7 +10,7 @@ public class GameObject
     private Bitmap bitmap; // the actual bitmap
     private int x; // the X coordinate
     private int y; // the Y coordinate
-    private boolean touched; 
+    private boolean touched;
 
     public GameObject(Bitmap bitmap, int x, int y)
     {
@@ -48,7 +48,7 @@ public class GameObject
     {
 	this.y = y;
     }
-    
+
     public void setXY(int x, int y)
     {
 	setX(x);
@@ -76,7 +76,7 @@ public class GameObject
 	{
 	    if (eventY >= (y - bitmap.getHeight() / 2) && (eventY <= (y + bitmap.getHeight() / 2)))
 	    {
-		// droid touched
+		// object touched
 		setTouched(true);
 		return true;
 	    }
@@ -92,6 +92,22 @@ public class GameObject
 	    return false;
 	}
 
+    }
+
+    public void handleActionMove(int x, int y)
+    {
+	if (isTouched())
+	{
+	    this.setXY(x, y);
+	}
+    }
+
+    public void handleActionUp()
+    {
+	if (isTouched())
+	{
+	    this.setTouched(false);
+	}
     }
 
     @Override

@@ -113,8 +113,8 @@ public class Backpack
 		    return item;
 		}
 	    }
+	    refreshItems();
 	}
-	refreshItems();
 
 	return null;
     }
