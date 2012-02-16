@@ -14,13 +14,16 @@ import android.view.Display;
 public class Backpack
 {
     private ArrayList<Item> items;
-    private final int MAX_SIZE = 50;
+    private final int MAX_SIZE = 30; // max number of items backpack can hold
+    private final int DISP_ITEMS = 10; // number of items to display on main screen
     private Display display;
+    private boolean backpackOpen = false;
 
     public Backpack(ArrayList<Item> items, Display display)
     {
 	this.items = items;
 	this.display = display;
+	refreshItems();
     }
 
     public boolean addItem(Item item)
@@ -46,6 +49,19 @@ public class Backpack
 	{
 	    for (Item item : items)
 	    {
+		if (item.getX() > -1 || item.getY() > -1)
+		    item.draw(canvas);
+	    }
+	}
+    }
+
+    public void drawAllItems(Canvas canvas)
+    {
+	synchronized (items)
+	{
+	    refreshItemsAll();
+	    for (Item item : items)
+	    {
 		item.draw(canvas);
 	    }
 	}
@@ -53,14 +69,52 @@ public class Backpack
 
     public void refreshItems()
     {
+	int height = display.getHeight();
+	int width = display.getWidth();
+	int SPACING = width / 6; // this centers the items
+	int c = 0;
+
+	synchronized (items)
+	{
+	    int i = 1, j = 2;
+
+	    for (Item item : items)
+	    {
+		if (c > DISP_ITEMS - 1)
+		{
+		    item.setXY(-100, -100);
+		}
+		else
+		{
+		    item.setXY(SPACING * i, height - SPACING * j);
+		    i++;
+		    if ((SPACING * i) > width - SPACING / 2)
+		    {
+			i = 1;
+			j--;
+		    }
+		}
+		c++;
+	    }
+	}
+    }
+
+    public void refreshItemsAll()
+    {
+	int height = display.getHeight();
+	int width = display.getWidth();
+	int SPACING = width / 6; // this centers the items
+	int d = MAX_SIZE / 5 + 1;
+
 	synchronized (items)
 	{
 	    int i = 1, j = 1;
+
 	    for (Item item : items)
 	    {
-		item.setXY(50 * i, 50 * j);
+		item.setXY(SPACING * i, SPACING * j + d);
 		i++;
-		if ((50 * i) > display.getWidth() - 50)
+		if ((SPACING * i) > width - SPACING / 2)
 		{
 		    i = 1;
 		    j++;
@@ -133,6 +187,16 @@ public class Backpack
 		return false;
 	    }
 	}
+    }
+
+    public boolean isBackpackOpen()
+    {
+	return backpackOpen;
+    }
+
+    public void setBackpackOpen(boolean backpackOpen)
+    {
+	this.backpackOpen = backpackOpen;
     }
 
 }

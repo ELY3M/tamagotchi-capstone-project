@@ -15,6 +15,5 @@ public class Tamagotchi extends GameObject
     public Tamagotchi(Bitmap bitmap, int x, int y)
     {
 	super(bitmap, x, y);
-	// TODO Auto-generated constructor stub
     }
 }

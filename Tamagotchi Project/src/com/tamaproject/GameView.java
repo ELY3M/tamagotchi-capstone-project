@@ -14,6 +14,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Paint.Style;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -35,6 +38,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private SharedPreferences settings;
     private ArrayList<Item> items = new ArrayList<Item>();
     private Display display = null;
+    private int height = -1, width = -1;
+
+    private final String BACKPACK_LABEL = "Backpack";
 
     private Backpack bp;
 
@@ -52,11 +58,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	LoadPreferences();
 	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 	display = wm.getDefaultDisplay();
+	this.height = display.getHeight();
+	this.width = display.getWidth();
 
 	// create tama and load bitmap
 	int a = 1;
 	int b = 1;
-	for (int i = 1; i < 50; i++)
+	for (int i = 1; i <= 10; i++)
 	{
 	    Item item;
 
@@ -74,6 +82,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	bp = new Backpack(items, display);
 
 	tama = new Tamagotchi(BitmapFactory.decodeResource(getResources(), R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
+
+	initInterface();
 
 	// create the game loop thread
 	thread = new GameLoopThread(getHolder(), this);
@@ -115,18 +125,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	if (event.getAction() == MotionEvent.ACTION_DOWN)
 	{
-	    tama.handleActionDown((int) event.getX(), (int) event.getY());
-	    bp.handleActionDown((int) event.getX(), (int) event.getY());
-
-	    // check if in the lower part of the screen we exit
-	    if (event.getY() > getHeight() - 50)
+	    if (bp.handleActionDown((int) event.getX(), (int) event.getY()))
 	    {
-		thread.setRunning(false);
-		((Activity) getContext()).finish();
+		bp.setBackpackOpen(false);
+		bp.refreshItems();
 	    }
-	    else
+	    if (!bp.isBackpackOpen())
 	    {
-		Log.d(TAG, "Coords: x=" + event.getX() + ",y=" + event.getY());
+		tama.handleActionDown((int) event.getX(), (int) event.getY());
+	    }
+
+	    if (event.getY() > getHeight() - 50 && event.getX() > getWidth() - 50)
+	    {
+		bp.setBackpackOpen(!bp.isBackpackOpen());
 	    }
 	}
 	if (event.getAction() == MotionEvent.ACTION_MOVE)
@@ -180,9 +191,39 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	if (canvas != null)
 	{
 	    canvas.drawColor(Color.BLACK);
-	    tama.draw(canvas);
-	    bp.draw(canvas);
+	    if (bp.isBackpackOpen())
+	    {
+		bp.drawAllItems(canvas);
+	    }
+	    else
+	    {
+
+		drawInterface(canvas);
+		tama.draw(canvas);
+		bp.draw(canvas);
+	    }
 	}
+    }
+
+    Paint paint = new Paint();
+
+    protected void drawInterface(Canvas canvas)
+    {
+	paint.setColor(Color.WHITE);
+	paint.setStyle(Style.STROKE);
+	paint.setStrokeWidth(1);
+	canvas.drawRect(bpRectangle, paint);
+	paint.setStyle(Style.FILL_AND_STROKE);
+	paint.setTextSize(20);
+	paint.setAntiAlias(true);
+	canvas.drawText(BACKPACK_LABEL, 5, height / 3 * 2 + 25, paint);
+    }
+
+    private Rect bpRectangle;
+
+    protected void initInterface()
+    {
+	this.bpRectangle = new Rect(0, height / 3 * 2, width - 1, height - 1);
     }
 
     private void SavePreferences(String key, String value)
