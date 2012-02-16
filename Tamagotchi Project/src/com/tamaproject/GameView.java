@@ -31,7 +31,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private static final String TAG = GameView.class.getSimpleName();
 
     private GameLoopThread thread;
-    private Tamagotchi tama;
+
     private int startX = 50, startY = 50;
     private Context context = null;
     public final String PREFS_NAME = "GRAPHICS";
@@ -43,6 +43,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private final String BACKPACK_LABEL = "Backpack";
 
     private Backpack bp;
+    private Tamagotchi tama;
 
     public GameView(Context context)
     {
@@ -56,31 +57,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	// load last location of tama
 	LoadPreferences();
-	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-	display = wm.getDefaultDisplay();
-	this.height = display.getHeight();
-	this.width = display.getWidth();
 
-	// create tama and load bitmap
-	int a = 1;
-	int b = 1;
-	for (int i = 1; i <= 10; i++)
+	// initialize the height, width, display variables
+	initDisplay();
+
+	// create dummy items
+	for (int i = 1; i <= 15; i++)
 	{
-	    Item item;
-
-	    item = new Item(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 50 * a++, 50 * b);
-
-	    if ((50 * a) > display.getWidth() - 50)
-	    {
-		a = 1;
-		b++;
-	    }
-
-	    items.add(item);
+	    items.add(new Item(BitmapFactory.decodeResource(getResources(), R.drawable.treasure), 0, 0));
 	}
 
 	bp = new Backpack(items, display);
-
 	tama = new Tamagotchi(BitmapFactory.decodeResource(getResources(), R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
 
 	initInterface();
@@ -90,6 +77,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	// make the GamePanel focusable so it can handle events
 	setFocusable(true);
+    }
+
+    public void initDisplay()
+    {
+	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+	display = wm.getDefaultDisplay();
+	this.height = display.getHeight();
+	this.width = display.getWidth();
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
@@ -163,7 +158,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    // touch was released
 	    tama.handleActionUp();
 	    giveItem(tama, bp.handleActionUp());
-	    bp.refreshItems();
 	}
 	return true;
     }
@@ -177,6 +171,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    if (GameObjectUtil.isTouching(tama, item))
 	    {
 		bp.removeItem(item);
+		bp.refreshItems();
 		return true;
 	    }
 	}
@@ -197,7 +192,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    }
 	    else
 	    {
-
 		drawInterface(canvas);
 		tama.draw(canvas);
 		bp.draw(canvas);
@@ -205,7 +199,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	}
     }
 
-    Paint paint = new Paint();
+    private Paint paint = new Paint();
+    private Rect bpRectangle;
 
     protected void drawInterface(Canvas canvas)
     {
@@ -213,13 +208,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	paint.setStyle(Style.STROKE);
 	paint.setStrokeWidth(1);
 	canvas.drawRect(bpRectangle, paint);
+
 	paint.setStyle(Style.FILL_AND_STROKE);
 	paint.setTextSize(20);
 	paint.setAntiAlias(true);
-	canvas.drawText(BACKPACK_LABEL, 5, height / 3 * 2 + 25, paint);
-    }
-
-    private Rect bpRectangle;
+	canvas.drawText(BACKPACK_LABEL + " (" + bp.numItems() + "/" + bp.maxSize() + ")", 5, height / 3 * 2 + 25, paint);
+    }    
 
     protected void initInterface()
     {

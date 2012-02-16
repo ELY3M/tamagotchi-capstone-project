@@ -67,6 +67,16 @@ public class Backpack
 	}
     }
 
+    public int numItems()
+    {
+	return items.size();
+    }
+
+    public int maxSize()
+    {
+	return MAX_SIZE;
+    }
+
     public void refreshItems()
     {
 	int height = display.getHeight();
