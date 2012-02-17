@@ -12,6 +12,7 @@ public class GameObject
     private int y; // the Y coordinate
     private boolean touched;
     private boolean moved;
+    private String group = null;
 
     public GameObject(Bitmap bitmap, int x, int y)
     {
@@ -107,27 +108,41 @@ public class GameObject
 
     }
 
-    public void handleActionMove(int x, int y)
+    public boolean handleActionMove(int x, int y)
     {
 	if (isTouched())
 	{
 	    this.moved = true;
 	    this.setXY(x, y);
+	    return true;
 	}
+	return false;
     }
 
-    public void handleActionUp()
+    public boolean handleActionUp()
     {
 	if (isTouched())
 	{
 	    this.setTouched(false);
+	    return true;
 	}
+	return false;
     }
 
     @Override
     public String toString()
     {
 	return "GameObject [bitmap=" + bitmap + ", x=" + x + ", y=" + y + ", touched=" + touched + "]";
+    }
+
+    public String getGroup()
+    {
+        return group;
+    }
+
+    public void setGroup(String group)
+    {
+        this.group = group;
     }
 
 }

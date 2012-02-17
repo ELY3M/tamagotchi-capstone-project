@@ -126,4 +126,59 @@ public class Tamagotchi extends GameObject
 	}
 	return false;
     }
+
+    public int getCurrentHealth()
+    {
+        return currentHealth;
+    }
+
+    public int getMaxHealth()
+    {
+        return maxHealth;
+    }
+
+    public int getCurrentHunger()
+    {
+        return currentHunger;
+    }
+
+    public int getMaxHunger()
+    {
+        return maxHunger;
+    }
+
+    public int getCurrentXP()
+    {
+        return currentXP;
+    }
+
+    public int getMaxXP()
+    {
+        return maxXP;
+    }
+
+    public int getCurrentSickness()
+    {
+        return currentSickness;
+    }
+
+    public int getMaxSickness()
+    {
+        return maxSickness;
+    }
+
+    public int getPoop()
+    {
+        return poop;
+    }
+
+    public int getBattleLevel()
+    {
+        return battleLevel;
+    }
+
+    public int getStatus()
+    {
+        return status;
+    }
 }

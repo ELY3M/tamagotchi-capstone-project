@@ -2,10 +2,9 @@ package com.tamaproject;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Random;
 
-import com.tamaproject.gameobjects.Backpack;
-import com.tamaproject.gameobjects.Item;
-import com.tamaproject.gameobjects.Tamagotchi;
+import com.tamaproject.gameobjects.*;
 import com.tamaproject.util.GameObjectUtil;
 
 import android.app.Activity;
@@ -45,15 +44,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private Context context = null;
     public final String PREFS_NAME = "GRAPHICS";
     private SharedPreferences settings;
-    private ArrayList<Item> items = new ArrayList<Item>();
+    private ArrayList<GameObject> inPlayObjects = new ArrayList<GameObject>();
     private Hashtable<Integer, Bitmap> bitmapTable = new Hashtable<Integer, Bitmap>();
     private Display display = null;
     private int height = -1, width = -1;
+    private int playTopBound, playBottomBound;
 
     private final String BACKPACK_LABEL = "Backpack";
 
-    private Backpack bp;
-    private Tamagotchi tama;
+    private Backpack bp; // backpack with items
+    private Tamagotchi tama; // our tamagotchi
+    private InPlayObjects ipo;
 
     public GameView(Context context)
     {
@@ -75,6 +76,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	initBitmaps();
 
 	// create dummy items
+
+	ArrayList<Item> items = new ArrayList<Item>();
 	for (int i = 1; i <= 15; i++)
 	{
 	    items.add(new Item(bitmapTable.get(R.drawable.treasure)));
@@ -82,11 +85,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	bp = new Backpack(items, display);
 	tama = new Tamagotchi(bitmapTable.get(R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
-	
-	if(isDead(tama))
+	ipo = new InPlayObjects();
+
+	if (isDead(tama))
 	{
 	    Toast.makeText(this.context, "Your Tamagotchi is DEAD", Toast.LENGTH_SHORT).show();
 	}
+
+	initPoop(tama.getPoop());
 
 	initInterface();
 
@@ -96,18 +102,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	// make the GamePanel focusable so it can handle events
 	setFocusable(true);
     }
-    
+
     private boolean isDead(Tamagotchi t)
     {
 	return t.isDead();
     }
 
+    // gets the width and height of the screen
     public void initDisplay()
     {
 	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 	display = wm.getDefaultDisplay();
 	this.height = display.getHeight();
 	this.width = display.getWidth();
+	this.playTopBound = height / 5;
+	this.playBottomBound = height / 3 * 2 - 50;
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
@@ -138,36 +147,43 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	Log.d(TAG, "Thread was shut down cleanly");
     }
 
+    // loads up the sprites and bitmaps
     private void initBitmaps()
     {
 	bitmapTable.put(R.drawable.kuro, BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
 	bitmapTable.put(R.drawable.tama, BitmapFactory.decodeResource(getResources(), R.drawable.tama));
 	bitmapTable.put(R.drawable.treasure, BitmapFactory.decodeResource(getResources(), R.drawable.treasure));
+	bitmapTable.put(R.drawable.poop, BitmapFactory.decodeResource(getResources(), R.drawable.poop));
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
+	int ex = (int) event.getX();
+	int ey = (int) event.getY();
+
 	if (event.getAction() == MotionEvent.ACTION_DOWN)
 	{
 	    Log.d(TAG, "Coords: x=" + event.getX() + ",y=" + event.getY());
 
-	    bp.handleActionDown((int) event.getX(), (int) event.getY());
-	    
-	    if (!bp.isBackpackOpen())
+	    if (!bp.handleActionDown(ex, ey))
 	    {
-		tama.handleActionDown((int) event.getX(), (int) event.getY());
+		if (!bp.isBackpackOpen())
+		{
+		    //tama.handleActionDown(ex, ey);
+		    ipo.handleActionDown(ex, ey);
+		}
 	    }
-	    
+
 	    // close any open pop ups
 	    if (popUp != null)
 		popUp.dismiss();
-	    
+
 	    // region to open backpack
 	    if (event.getY() > getHeight() - 50 && event.getX() > getWidth() - 50)
 	    {
 		bp.setBackpackOpen(!bp.isBackpackOpen());
-		if(!bp.isBackpackOpen())
+		if (!bp.isBackpackOpen())
 		{
 		    bp.refreshItems();
 		}
@@ -176,9 +192,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	if (event.getAction() == MotionEvent.ACTION_MOVE)
 	{
 	    // the tama was picked up and is being dragged
-	    tama.handleActionMove((int) event.getX(), (int) event.getY());
-	    Item temp = bp.handleActionMove((int) event.getX(), (int) event.getY());
-	    
+	    //tama.handleActionMove(ex, ey);
+	    Item temp = bp.handleActionMove(ex, ey);
+	    if (temp == null)
+	    {
+		ipo.handleActionMove(ex, ey, playTopBound, playBottomBound);
+	    }
+
 	    if (temp != null && bp.isBackpackOpen())
 	    {
 		bp.setBackpackOpen(false);
@@ -197,7 +217,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	}
 	if (event.getAction() == MotionEvent.ACTION_UP)
 	{
-	    tama.handleActionUp();
+	    //tama.handleActionUp();
 	    Item temp = bp.handleActionUp();
 
 	    if (temp != null)
@@ -212,6 +232,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		{
 		    showItemDescription(temp);
 		}
+	    }
+	    else
+	    {
+		ipo.handleActionUp();
 	    }
 
 	    bp.refreshItems();
@@ -230,9 +254,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	Button but = new Button(context);
 	ImageView iv = new ImageView(context);
 	LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-	
+
 	layout.setOrientation(LinearLayout.HORIZONTAL);
-	params.setMargins(10,10,10,10);
+	params.setMargins(10, 10, 10, 10);
 	tv.setText(i.getDescription() + "\n");
 	iv.setImageBitmap(i.getBitmap());
 	but.setText("Close");
@@ -253,6 +277,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	popUp.showAtLocation(layout, Gravity.BOTTOM, 10, 10);
 	popUp.update(width, height / 4);
 	popUp.setFocusable(true);
+    }
+
+    private void initPoop(int numPoop)
+    {
+	Random r = new Random();
+	int count = 0;
+	while (count < numPoop)
+	{
+	    int x = r.nextInt(width);
+	    int y = r.nextInt(playBottomBound - playTopBound) + playTopBound;
+	    GameObject go = new GameObject(bitmapTable.get(R.drawable.poop), x, y);
+	    go.setGroup("poop");
+	    if (!GameObjectUtil.isTouching(go, tama))
+	    {
+		ipo.add(go);
+		count++;
+	    }
+	}
     }
 
     // this method is to demonstrate collisions
@@ -286,14 +328,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    else
 	    {
 		drawInterface(canvas);
-		tama.draw(canvas);
 		bp.draw(canvas);
+		ipo.draw(canvas);
+		tama.draw(canvas); // always draw tama last
 	    }
 	}
     }
 
     private Paint paint = new Paint();
     private Rect bpRectangle;
+    private Rect cHealth, mHealth, cHunger, mHunger, cSick, mSick;
 
     protected void drawInterface(Canvas canvas)
     {
@@ -306,6 +350,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	paint.setTextSize(20);
 	paint.setAntiAlias(true);
 	canvas.drawText(BACKPACK_LABEL + " (" + bp.numItems() + "/" + bp.maxSize() + ")", 5, height / 3 * 2 + 25, paint);
+
     }
 
     protected void initInterface()
