@@ -82,6 +82,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	bp = new Backpack(items, display);
 	tama = new Tamagotchi(bitmapTable.get(R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
+	
+	if(isDead(tama))
+	{
+	    Toast.makeText(this.context, "Your Tamagotchi is DEAD", Toast.LENGTH_SHORT).show();
+	}
 
 	initInterface();
 
@@ -90,6 +95,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	// make the GamePanel focusable so it can handle events
 	setFocusable(true);
+    }
+    
+    private boolean isDead(Tamagotchi t)
+    {
+	return t.isDead();
     }
 
     public void initDisplay()
@@ -148,13 +158,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    {
 		tama.handleActionDown((int) event.getX(), (int) event.getY());
 	    }
-
+	    
+	    // close any open pop ups
 	    if (popUp != null)
 		popUp.dismiss();
-
+	    
+	    // region to open backpack
 	    if (event.getY() > getHeight() - 50 && event.getX() > getWidth() - 50)
 	    {
 		bp.setBackpackOpen(!bp.isBackpackOpen());
+		if(!bp.isBackpackOpen())
+		{
+		    bp.refreshItems();
+		}
 	    }
 	}
 	if (event.getAction() == MotionEvent.ACTION_MOVE)
@@ -181,9 +197,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	}
 	if (event.getAction() == MotionEvent.ACTION_UP)
 	{
-	    // touch was released
 	    tama.handleActionUp();
-	    // Item temp = bp.handleActionUp();
 	    Item temp = bp.handleActionUp();
 
 	    if (temp != null)
@@ -196,13 +210,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		else
 		// if user tapped item
 		{
-		    // Toast.makeText(this.context, temp.getDescription(), Toast.LENGTH_SHORT).show();
-		    showPopUp(temp, event.getY());
+		    showItemDescription(temp);
 		}
 	    }
 
 	    bp.refreshItems();
-
 	}
 	return true;
     }
@@ -210,17 +222,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private PopupWindow popUp;
     private LinearLayout layout;
 
-    private void showPopUp(Item i, float y)
+    private void showItemDescription(Item i)
     {
 	popUp = new PopupWindow(context);
 	layout = new LinearLayout(context);
 	TextView tv = new TextView(context);
+	Button but = new Button(context);
+	ImageView iv = new ImageView(context);
 	LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+	
 	layout.setOrientation(LinearLayout.HORIZONTAL);
 	params.setMargins(10,10,10,10);
 	tv.setText(i.getDescription() + "\n");
-	Button but = new Button(context);
-	ImageView iv = new ImageView(context);
 	iv.setImageBitmap(i.getBitmap());
 	but.setText("Close");
 	but.setOnClickListener(new OnClickListener()
