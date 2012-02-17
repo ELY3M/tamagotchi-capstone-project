@@ -11,6 +11,7 @@ public class GameObject
     private int x; // the X coordinate
     private int y; // the Y coordinate
     private boolean touched;
+    private boolean moved;
 
     public GameObject(Bitmap bitmap, int x, int y)
     {
@@ -49,6 +50,16 @@ public class GameObject
 	this.y = y;
     }
 
+    public boolean isMoved()
+    {
+	return moved;
+    }
+
+    public void setMoved(boolean moved)
+    {
+	this.moved = moved;
+    }
+
     public void setXY(int x, int y)
     {
 	setX(x);
@@ -72,6 +83,8 @@ public class GameObject
 
     public boolean handleActionDown(int eventX, int eventY)
     {
+	this.moved = false;
+	
 	if (eventX >= (x - bitmap.getWidth() / 2) && (eventX <= (x + bitmap.getWidth() / 2)))
 	{
 	    if (eventY >= (y - bitmap.getHeight() / 2) && (eventY <= (y + bitmap.getHeight() / 2)))
@@ -98,6 +111,7 @@ public class GameObject
     {
 	if (isTouched())
 	{
+	    this.moved = true;
 	    this.setXY(x, y);
 	}
     }

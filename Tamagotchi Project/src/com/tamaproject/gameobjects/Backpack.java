@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.view.Display;
+import android.widget.Toast;
 
 public class Backpack
 {
@@ -157,7 +158,7 @@ public class Backpack
 	    {
 		if (item.isTouched())
 		{
-		    item.setXY(eventX, eventY);
+		    item.handleActionMove(eventX, eventY);
 		    return item;
 		}
 	    }
@@ -181,7 +182,7 @@ public class Backpack
 	}
 
 	return null;
-    }
+    }    
 
     public boolean removeItem(Item item)
     {
