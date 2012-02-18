@@ -64,6 +64,7 @@ public class InPlayObjects
 			if (GameObjectUtil.isTouching(g, trashcan))
 			{
 			    ipo.remove(g);
+			    poopCount--;
 			    return null;
 			}
 		    }

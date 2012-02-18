@@ -366,25 +366,36 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     private Paint paint = new Paint();
     private Rect bpRectangle;
-    private Rect cHealth, mHealth, cHunger, mHunger, cSick, mSick;
+    private Rect topRectangle;
 
     protected void drawInterface(Canvas canvas)
     {
+	// draw the rectangle around backpack
 	paint.setColor(Color.WHITE);
 	paint.setStyle(Style.STROKE);
 	paint.setStrokeWidth(1);
 	canvas.drawRect(bpRectangle, paint);
+	canvas.drawRect(topRectangle, paint);
 
+	// draw the backpack label and number of items in backpack
 	paint.setStyle(Style.FILL_AND_STROKE);
 	paint.setTextSize(20);
 	paint.setAntiAlias(true);
 	canvas.drawText(BACKPACK_LABEL + " (" + bp.numItems() + "/" + bp.maxSize() + ")", 5, height / 3 * 2 + 25, paint);
 
+	// draw the health, hunger, sickness
+	paint.setTextSize(21);
+	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), 25, (playTopBound-50) / 3, paint);
+	canvas.drawText("Hunger: " + tama.getCurrentHunger() + "/" + tama.getMaxHunger(), 25, (playTopBound-50) / 3 * 2, paint);
+	canvas.drawText("Sick: " + tama.getCurrentSickness() + "/" + tama.getMaxSickness(), width / 2, (playTopBound-50) / 3, paint);
+	canvas.drawText("XP: " + tama.getCurrentXP() + "/" + tama.getMaxXP(), width / 2, (playTopBound-50) / 3*2, paint);
+
     }
 
     protected void initInterface()
     {
-	this.bpRectangle = new Rect(1, height / 3 * 2, width - 1, height - 1);
+	this.bpRectangle = new Rect(1, playBottomBound + 50, width - 1, height - 1);
+	this.topRectangle = new Rect(1, 1, width - 1, playTopBound - 50);
     }
 
     private void SavePreferences(String key, String value)
@@ -419,11 +430,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		{
 		    Thread.sleep(5000l);
 		    ipo.add(makePoop());
-		    if (ipo.getPoopCount() > 5)
-		    {
-			tama.setCurrentSickness(tama.getCurrentSickness() + 5);
-			Log.d(TAG, tama.getCurrentSickness() + "");
-		    }
 		} catch (Exception e)
 		{
 
@@ -455,7 +461,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		try
 		{
 		    Thread.sleep(500l);
-		    Log.d(TAG, tama.getCurrentSickness() + "/" + tama.getMaxSickness());
+		    // check if tamagotchi has died
 		    if (tama.isDead())
 		    {
 			Runnable toastRunnable = new Runnable()
@@ -477,5 +483,4 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    Log.d(TAG, "Tama thread ended.");
 	}
     }
-
 }
