@@ -88,6 +88,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	// create dummy items
 
 	ArrayList<Item> items = new ArrayList<Item>();
+	items.add(new Item(bitmapTable.get(R.drawable.ic_launcher), "Health item", 7, 0, 0, 0));
+	items.add(new Item(bitmapTable.get(R.drawable.ic_launcher), "Food item", 7, -20, 0, 0));
+	items.add(new Item(bitmapTable.get(R.drawable.ic_launcher), "XP item", 0, 0, 0, 1000));
 	for (int i = 1; i <= 15; i++)
 	{
 	    items.add(new Item(bitmapTable.get(R.drawable.treasure)));
@@ -95,7 +98,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	bp = new Backpack(items, display);
 
-	tama = new Tamagotchi(bitmapTable.get(R.drawable.tama), display.getWidth() / 2, display.getHeight() / 2);
+	tama = new Tamagotchi(bitmapTable.get(R.drawable.tama), width / 2, (playTopBound + playBottomBound) / 2);
 	tama.setLocked(true);
 
 	ipo = new InPlayObjects();
@@ -168,6 +171,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	bitmapTable.put(R.drawable.treasure, BitmapFactory.decodeResource(getResources(), R.drawable.treasure));
 	bitmapTable.put(R.drawable.poop, BitmapFactory.decodeResource(getResources(), R.drawable.poop));
 	bitmapTable.put(R.drawable.trash, BitmapFactory.decodeResource(getResources(), R.drawable.trash));
+	bitmapTable.put(R.drawable.ic_launcher, BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
     }
 
     @Override
@@ -194,7 +198,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		popUp.dismiss();
 
 	    // region to open backpack
-	    if (event.getY() > getHeight() - 50 && event.getX() > getWidth() - 50)
+	    if (ey > height - 50 && ex > width - 50)
 	    {
 		bp.setBackpackOpen(!bp.isBackpackOpen());
 		if (!bp.isBackpackOpen())
@@ -327,13 +331,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     }
 
     // this method is to demonstrate collisions
-    protected boolean giveItem(GameObject tama, Item item)
+    protected boolean giveItem(Tamagotchi tama, Item item)
     {
 	if (tama != null && item != null)
 	{
 	    tama.setBitmap(bitmapTable.get(R.drawable.tama));
 	    if (GameObjectUtil.isTouching(tama, item))
 	    {
+		tama.applyItem(item);
 		bp.removeItem(item);
 		bp.refreshItems();
 		return true;
@@ -385,10 +390,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	// draw the health, hunger, sickness
 	paint.setTextSize(21);
-	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), 25, (playTopBound-50) / 3, paint);
-	canvas.drawText("Hunger: " + tama.getCurrentHunger() + "/" + tama.getMaxHunger(), 25, (playTopBound-50) / 3 * 2, paint);
-	canvas.drawText("Sick: " + tama.getCurrentSickness() + "/" + tama.getMaxSickness(), width / 2, (playTopBound-50) / 3, paint);
-	canvas.drawText("XP: " + tama.getCurrentXP() + "/" + tama.getMaxXP(), width / 2, (playTopBound-50) / 3*2, paint);
+	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), 25, (playTopBound - 50) / 3, paint);
+	canvas.drawText("Hunger: " + tama.getCurrentHunger() + "/" + tama.getMaxHunger(), 25, (playTopBound - 50) / 3 * 2, paint);
+	canvas.drawText("Sick: " + tama.getCurrentSickness() + "/" + tama.getMaxSickness(), width / 2, (playTopBound - 50) / 3, paint);
+	canvas.drawText("XP: " + tama.getCurrentXP() + "/" + tama.getMaxXP(), width / 2, (playTopBound - 50) / 3 * 2, paint);
 
     }
 

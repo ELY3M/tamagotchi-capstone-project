@@ -110,11 +110,12 @@ public class Tamagotchi extends GameObject
 
     private boolean levelUp()
     {
-	if (this.currentXP > this.maxXP)
+	boolean leveled = false;
+	while (this.currentXP > this.maxXP)
 	{
 	    this.battleLevel++;
 
-	    this.currentXP = this.maxXP - this.currentXP;
+	    this.currentXP = this.currentXP - this.maxXP;
 	    this.maxXP *= 2;
 
 	    this.maxHealth += this.maxHealth / 2;
@@ -123,10 +124,9 @@ public class Tamagotchi extends GameObject
 	    this.maxHunger += this.maxHunger / 4;
 
 	    this.maxSickness += this.maxSickness / 4;
-
-	    return true;
+	    leveled = true;
 	}
-	return false;
+	return leveled;
     }
 
     public int getAge()
@@ -192,66 +192,66 @@ public class Tamagotchi extends GameObject
 
     public long getBirthday()
     {
-        return birthday;
+	return birthday;
     }
 
     public void setCurrentHealth(int currentHealth)
     {
-        this.currentHealth = currentHealth;
+	this.currentHealth = currentHealth;
     }
 
     public void setMaxHealth(int maxHealth)
     {
-        this.maxHealth = maxHealth;
+	this.maxHealth = maxHealth;
     }
 
     public void setCurrentHunger(int currentHunger)
     {
-        this.currentHunger = currentHunger;
+	this.currentHunger = currentHunger;
     }
 
     public void setMaxHunger(int maxHunger)
     {
-        this.maxHunger = maxHunger;
+	this.maxHunger = maxHunger;
     }
 
     public void setCurrentXP(int currentXP)
     {
-        this.currentXP = currentXP;
+	this.currentXP = currentXP;
     }
 
     public void setMaxXP(int maxXP)
     {
-        this.maxXP = maxXP;
+	this.maxXP = maxXP;
     }
 
     public void setCurrentSickness(int currentSickness)
     {
-        this.currentSickness = currentSickness;
+	this.currentSickness = currentSickness;
     }
 
     public void setMaxSickness(int maxSickness)
     {
-        this.maxSickness = maxSickness;
+	this.maxSickness = maxSickness;
     }
 
     public void setPoop(int poop)
     {
-        this.poop = poop;
+	this.poop = poop;
     }
 
     public void setBattleLevel(int battleLevel)
     {
-        this.battleLevel = battleLevel;
+	this.battleLevel = battleLevel;
     }
 
     public void setStatus(int status)
     {
-        this.status = status;
+	this.status = status;
     }
 
     public void setBirthday(long birthday)
     {
-        this.birthday = birthday;
+	this.birthday = birthday;
     }
 }
