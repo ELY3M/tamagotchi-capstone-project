@@ -13,8 +13,9 @@ public class Tamagotchi extends GameObject
     private int poop;
     private int battleLevel;
     private int status;
+    private long birthday;
 
-    public static int ALIVE = 1, DEAD = 0;
+    public final static int ALIVE = 1, DEAD = 0;
 
     public Tamagotchi(Bitmap bitmap, int x, int y)
     {
@@ -35,6 +36,7 @@ public class Tamagotchi extends GameObject
 	this.poop = 6;
 	this.battleLevel = 5;
 	this.status = Tamagotchi.ALIVE;
+	this.birthday = System.currentTimeMillis();
     }
 
     public Tamagotchi(Bitmap bitmap, int x, int y, int currentHealth, int maxHealth,
@@ -127,58 +129,129 @@ public class Tamagotchi extends GameObject
 	return false;
     }
 
+    public int getAge()
+    {
+	int age = (int) ((System.currentTimeMillis() - birthday) / (24L * 60 * 60 * 1000));
+	return age;
+    }
+
     public int getCurrentHealth()
     {
-        return currentHealth;
+	return currentHealth;
     }
 
     public int getMaxHealth()
     {
-        return maxHealth;
+	return maxHealth;
     }
 
     public int getCurrentHunger()
     {
-        return currentHunger;
+	return currentHunger;
     }
 
     public int getMaxHunger()
     {
-        return maxHunger;
+	return maxHunger;
     }
 
     public int getCurrentXP()
     {
-        return currentXP;
+	return currentXP;
     }
 
     public int getMaxXP()
     {
-        return maxXP;
+	return maxXP;
     }
 
     public int getCurrentSickness()
     {
-        return currentSickness;
+	return currentSickness;
     }
 
     public int getMaxSickness()
     {
-        return maxSickness;
+	return maxSickness;
     }
 
     public int getPoop()
     {
-        return poop;
+	return poop;
     }
 
     public int getBattleLevel()
     {
-        return battleLevel;
+	return battleLevel;
     }
 
     public int getStatus()
     {
-        return status;
+	return status;
+    }
+
+    public long getBirthday()
+    {
+        return birthday;
+    }
+
+    public void setCurrentHealth(int currentHealth)
+    {
+        this.currentHealth = currentHealth;
+    }
+
+    public void setMaxHealth(int maxHealth)
+    {
+        this.maxHealth = maxHealth;
+    }
+
+    public void setCurrentHunger(int currentHunger)
+    {
+        this.currentHunger = currentHunger;
+    }
+
+    public void setMaxHunger(int maxHunger)
+    {
+        this.maxHunger = maxHunger;
+    }
+
+    public void setCurrentXP(int currentXP)
+    {
+        this.currentXP = currentXP;
+    }
+
+    public void setMaxXP(int maxXP)
+    {
+        this.maxXP = maxXP;
+    }
+
+    public void setCurrentSickness(int currentSickness)
+    {
+        this.currentSickness = currentSickness;
+    }
+
+    public void setMaxSickness(int maxSickness)
+    {
+        this.maxSickness = maxSickness;
+    }
+
+    public void setPoop(int poop)
+    {
+        this.poop = poop;
+    }
+
+    public void setBattleLevel(int battleLevel)
+    {
+        this.battleLevel = battleLevel;
+    }
+
+    public void setStatus(int status)
+    {
+        this.status = status;
+    }
+
+    public void setBirthday(long birthday)
+    {
+        this.birthday = birthday;
     }
 }

@@ -13,6 +13,7 @@ public class GameObject
     private boolean touched;
     private boolean moved;
     private String group = null;
+    private boolean locked = false;
 
     public GameObject(Bitmap bitmap, int x, int y)
     {
@@ -84,8 +85,10 @@ public class GameObject
 
     public boolean handleActionDown(int eventX, int eventY)
     {
+	if (locked)
+	    return false;
 	this.moved = false;
-	
+
 	if (eventX >= (x - bitmap.getWidth() / 2) && (eventX <= (x + bitmap.getWidth() / 2)))
 	{
 	    if (eventY >= (y - bitmap.getHeight() / 2) && (eventY <= (y + bitmap.getHeight() / 2)))
@@ -110,6 +113,8 @@ public class GameObject
 
     public boolean handleActionMove(int x, int y)
     {
+	if (locked)
+	    return false;
 	if (isTouched())
 	{
 	    this.moved = true;
@@ -121,6 +126,8 @@ public class GameObject
 
     public boolean handleActionUp()
     {
+	if (locked)
+	    return false;
 	if (isTouched())
 	{
 	    this.setTouched(false);
@@ -137,12 +144,22 @@ public class GameObject
 
     public String getGroup()
     {
-        return group;
+	return group;
     }
 
     public void setGroup(String group)
     {
-        this.group = group;
+	this.group = group;
+    }
+
+    public boolean isLocked()
+    {
+	return locked;
+    }
+
+    public void setLocked(boolean locked)
+    {
+	this.locked = locked;
     }
 
 }
