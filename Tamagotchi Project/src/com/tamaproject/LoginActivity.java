@@ -26,7 +26,7 @@ public class LoginActivity extends Activity
 	setContentView(R.layout.login);
 
 	Button launch = (Button) findViewById(R.id.login_button);
-	
+
 	usernameEditText = (EditText) findViewById(R.id.txt_username);
 	passwordEditText = (EditText) findViewById(R.id.txt_password);
 	LoadPreferences();
@@ -36,7 +36,7 @@ public class LoginActivity extends Activity
 	{
 
 	    public void onClick(View viewParam)
-	    {	
+	    {
 
 		// the getText() gets the current value of the text box
 		// the toString() converts the value to String data type
@@ -52,17 +52,28 @@ public class LoginActivity extends Activity
 		else
 		{
 		    // display the username and the password in string format
-		    Toast.makeText(LoginActivity.this, "Username: " + sUserName + ", Password: " + sPassword, Toast.LENGTH_SHORT).show();
-		    Intent goToGame = new Intent(LoginActivity.this, GameActivity.class);
 		    SavePreferences(USERNAME, sUserName);
 		    SavePreferences(PASSWORD, sPassword);
-		    startActivity(goToGame);
-		    finish();
+		    if (checkLogin(sUserName, sPassword))
+			startGame();
 		}
 	    }
 	}
 
 	); // end of launch.setOnclickListener
+    }
+
+    private boolean checkLogin(String username, String password)
+    {
+	Toast.makeText(LoginActivity.this, "Username: " + username + ", Password: " + password, Toast.LENGTH_SHORT).show();
+	return true;
+    }
+
+    private void startGame()
+    {
+	Intent goToGame = new Intent(LoginActivity.this, GameActivity.class);
+	startActivity(goToGame);
+	finish();
     }
 
     private void SavePreferences(String key, String value)
@@ -76,9 +87,12 @@ public class LoginActivity extends Activity
     private void LoadPreferences()
     {
 	SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
-	String strSavedMem1 = sharedPreferences.getString(USERNAME, "");
-	String strSavedMem2 = sharedPreferences.getString(PASSWORD, "");
-	usernameEditText.setText(strSavedMem1);
-	passwordEditText.setText(strSavedMem2);
+	String user = sharedPreferences.getString(USERNAME, null);
+	String pass = sharedPreferences.getString(PASSWORD, null);
+	if (user != null && pass != null)
+	{
+	    if (checkLogin(user, pass))
+		startGame();
+	}
     }
 }

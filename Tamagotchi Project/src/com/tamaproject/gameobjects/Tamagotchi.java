@@ -36,7 +36,7 @@ public class Tamagotchi extends GameObject
 	this.poop = 6;
 	this.battleLevel = 5;
 	this.status = Tamagotchi.ALIVE;
-	this.birthday = System.currentTimeMillis();
+	this.birthday = 1325376000000l;
     }
 
     public Tamagotchi(Bitmap bitmap, int x, int y, int currentHealth, int maxHealth,

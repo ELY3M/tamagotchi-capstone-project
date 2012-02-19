@@ -9,8 +9,12 @@ import com.tamaproject.util.GameObjectUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.view.Display;
 import android.widget.Toast;
+import android.graphics.Rect;
+import android.graphics.Paint.Style;
 
 public class Backpack
 {
@@ -19,11 +23,18 @@ public class Backpack
     private final int DISP_ITEMS = 10; // number of items to display on main screen
     private Display display;
     private boolean backpackOpen = false;
+    private Rect bpRectangle;
+    private Paint paint = new Paint();
+    private int top, itemTopBound;
+    private final int textSize = 20;
 
-    public Backpack(ArrayList<Item> items, Display display)
+    public Backpack(ArrayList<Item> items, Display display, int top)
     {
 	this.items = items;
 	this.display = display;
+	this.top = top;
+	this.itemTopBound = top;
+	this.bpRectangle = new Rect(1, top, display.getWidth() - 1, display.getHeight() - 1);
 	refreshItems();
     }
 
@@ -46,6 +57,16 @@ public class Backpack
 
     public void draw(Canvas canvas)
     {
+	paint.setColor(Color.WHITE);
+	paint.setStyle(Style.STROKE);
+	paint.setStrokeWidth(1);
+	canvas.drawRect(bpRectangle, paint);
+
+	paint.setStyle(Style.FILL_AND_STROKE);
+	paint.setTextSize(textSize);
+	paint.setAntiAlias(true);
+	canvas.drawText("Backpack (" + this.numItems() + "/" + this.maxSize() + ")", 25, top + textSize + 5, paint);
+
 	synchronized (items)
 	{
 	    for (Item item : items)
@@ -87,7 +108,7 @@ public class Backpack
 
 	synchronized (items)
 	{
-	    int i = 1, j = 2;
+	    int i = 1, j = 1;
 
 	    for (Item item : items)
 	    {
@@ -97,12 +118,12 @@ public class Backpack
 		}
 		else
 		{
-		    item.setXY(SPACING * i, height - SPACING * j);
+		    item.setXY(SPACING * i, (height - itemTopBound) / 3 * j + itemTopBound);
 		    i++;
 		    if ((SPACING * i) > width - SPACING / 2)
 		    {
 			i = 1;
-			j--;
+			j++;
 		    }
 		}
 		c++;
@@ -182,7 +203,7 @@ public class Backpack
 	}
 
 	return null;
-    }    
+    }
 
     public boolean removeItem(Item item)
     {

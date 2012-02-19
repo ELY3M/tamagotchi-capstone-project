@@ -7,7 +7,6 @@ import java.util.Random;
 import com.tamaproject.gameobjects.*;
 import com.tamaproject.util.GameObjectUtil;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -17,12 +16,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Paint.Style;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -53,9 +50,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     private Display display = null;
     private int height = -1, width = -1;
-    private int playTopBound, playBottomBound, playRightBound, playLeftBound;
 
-    private final String BACKPACK_LABEL = "Backpack";
+    private int playTopBound, playBottomBound, playLeftBound, playRightBound, cushion;
 
     private Backpack bp; // backpack with items
     protected Tamagotchi tama; // our tamagotchi
@@ -63,14 +59,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     private Random r = new Random();
 
-    protected Handler toastHandler;
+    protected Handler handler;
 
     public GameView(Context context)
     {
 	super(context);
 	// adding the callback (this) to the surface holder to intercept events
 	getHolder().addCallback(this);
-	toastHandler = new Handler();
+	handler = new Handler();
 
 	this.context = context;
 
@@ -96,7 +92,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    items.add(new Item(bitmapTable.get(R.drawable.treasure)));
 	}
 
-	bp = new Backpack(items, display);
+	bp = new Backpack(items, display, playBottomBound + 45);
 
 	tama = new Tamagotchi(bitmapTable.get(R.drawable.tama), width / 2, (playTopBound + playBottomBound) / 2);
 	tama.setLocked(true);
@@ -125,10 +121,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	display = wm.getDefaultDisplay();
 	this.height = display.getHeight();
 	this.width = display.getWidth();
+
 	this.playTopBound = height / 5;
-	this.playBottomBound = height / 3 * 2 - 50;
+	this.playBottomBound = height / 3 * 2 - cushion;
 	this.playLeftBound = 25;
 	this.playRightBound = width - 25;
+	this.cushion = 25;
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
@@ -148,8 +146,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceDestroyed(SurfaceHolder holder)
     {
 	Toast.makeText(this.context, tama.toString(), Toast.LENGTH_SHORT).show();
-	SavePreferences("x", tama.getX() + "");
-	SavePreferences("y", tama.getY() + "");
 	Log.d(TAG, "Surface is being destroyed");
 	try
 	{
@@ -313,8 +309,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     protected GameObject makePoop()
     {
-	int tx = tama.getX();
-	int ty = tama.getY();
+	int ty = tama.getY() + cushion;
 	int x = r.nextInt(width);
 	int y = r.nextInt(playBottomBound - ty) + ty;
 	GameObject go = new GameObject(bitmapTable.get(R.drawable.poop), x, y);
@@ -361,46 +356,49 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    }
 	    else
 	    {
-		drawInterface(canvas);
 		tama.draw(canvas);
 		ipo.draw(canvas);
 		bp.draw(canvas);
+		drawInterface(canvas);
 	    }
 	}
     }
 
     private Paint paint = new Paint();
-    private Rect bpRectangle;
     private Rect topRectangle;
+    private Rect cHealthBar, mHealthBar;
 
     protected void drawInterface(Canvas canvas)
     {
 	// draw the rectangle around backpack
-	paint.setColor(Color.WHITE);
+	paint.setColor(Color.YELLOW);
 	paint.setStyle(Style.STROKE);
 	paint.setStrokeWidth(1);
-	canvas.drawRect(bpRectangle, paint);
 	canvas.drawRect(topRectangle, paint);
+
+	paint.setColor(Color.WHITE);
+	paint.setStyle(Style.FILL_AND_STROKE);
 
 	// draw the backpack label and number of items in backpack
 	paint.setStyle(Style.FILL_AND_STROKE);
 	paint.setTextSize(20);
 	paint.setAntiAlias(true);
-	canvas.drawText(BACKPACK_LABEL + " (" + bp.numItems() + "/" + bp.maxSize() + ")", 5, height / 3 * 2 + 25, paint);
-
+	
 	// draw the health, hunger, sickness
 	paint.setTextSize(21);
-	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), 25, (playTopBound - 50) / 3, paint);
-	canvas.drawText("Hunger: " + tama.getCurrentHunger() + "/" + tama.getMaxHunger(), 25, (playTopBound - 50) / 3 * 2, paint);
-	canvas.drawText("Sick: " + tama.getCurrentSickness() + "/" + tama.getMaxSickness(), width / 2, (playTopBound - 50) / 3, paint);
-	canvas.drawText("XP: " + tama.getCurrentXP() + "/" + tama.getMaxXP(), width / 2, (playTopBound - 50) / 3 * 2, paint);
+	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), cushion, (playTopBound - cushion) / 4, paint);
+	canvas.drawText("Hunger: " + tama.getCurrentHunger() + "/" + tama.getMaxHunger(), cushion, (playTopBound - cushion) / 4 * 2, paint);
+	canvas.drawText("Sick: " + tama.getCurrentSickness() + "/" + tama.getMaxSickness(), width / 2, (playTopBound - cushion) / 4, paint);
+	canvas.drawText("XP: " + tama.getCurrentXP() + "/" + tama.getMaxXP(), width / 2, (playTopBound - cushion) / 4 * 2, paint);
+	canvas.drawText("Battle Level: " + tama.getBattleLevel(), width / 2, (playTopBound - cushion) / 4 * 3, paint);
+	canvas.drawText("Age: " + tama.getAge(), cushion, (playTopBound - cushion) / 4 * 3, paint);
 
     }
 
     protected void initInterface()
     {
-	this.bpRectangle = new Rect(1, playBottomBound + 50, width - 1, height - 1);
-	this.topRectangle = new Rect(1, 1, width - 1, playTopBound - 50);
+	// this.bpRectangle = new Rect(1, playBottomBound + cushion, width - 1, height - 1);
+	this.topRectangle = new Rect(1, 1, width - 1, playTopBound - cushion);
     }
 
     private void SavePreferences(String key, String value)
@@ -476,7 +474,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 				Toast.makeText(context, "Tama is dead", Toast.LENGTH_SHORT).show();
 			    }
 			};
-			toastHandler.post(toastRunnable);
+			handler.post(toastRunnable);
 			active = false;
 		    }
 		} catch (Exception e)
@@ -488,4 +486,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    Log.d(TAG, "Tama thread ended.");
 	}
     }
+
 }

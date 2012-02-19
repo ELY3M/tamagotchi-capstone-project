@@ -98,9 +98,15 @@ public class InPlayObjects
 	trashcan.draw(canvas);
 	synchronized (ipo)
 	{
+	    /*
 	    for (GameObject g : ipo)
 	    {
 		g.draw(canvas);
+	    }
+	    */
+	    for(int i=ipo.size()-1;i>=0;i--)
+	    {
+		ipo.get(i).draw(canvas);
 	    }
 	}
 
