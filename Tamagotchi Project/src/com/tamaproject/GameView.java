@@ -187,7 +187,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		popUp.dismiss();
 
 	    // region to open backpack
-	    if (ey > bp.getOpenSquareSize() && ex > width - bp.getOpenSquareSize())
+	    if (ey > height - bp.getOpenSquareSize() && ex > width - bp.getOpenSquareSize())
 	    {
 		bp.setBackpackOpen(!bp.isBackpackOpen());
 		if (!bp.isBackpackOpen())

@@ -85,7 +85,7 @@ public class Backpack
 	{
 	    for (Item item : items)
 	    {
-		if (item.getX() > -1 || item.getY() > -1)
+		if (!item.isLocked())
 		    item.draw(canvas);
 	    }
 	}
@@ -135,10 +135,11 @@ public class Backpack
 	    {
 		if (c > DISP_ITEMS - 1)
 		{
-		    item.setXY(-100, -100);
+		    item.setLocked(true);
 		}
 		else
 		{
+		    item.setLocked(false);
 		    item.setXY(SPACING * i, (height - itemTopBound) / 3 * j + itemTopBound + OFFSET);
 		    i++;
 		    if ((SPACING * i) > width - SPACING / 2)
@@ -165,6 +166,7 @@ public class Backpack
 
 	    for (Item item : items)
 	    {
+		item.setLocked(false);
 		item.setXY(SPACING * i, SPACING * j + d);
 		i++;
 		if ((SPACING * i) > width - SPACING / 2)
@@ -185,6 +187,7 @@ public class Backpack
 		// assume that only one item is touched at a time
 		if (item.handleActionDown(eventX, eventY))
 		{
+		    item.setLocked(false);
 		    return true;
 		}
 	    }
