@@ -200,11 +200,6 @@ public class Backpack
 	    {
 		if (item.isTouched())
 		{
-		    if(isBackpackOpen())
-		    {
-			setBackpackOpen(false);
-			refreshItems();
-		    }
 		    item.handleActionMove(eventX, eventY);
 		    return item;
 		}

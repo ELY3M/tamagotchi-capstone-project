@@ -206,7 +206,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		ipo.handleActionMove(ex, ey, playTopBound, playBottomBound);
 	    }
 
-	    
+	    if (temp != null && bp.isBackpackOpen())
+	    {
+		bp.setBackpackOpen(false);
+		bp.refreshItems();
+		this.invalidate();
+	    }
+
 	    if (GameObjectUtil.isTouching(temp, tama))
 	    {
 		tama.setBitmap(bitmapTable.get(R.drawable.kuro));
