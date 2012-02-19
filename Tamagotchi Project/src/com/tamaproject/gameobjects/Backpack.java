@@ -27,6 +27,9 @@ public class Backpack
     private Paint paint = new Paint();
     private int top, itemTopBound;
     private final int textSize = 20;
+    private final int OFFSET = 15;
+    private Rect fullBPRectangle;
+    private final int openSquareSize;
 
     public Backpack(ArrayList<Item> items, Display display, int top)
     {
@@ -34,8 +37,17 @@ public class Backpack
 	this.display = display;
 	this.top = top;
 	this.itemTopBound = top;
-	this.bpRectangle = new Rect(1, top, display.getWidth() - 1, display.getHeight() - 1);
+	int width = display.getWidth();
+	int height = display.getHeight();
+	this.bpRectangle = new Rect(1, top, width - 1, height - 1);
+	this.openSquareSize = width/20;
+	this.fullBPRectangle = new Rect(width - openSquareSize, height - openSquareSize, width, height);
 	refreshItems();
+    }
+
+    public int getOpenSquareSize()
+    {
+        return openSquareSize;
     }
 
     public boolean addItem(Item item)
@@ -64,9 +76,10 @@ public class Backpack
 
 	paint.setColor(Color.WHITE);
 	paint.setStrokeWidth(1);
+	canvas.drawRect(fullBPRectangle, paint);
 	paint.setTextSize(textSize);
 	paint.setAntiAlias(true);
-	canvas.drawText("Backpack (" + this.numItems() + "/" + this.maxSize() + ")", 25, top + textSize + 5, paint);
+	canvas.drawText("Backpack (" + this.numItems() + "/" + this.maxSize() + ")", textSize, top + textSize + OFFSET, paint);
 
 	synchronized (items)
 	{
@@ -80,6 +93,13 @@ public class Backpack
 
     public void drawAllItems(Canvas canvas)
     {
+	canvas.drawColor(Color.BLACK);
+	paint.setColor(Color.WHITE);
+	paint.setStrokeWidth(1);
+	canvas.drawRect(fullBPRectangle, paint);
+	paint.setTextSize(textSize);
+	paint.setStyle(Style.FILL_AND_STROKE);
+	canvas.drawText("Backpack", textSize+1, textSize*2, paint);
 	synchronized (items)
 	{
 	    refreshItemsAll();
@@ -119,7 +139,7 @@ public class Backpack
 		}
 		else
 		{
-		    item.setXY(SPACING * i, (height - itemTopBound) / 3 * j + itemTopBound);
+		    item.setXY(SPACING * i, (height - itemTopBound) / 3 * j + itemTopBound + OFFSET);
 		    i++;
 		    if ((SPACING * i) > width - SPACING / 2)
 		    {
@@ -180,6 +200,11 @@ public class Backpack
 	    {
 		if (item.isTouched())
 		{
+		    if(isBackpackOpen())
+		    {
+			setBackpackOpen(false);
+			refreshItems();
+		    }
 		    item.handleActionMove(eventX, eventY);
 		    return item;
 		}

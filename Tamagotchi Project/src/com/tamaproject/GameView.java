@@ -61,6 +61,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     protected Handler handler;
 
+    private Bitmap background;
+    private PopupWindow popUp;
+    private LinearLayout layout;
+
     public GameView(Context context)
     {
 	super(context);
@@ -159,18 +163,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	Log.d(TAG, "Thread was shut down cleanly");
     }
 
-    // loads up the sprites and bitmaps
-    private void initBitmaps()
-    {
-	bitmapTable.put(R.drawable.kuro, BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
-	bitmapTable.put(R.drawable.tama, BitmapFactory.decodeResource(getResources(), R.drawable.tama));
-	bitmapTable.put(R.drawable.treasure, BitmapFactory.decodeResource(getResources(), R.drawable.treasure));
-	bitmapTable.put(R.drawable.poop, BitmapFactory.decodeResource(getResources(), R.drawable.poop));
-	bitmapTable.put(R.drawable.trash, BitmapFactory.decodeResource(getResources(), R.drawable.trash));
-	bitmapTable.put(R.drawable.ic_launcher, BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
-	// bitmapTable.put(R.drawable.background, BitmapFactory.decodeResource(getResources(), R.drawable.background));
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
@@ -195,7 +187,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		popUp.dismiss();
 
 	    // region to open backpack
-	    if (ey > height - 50 && ex > width - 50)
+	    if (ey > bp.getOpenSquareSize()  && ex > width - bp.getOpenSquareSize())
 	    {
 		bp.setBackpackOpen(!bp.isBackpackOpen());
 		if (!bp.isBackpackOpen())
@@ -214,12 +206,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		ipo.handleActionMove(ex, ey, playTopBound, playBottomBound);
 	    }
 
-	    if (temp != null && bp.isBackpackOpen())
-	    {
-		bp.setBackpackOpen(false);
-		bp.refreshItems();
-	    }
-
+	    
 	    if (GameObjectUtil.isTouching(temp, tama))
 	    {
 		tama.setBitmap(bitmapTable.get(R.drawable.kuro));
@@ -257,9 +244,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	}
 	return true;
     }
-
-    private PopupWindow popUp;
-    private LinearLayout layout;
 
     private void showItemDescription(Item i)
     {
@@ -318,18 +302,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	return go;
     }
 
-    private Bitmap background;
-
-    private void initEnvironment()
-    {
-	GameObject trash = new GameObject(bitmapTable.get(R.drawable.trash), playRightBound, playBottomBound);
-	trash.setGroup("trashcan");
-	trash.setLocked(true);
-	ipo.add(trash);
-
-	this.background = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.background), width, height, false);
-    }
-
     // this method is to demonstrate collisions
     protected boolean giveItem(Tamagotchi tama, Item item)
     {
@@ -353,10 +325,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	// fills the canvas with black
 	if (canvas != null)
-	{	    
+	{
 	    if (bp.isBackpackOpen())
 	    {
-		canvas.drawColor(Color.BLACK);
 		bp.drawAllItems(canvas);
 	    }
 	    else
@@ -373,6 +344,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private Paint paint = new Paint();
     private Rect topRectangle;
     private Rect cHealthBar, mHealthBar;
+    private int textSize = 20;
 
     protected void drawInterface(Canvas canvas)
     {
@@ -382,22 +354,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	paint.setStrokeWidth(3);
 	canvas.drawRect(topRectangle, paint);
 
-
 	// draw the backpack label and number of items in backpack
 	paint.setColor(Color.WHITE);
 	paint.setStyle(Style.FILL_AND_STROKE);
 	paint.setStrokeWidth(1);
-	paint.setTextSize(20);
+	paint.setTextSize(textSize);
 	paint.setAntiAlias(true);
 
 	// draw the health, hunger, sickness
-	paint.setTextSize(21);
-	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), cushion, (playTopBound - cushion) / 4, paint);
-	canvas.drawText("Hunger: " + tama.getCurrentHunger() + "/" + tama.getMaxHunger(), cushion, (playTopBound - cushion) / 4 * 2, paint);
+	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), textSize, (playTopBound - cushion) / 4, paint);
+	canvas.drawText("Hunger: " + tama.getCurrentHunger() + "/" + tama.getMaxHunger(), textSize, (playTopBound - cushion) / 4 * 2, paint);
 	canvas.drawText("Sick: " + tama.getCurrentSickness() + "/" + tama.getMaxSickness(), width / 2, (playTopBound - cushion) / 4, paint);
 	canvas.drawText("XP: " + tama.getCurrentXP() + "/" + tama.getMaxXP(), width / 2, (playTopBound - cushion) / 4 * 2, paint);
 	canvas.drawText("Battle Level: " + tama.getBattleLevel(), width / 2, (playTopBound - cushion) / 4 * 3, paint);
-	canvas.drawText("Age: " + tama.getAge(), cushion, (playTopBound - cushion) / 4 * 3, paint);
+	canvas.drawText("Age: " + tama.getAge(), textSize, (playTopBound - cushion) / 4 * 3, paint);
 
     }
 
@@ -405,6 +375,28 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	// this.bpRectangle = new Rect(1, playBottomBound + cushion, width - 1, height - 1);
 	this.topRectangle = new Rect(1, 1, width - 1, playTopBound - cushion);
+    }
+
+    private void initEnvironment()
+    {
+	GameObject trash = new GameObject(bitmapTable.get(R.drawable.trash), playRightBound, playBottomBound);
+	trash.setGroup("trashcan");
+	trash.setLocked(true);
+	ipo.add(trash);
+
+	this.background = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.background), width, height, false);
+    }
+
+    // loads up the sprites and bitmaps
+    private void initBitmaps()
+    {
+	bitmapTable.put(R.drawable.kuro, BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
+	bitmapTable.put(R.drawable.tama, BitmapFactory.decodeResource(getResources(), R.drawable.tama));
+	bitmapTable.put(R.drawable.treasure, BitmapFactory.decodeResource(getResources(), R.drawable.treasure));
+	bitmapTable.put(R.drawable.poop, BitmapFactory.decodeResource(getResources(), R.drawable.poop));
+	bitmapTable.put(R.drawable.trash, BitmapFactory.decodeResource(getResources(), R.drawable.trash));
+	bitmapTable.put(R.drawable.ic_launcher, BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
+	// bitmapTable.put(R.drawable.background, BitmapFactory.decodeResource(getResources(), R.drawable.background));
     }
 
     private void SavePreferences(String key, String value)
