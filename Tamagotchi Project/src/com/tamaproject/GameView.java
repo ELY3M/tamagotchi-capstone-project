@@ -168,6 +168,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	bitmapTable.put(R.drawable.poop, BitmapFactory.decodeResource(getResources(), R.drawable.poop));
 	bitmapTable.put(R.drawable.trash, BitmapFactory.decodeResource(getResources(), R.drawable.trash));
 	bitmapTable.put(R.drawable.ic_launcher, BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
+	// bitmapTable.put(R.drawable.background, BitmapFactory.decodeResource(getResources(), R.drawable.background));
     }
 
     @Override
@@ -317,12 +318,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	return go;
     }
 
+    private Bitmap background;
+
     private void initEnvironment()
     {
 	GameObject trash = new GameObject(bitmapTable.get(R.drawable.trash), playRightBound, playBottomBound);
 	trash.setGroup("trashcan");
 	trash.setLocked(true);
 	ipo.add(trash);
+
+	this.background = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.background), width, height, false);
     }
 
     // this method is to demonstrate collisions
@@ -348,14 +353,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	// fills the canvas with black
 	if (canvas != null)
-	{
-	    canvas.drawColor(Color.BLACK);
+	{	    
 	    if (bp.isBackpackOpen())
 	    {
+		canvas.drawColor(Color.BLACK);
 		bp.drawAllItems(canvas);
 	    }
 	    else
 	    {
+		canvas.drawBitmap(background, 0, 0, null);
 		tama.draw(canvas);
 		ipo.draw(canvas);
 		bp.draw(canvas);
@@ -371,19 +377,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     protected void drawInterface(Canvas canvas)
     {
 	// draw the rectangle around backpack
-	paint.setColor(Color.YELLOW);
-	paint.setStyle(Style.STROKE);
-	paint.setStrokeWidth(1);
+	paint.setColor(Color.BLACK);
+	paint.setStyle(Style.FILL_AND_STROKE);
+	paint.setStrokeWidth(3);
 	canvas.drawRect(topRectangle, paint);
 
-	paint.setColor(Color.WHITE);
-	paint.setStyle(Style.FILL_AND_STROKE);
 
 	// draw the backpack label and number of items in backpack
+	paint.setColor(Color.WHITE);
 	paint.setStyle(Style.FILL_AND_STROKE);
+	paint.setStrokeWidth(1);
 	paint.setTextSize(20);
 	paint.setAntiAlias(true);
-	
+
 	// draw the health, hunger, sickness
 	paint.setTextSize(21);
 	canvas.drawText("Health: " + tama.getCurrentHealth() + "/" + tama.getMaxHealth(), cushion, (playTopBound - cushion) / 4, paint);

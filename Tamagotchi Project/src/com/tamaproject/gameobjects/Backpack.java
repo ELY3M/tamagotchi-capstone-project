@@ -57,12 +57,13 @@ public class Backpack
 
     public void draw(Canvas canvas)
     {
-	paint.setColor(Color.WHITE);
-	paint.setStyle(Style.STROKE);
-	paint.setStrokeWidth(1);
+	paint.setColor(Color.BLACK);
+	paint.setStyle(Style.FILL_AND_STROKE);
+	paint.setStrokeWidth(3);
 	canvas.drawRect(bpRectangle, paint);
 
-	paint.setStyle(Style.FILL_AND_STROKE);
+	paint.setColor(Color.WHITE);
+	paint.setStrokeWidth(1);
 	paint.setTextSize(textSize);
 	paint.setAntiAlias(true);
 	canvas.drawText("Backpack (" + this.numItems() + "/" + this.maxSize() + ")", 25, top + textSize + 5, paint);
