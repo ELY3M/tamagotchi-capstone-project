@@ -40,14 +40,14 @@ public class Backpack
 	int width = display.getWidth();
 	int height = display.getHeight();
 	this.bpRectangle = new Rect(1, top, width - 1, height - 1);
-	this.openSquareSize = width/20;
+	this.openSquareSize = width / 20;
 	this.fullBPRectangle = new Rect(width - openSquareSize, height - openSquareSize, width, height);
 	refreshItems();
     }
 
     public int getOpenSquareSize()
     {
-        return openSquareSize;
+	return openSquareSize;
     }
 
     public boolean addItem(Item item)
@@ -99,7 +99,7 @@ public class Backpack
 	canvas.drawRect(fullBPRectangle, paint);
 	paint.setTextSize(textSize);
 	paint.setStyle(Style.FILL_AND_STROKE);
-	canvas.drawText("Backpack", textSize+1, textSize*2, paint);
+	canvas.drawText("Backpack", textSize + 1, textSize * 2, paint);
 	synchronized (items)
 	{
 	    refreshItemsAll();
@@ -127,11 +127,11 @@ public class Backpack
 	int SPACING = width / 6; // this centers the items
 	int c = 0;
 
-	synchronized (items)
-	{
-	    int i = 1, j = 1;
+	int i = 1, j = 1;
 
-	    for (Item item : items)
+	for (Item item : items)
+	{
+	    if (!item.isTouched())
 	    {
 		if (c > DISP_ITEMS - 1)
 		{

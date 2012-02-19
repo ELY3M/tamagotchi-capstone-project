@@ -187,7 +187,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		popUp.dismiss();
 
 	    // region to open backpack
-	    if (ey > bp.getOpenSquareSize()  && ex > width - bp.getOpenSquareSize())
+	    if (ey > bp.getOpenSquareSize() && ex > width - bp.getOpenSquareSize())
 	    {
 		bp.setBackpackOpen(!bp.isBackpackOpen());
 		if (!bp.isBackpackOpen())
@@ -205,12 +205,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    {
 		ipo.handleActionMove(ex, ey, playTopBound, playBottomBound);
 	    }
-
-	    if (temp != null && bp.isBackpackOpen())
+	    else
 	    {
-		bp.setBackpackOpen(false);
+		if (bp.isBackpackOpen())
+		{
+		    bp.setBackpackOpen(false);
+		    // this.invalidate();
+		}
 		bp.refreshItems();
-		this.invalidate();
 	    }
 
 	    if (GameObjectUtil.isTouching(temp, tama))
