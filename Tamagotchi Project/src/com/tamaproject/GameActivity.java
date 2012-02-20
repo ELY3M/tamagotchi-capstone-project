@@ -26,18 +26,38 @@ public class GameActivity extends Activity
     }
 
     @Override
-    protected void onDestroy()
+    protected void onDestroy()  // called when back button pressed
     {
 	Log.d(TAG, "Destroying...");
+	Toast.makeText(this, "Closing game...", Toast.LENGTH_SHORT).show();
 	super.onDestroy();
     }
 
     @Override
-    protected void onStop()
+    protected void onStop()  // called when home button pressed, comes after onPause()
     {
-	Log.d(TAG, "Stopping...");
+	Log.d(TAG, "Stopping...");	
 	super.onStop();
-	finish();
+	//finish();
+    }
+    
+    protected void onRestart()
+    {	
+	super.onRestart();
+    }
+    
+    protected void onPause()  // called when the app is minimized because another activity comes into the foreground
+    {
+	super.onPause();
+	Toast.makeText(this, "Pausing game...", Toast.LENGTH_SHORT).show();
+    }
+    
+    protected void onResume()  // called when user returns to activity from onPause()
+    {
+	super.onResume();
+	Log.d(TAG, "Restarting...");
+	Toast.makeText(this, "Resuming game...", Toast.LENGTH_SHORT).show();
+	setContentView(gv);
     }
 
     @Override

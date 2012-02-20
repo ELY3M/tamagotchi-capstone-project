@@ -99,7 +99,7 @@ public class Backpack
 	canvas.drawRect(fullBPRectangle, paint);
 	paint.setTextSize(textSize);
 	paint.setStyle(Style.FILL_AND_STROKE);
-	canvas.drawText("Backpack", textSize + 1, textSize * 2, paint);
+	canvas.drawText("Backpack (" + this.numItems() + "/" + this.maxSize() + ")", textSize + 1, textSize * 2, paint);
 	synchronized (items)
 	{
 	    refreshItemsAll();

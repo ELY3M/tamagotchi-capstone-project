@@ -7,7 +7,7 @@ import android.view.SurfaceHolder;
 public class GameLoopThread extends Thread
 {
     private static final String TAG = GameLoopThread.class.getSimpleName();
-    private boolean running;
+    private boolean running = true;
     private SurfaceHolder surfaceHolder;
     private GameView gameView;
 
@@ -51,7 +51,9 @@ public class GameLoopThread extends Thread
 			surfaceHolder.unlockCanvasAndPost(canvas);
 		    }
 		} // end finally
+
 	    }
+	    Log.d(TAG, "Ending game loop");
 	} catch (Exception e)
 	{
 	    e.printStackTrace();

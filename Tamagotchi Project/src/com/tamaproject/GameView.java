@@ -109,11 +109,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	initInterface();
 
-	// create the game loop thread
-	thread = new GameLoopThread(getHolder(), this);
-	poopThread = new PoopThread();
-	tamaThread = new TamaThread();
-
 	// make the GamePanel focusable so it can handle events
 	setFocusable(true);
     }
@@ -141,20 +136,50 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	// at this point the surface is created and
 	// we can safely start the game loop
+	// create the game loop thread
+	
+	// check if the game was minimized or we're starting for first time
+	if (poopThread == null)
+	{
+	    poopThread = new PoopThread();
+	    poopThread.start();
+	}
+	else
+	{
+	    if (!poopThread.isAlive())
+	    {
+		poopThread = new PoopThread();
+		poopThread.start();
+	    }
+	}
+	
+	if (tamaThread == null)
+	{
+	    tamaThread = new TamaThread();
+	    tamaThread.start();
+	}
+	else
+	{
+	    if (!tamaThread.isAlive())
+	    {
+		tamaThread = new TamaThread();
+		tamaThread.start();
+	    }
+	}
+
+	thread = new GameLoopThread(getHolder(), this);
 	thread.setRunning(true);
 	thread.start();
-	poopThread.start();
-	tamaThread.start();
     }
 
     public void surfaceDestroyed(SurfaceHolder holder)
     {
-	Toast.makeText(this.context, tama.toString(), Toast.LENGTH_SHORT).show();
+	// Toast.makeText(this.context, tama.toString(), Toast.LENGTH_SHORT).show();
 	Log.d(TAG, "Surface is being destroyed");
 	try
 	{
 	    thread.setRunning(false);
-	    poopThread.setRunning(false);
+	    // poopThread.setRunning(false);
 	    tamaThread.setRunning(false);
 	} catch (Exception e)
 	{
@@ -439,9 +464,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		{
 		    Thread.sleep(5000l);
 		    ipo.add(makePoop());
+		    
 		} catch (Exception e)
 		{
-
+		    e.printStackTrace();
 		}
 	    }
 	    Log.d(TAG, "Poop thread ended.");
