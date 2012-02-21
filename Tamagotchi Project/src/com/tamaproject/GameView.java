@@ -179,7 +179,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	try
 	{
 	    thread.setRunning(false);
-	    // poopThread.setRunning(false);
+	    poopThread.setRunning(false);
 	    tamaThread.setRunning(false);
 	} catch (Exception e)
 	{
@@ -517,6 +517,36 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
 	    Log.d(TAG, "Tama thread ended.");
 	}
+    }
+
+    public Backpack getBp()
+    {
+        return bp;
+    }
+
+    public Tamagotchi getTama()
+    {
+        return tama;
+    }
+
+    public InPlayObjects getIpo()
+    {
+        return ipo;
+    }
+
+    public void setBp(Backpack bp)
+    {
+        this.bp = bp;
+    }
+
+    public void setTama(Tamagotchi tama)
+    {
+        this.tama = tama;
+    }
+
+    public void setIpo(InPlayObjects ipo)
+    {
+        this.ipo = ipo;
     }
 
 }
