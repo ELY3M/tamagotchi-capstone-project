@@ -41,7 +41,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private PoopThread poopThread;
     private TamaThread tamaThread;
 
-    private int startX = 50, startY = 50;
     private Context context = null;
     public final String PREFS_NAME = "GRAPHICS";
     private SharedPreferences settings;
@@ -75,9 +74,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	this.context = context;
 
 	settings = context.getSharedPreferences(PREFS_NAME, 0);
-
-	// load last location of tama
-	LoadPreferences();
 
 	// initialize the height, width, display variables
 	initDisplay();
@@ -431,26 +427,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	bitmapTable.put(R.drawable.ic_launcher, BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
 	// bitmapTable.put(R.drawable.background, BitmapFactory.decodeResource(getResources(), R.drawable.background));
     }
-
-    private void SavePreferences(String key, String value)
-    {
-	SharedPreferences.Editor editor = settings.edit();
-	editor.putString(key, value);
-	editor.commit();
-    }
-
-    private void LoadPreferences()
-    {
-	try
-	{
-	    this.startX = Integer.parseInt(settings.getString("x", ""));
-	    this.startY = Integer.parseInt(settings.getString("y", ""));
-	} catch (Exception e)
-	{
-	    e.printStackTrace();
-	}
-    }
-
+    
     public class PoopThread extends Thread
     {
 	private boolean active = true;
