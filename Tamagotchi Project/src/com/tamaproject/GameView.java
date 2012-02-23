@@ -64,6 +64,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private PopupWindow popUp;
     private LinearLayout layout;
 
+    private boolean pooping = true;
+
     public GameView(Context context)
     {
 	super(context);
@@ -126,42 +128,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
     {
+	Log.d(TAG, "Surface changed...");
     }
 
     public void surfaceCreated(SurfaceHolder holder)
     {
+	Log.d(TAG, "Surface created...");
 	// at this point the surface is created and
 	// we can safely start the game loop
 	// create the game loop thread
-	
+
 	// check if the game was minimized or we're starting for first time
-	if (poopThread == null)
+	if (pooping)
 	{
 	    poopThread = new PoopThread();
 	    poopThread.start();
 	}
-	else
-	{
-	    if (!poopThread.isAlive())
-	    {
-		poopThread = new PoopThread();
-		poopThread.start();
-	    }
-	}
-	
-	if (tamaThread == null)
-	{
-	    tamaThread = new TamaThread();
-	    tamaThread.start();
-	}
-	else
-	{
-	    if (!tamaThread.isAlive())
-	    {
-		tamaThread = new TamaThread();
-		tamaThread.start();
-	    }
-	}
+
+	tamaThread = new TamaThread();
+	tamaThread.start();
 
 	thread = new GameLoopThread(getHolder(), this);
 	thread.setRunning(true);
@@ -171,7 +156,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceDestroyed(SurfaceHolder holder)
     {
 	// Toast.makeText(this.context, tama.toString(), Toast.LENGTH_SHORT).show();
-	Log.d(TAG, "Surface is being destroyed");
+	Log.d(TAG, "Surface is being destroyed...");
 	try
 	{
 	    thread.setRunning(false);
@@ -199,7 +184,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		if (!bp.isBackpackOpen())
 		{
 		    // tama.handleActionDown(ex, ey);
-		    ipo.handleActionDown(ex, ey);
+		    if (!ipo.handleActionDown(ex, ey))
+		    {
+			tama.handleActionDown(ex, ey);
+		    }
 		}
 	    }
 
@@ -236,14 +224,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		bp.refreshItems();
 	    }
 
-	    if (GameObjectUtil.isTouching(temp, tama))
-	    {
-		tama.setBitmap(bitmapTable.get(R.drawable.kuro));
-	    }
-	    else
-	    {
-		tama.setBitmap(bitmapTable.get(R.drawable.tama));
-	    }
+	    /*
+	     * if (GameObjectUtil.isTouching(temp, tama)) { tama.setBitmap(bitmapTable.get(R.drawable.kuro)); } else { tama.setBitmap(bitmapTable.get(R.drawable.tama)); }
+	     */
 
 	}
 	if (event.getAction() == MotionEvent.ACTION_UP)
@@ -267,6 +250,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    else
 	    {
 		ipo.handleActionUp();
+		if (tama.handleActionUp())
+		{
+		    if (!tama.isMoved())
+		    {
+			Log.d(TAG, "Starting voice recognition activity...");
+			GameActivity ga = (GameActivity) context;
+			ga.startVoiceRecognitionActivity();
+		    }
+
+		}
 	    }
 
 	    bp.refreshItems();
@@ -336,7 +329,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	if (tama != null && item != null)
 	{
-	    tama.setBitmap(bitmapTable.get(R.drawable.tama));
+	    //tama.setBitmap(bitmapTable.get(R.drawable.tama));
 	    if (GameObjectUtil.isTouching(tama, item))
 	    {
 		tama.applyItem(item);
@@ -427,7 +420,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	bitmapTable.put(R.drawable.ic_launcher, BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
 	// bitmapTable.put(R.drawable.background, BitmapFactory.decodeResource(getResources(), R.drawable.background));
     }
-    
+
     public class PoopThread extends Thread
     {
 	private boolean active = true;
@@ -441,7 +434,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		{
 		    Thread.sleep(5000l);
 		    ipo.add(makePoop());
-		    
+
 		} catch (Exception e)
 		{
 		    e.printStackTrace();
@@ -498,32 +491,57 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     public Backpack getBp()
     {
-        return bp;
+	return bp;
     }
 
     public Tamagotchi getTama()
     {
-        return tama;
+	return tama;
     }
 
     public InPlayObjects getIpo()
     {
-        return ipo;
+	return ipo;
     }
 
     public void setBp(Backpack bp)
     {
-        this.bp = bp;
+	this.bp = bp;
     }
 
     public void setTama(Tamagotchi tama)
     {
-        this.tama = tama;
+	this.tama = tama;
     }
 
     public void setIpo(InPlayObjects ipo)
     {
-        this.ipo = ipo;
+	this.ipo = ipo;
+    }
+
+    public void onVoiceCommand(ArrayList<String> matches)
+    {
+	Log.d(TAG, matches.toString());
+	if (matches.contains("transform"))
+	{
+	    if (tama != null)
+	    {
+		tama.setBitmap(bitmapTable.get(R.drawable.kuro));
+	    }
+	}
+	else if (matches.contains("go back"))
+	{
+	    if (tama != null)
+	    {
+		tama.setBitmap(bitmapTable.get(R.drawable.tama));
+	    }
+	}
+	else if (matches.contains("stop pooping"))
+	{
+	    Toast.makeText(this.context, "OK, fine.", Toast.LENGTH_SHORT).show();
+	    poopThread.setRunning(false);
+	    pooping = false;
+	}
     }
 
 }

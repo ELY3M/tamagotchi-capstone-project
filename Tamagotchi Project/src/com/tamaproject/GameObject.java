@@ -85,8 +85,6 @@ public class GameObject
 
     public boolean handleActionDown(int eventX, int eventY)
     {
-	if (locked)
-	    return false;
 	this.moved = false;
 
 	if (eventX >= (x - bitmap.getWidth() / 2) && (eventX <= (x + bitmap.getWidth() / 2)))
@@ -126,8 +124,6 @@ public class GameObject
 
     public boolean handleActionUp()
     {
-	if (locked)
-	    return false;
 	if (isTouched())
 	{
 	    this.setTouched(false);
