@@ -433,6 +433,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		try
 		{
 		    Thread.sleep(5000l);
+		    if(!active)
+			break;
 		    ipo.add(makePoop());
 
 		} catch (Exception e)
