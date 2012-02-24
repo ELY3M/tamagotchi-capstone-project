@@ -29,6 +29,7 @@ public class GameActivity extends Activity
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
     private LocationManager mlocManager;
     private LocationListener mlocListener;
+    private long lastWeatherRetrieve = 0;
 
     public void onCreate(Bundle savedInstanceState)
     {
@@ -38,40 +39,28 @@ public class GameActivity extends Activity
 	// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 	gv = new GameView(this);
 	setContentView(gv);
+	startGPS();
+    }
 
-	// if there is internet start gps location, otherwise wait 5 seconds
-	Thread gpsThread = new Thread()
-	{
-	    public void run()
+    private void startGPS()
+    {
+	Log.d(TAG, "Starting GPS...");
+	mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+	mlocListener = new MyLocationListener();
+	mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
+    }
+
+    private void stopGPS()
+    {
+	Log.d(TAG, "Stopping GPS...");
+	if (mlocManager != null)
+	    try
 	    {
-		Log.d(TAG, "Starting gpsThread...");
-		Looper.prepare();
-
-		while (true)
-		{
-		    if (isNetworkAvailable())
-		    {
-			// start gps listener
-			mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-			mlocListener = new MyLocationListener();
-			mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 20000, mlocListener);
-			break;
-		    }
-		    else
-		    {
-			try
-			{
-			    Thread.sleep(5000l);
-			} catch (InterruptedException e)
-			{
-			    e.printStackTrace();
-			}
-		    }
-		}
+		mlocManager.removeUpdates(mlocListener);
+	    } catch (Exception e)
+	    {
+		e.printStackTrace();
 	    }
-	};
-	gpsThread.start();
-
     }
 
     @Override
@@ -80,8 +69,7 @@ public class GameActivity extends Activity
 	Log.d(TAG, "Destroying...");
 	Toast.makeText(this, "Closing game...", Toast.LENGTH_SHORT).show();
 	// stop gps listener
-	if (mlocManager != null)
-	    mlocManager.removeUpdates(mlocListener);
+	stopGPS();
 	super.onDestroy();
     }
 
@@ -90,7 +78,6 @@ public class GameActivity extends Activity
     {
 	Log.d(TAG, "Stopping...");
 	super.onStop();
-	// finish();
     }
 
     protected void onRestart()
@@ -103,14 +90,12 @@ public class GameActivity extends Activity
     {
 	Log.d(TAG, "Pausing...");
 	super.onPause();
-	// Toast.makeText(this, "Pausing game...", Toast.LENGTH_SHORT).show();
     }
 
     protected void onResume() // called when user returns to activity from onPause()
     {
 	super.onResume();
 	Log.d(TAG, "Resuming...");
-	// Toast.makeText(this, "Resuming game...", Toast.LENGTH_SHORT).show();
 	setContentView(gv);
     }
 
@@ -206,6 +191,8 @@ public class GameActivity extends Activity
 	    if (cc != null)
 	    {
 		Toast.makeText(getApplicationContext(), cc.toString(), Toast.LENGTH_SHORT).show();
+		stopGPS();
+		lastWeatherRetrieve = System.currentTimeMillis();
 		Log.d(TAG, cc.toString());
 	    }
 	}
