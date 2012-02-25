@@ -8,6 +8,7 @@ public class GameObject
 {
 
     private Bitmap bitmap; // the actual bitmap
+    private String bitmapFileLocation;
     private int x; // the X coordinate
     private int y; // the Y coordinate
     private boolean touched;

@@ -40,28 +40,7 @@ public class GameActivity extends Activity
 	gv = new GameView(this);
 	setContentView(gv);
 	startGPS();
-    }
-
-    private void startGPS()
-    {
-	Log.d(TAG, "Starting GPS...");
-	mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-	mlocListener = new MyLocationListener();
-	mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
-    }
-
-    private void stopGPS()
-    {
-	Log.d(TAG, "Stopping GPS...");
-	if (mlocManager != null)
-	    try
-	    {
-		mlocManager.removeUpdates(mlocListener);
-	    } catch (Exception e)
-	    {
-		e.printStackTrace();
-	    }
-    }
+    }   
 
     @Override
     protected void onDestroy() // called when back button pressed
@@ -99,6 +78,9 @@ public class GameActivity extends Activity
 	setContentView(gv);
     }
 
+    /**
+     * Confirmation dialog settings
+     */
     @Override
     protected Dialog onCreateDialog(int id)
     {
@@ -212,7 +194,39 @@ public class GameActivity extends Activity
 
 	}
     }
+    
+    private void startGPS()
+    {
+	Log.d(TAG, "Starting GPS...");
+	if (isNetworkAvailable())
+	{
+	    mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+	    mlocListener = new MyLocationListener();
+	    mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
+	}
+	else
+	{
+	    Log.d(TAG, "Internet connection not available, not starting GPS.");
+	}
+    }
 
+    private void stopGPS()
+    {
+	Log.d(TAG, "Stopping GPS...");
+	if (mlocManager != null)
+	    try
+	    {
+		mlocManager.removeUpdates(mlocListener);
+	    } catch (Exception e)
+	    {
+		e.printStackTrace();
+	    }
+    }
+
+    /**
+     * Checks to see if Android is connected to the internet
+     * @return
+     */
     private boolean isNetworkAvailable()
     {
 	ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);

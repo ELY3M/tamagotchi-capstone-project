@@ -117,4 +117,14 @@ public class InPlayObjects
         return poopCount;
     }
 
+    public ArrayList<GameObject> getIpo()
+    {
+        return ipo;
+    }
+
+    public void setIpo(ArrayList<GameObject> ipo)
+    {
+        this.ipo = ipo;
+    }
+
 }

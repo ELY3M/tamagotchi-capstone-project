@@ -1,5 +1,6 @@
 package com.tamaproject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Random;
@@ -9,6 +10,7 @@ import com.tamaproject.util.GameObjectUtil;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -45,7 +47,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     public final String PREFS_NAME = "GRAPHICS";
     private SharedPreferences settings;
 
-    private Hashtable<Integer, Bitmap> bitmapTable = new Hashtable<Integer, Bitmap>();
+    private Hashtable<String, Bitmap> bitmapTable = new Hashtable<String, Bitmap>();
 
     private Display display = null;
     private int height = -1, width = -1;
@@ -86,17 +88,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	// create dummy items
 
 	ArrayList<Item> items = new ArrayList<Item>();
-	items.add(new Item(bitmapTable.get(R.drawable.ic_launcher), "Health item", 7, 0, 0, 0));
-	items.add(new Item(bitmapTable.get(R.drawable.ic_launcher), "Food item", 7, -20, 0, 0));
-	items.add(new Item(bitmapTable.get(R.drawable.ic_launcher), "XP item", 0, 0, 0, 1000));
+	items.add(new Item(bitmapTable.get("ic_launcher"), "Health item", 7, 0, 0, 0));
+	items.add(new Item(bitmapTable.get("ic_launcher"), "Food item", 7, -20, 0, 0));
+	items.add(new Item(bitmapTable.get("ic_launcher"), "XP item", 0, 0, 0, 1000));
 	for (int i = 1; i <= 15; i++)
 	{
-	    items.add(new Item(bitmapTable.get(R.drawable.treasure)));
+	    items.add(new Item(bitmapTable.get("treasure")));
 	}
 
 	bp = new Backpack(items, display, playBottomBound + 45);
 
-	tama = new Tamagotchi(bitmapTable.get(R.drawable.tama), width / 2, (playTopBound + playBottomBound) / 2);
+	tama = new Tamagotchi(bitmapTable.get("tama"), width / 2, (playTopBound + playBottomBound) / 2);
 	tama.setLocked(true);
 
 	ipo = new InPlayObjects();
@@ -225,7 +227,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    }
 
 	    /*
-	     * if (GameObjectUtil.isTouching(temp, tama)) { tama.setBitmap(bitmapTable.get(R.drawable.kuro)); } else { tama.setBitmap(bitmapTable.get(R.drawable.tama)); }
+	     * if (GameObjectUtil.isTouching(temp, tama)) { tama.setBitmap(bitmapTable.get(.kuro)); } else { tama.setBitmap(bitmapTable.get(.tama)); }
 	     */
 
 	}
@@ -319,7 +321,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	int ty = tama.getY() + cushion;
 	int x = r.nextInt(width);
 	int y = r.nextInt(playBottomBound - ty) + ty;
-	GameObject go = new GameObject(bitmapTable.get(R.drawable.poop), x, y);
+	GameObject go = new GameObject(bitmapTable.get("poop"), x, y);
 	go.setGroup("poop");
 	return go;
     }
@@ -329,7 +331,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	if (tama != null && item != null)
 	{
-	    //tama.setBitmap(bitmapTable.get(R.drawable.tama));
+	    // tama.setBitmap(bitmapTable.get(.tama));
 	    if (GameObjectUtil.isTouching(tama, item))
 	    {
 		tama.applyItem(item);
@@ -401,24 +403,32 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     private void initEnvironment()
     {
-	GameObject trash = new GameObject(bitmapTable.get(R.drawable.trash), playRightBound, playBottomBound);
+	GameObject trash = new GameObject(bitmapTable.get("trash"), playRightBound, playBottomBound);
 	trash.setGroup("trashcan");
 	trash.setLocked(true);
 	ipo.add(trash);
 
-	this.background = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.background), width, height, false);
+	this.background = Bitmap.createScaledBitmap(bitmapTable.get("background"), width, height, false);
     }
 
     // loads up the sprites and bitmaps
     private void initBitmaps()
     {
-	bitmapTable.put(R.drawable.kuro, BitmapFactory.decodeResource(getResources(), R.drawable.kuro));
-	bitmapTable.put(R.drawable.tama, BitmapFactory.decodeResource(getResources(), R.drawable.tama));
-	bitmapTable.put(R.drawable.treasure, BitmapFactory.decodeResource(getResources(), R.drawable.treasure));
-	bitmapTable.put(R.drawable.poop, BitmapFactory.decodeResource(getResources(), R.drawable.poop));
-	bitmapTable.put(R.drawable.trash, BitmapFactory.decodeResource(getResources(), R.drawable.trash));
-	bitmapTable.put(R.drawable.ic_launcher, BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
-	// bitmapTable.put(R.drawable.background, BitmapFactory.decodeResource(getResources(), R.drawable.background));
+	AssetManager assetManager = context.getAssets();
+	try
+	{
+	    bitmapTable.put("kuro", BitmapFactory.decodeStream(assetManager.open("game/kuro.png")));
+	    bitmapTable.put("ic_launcher", BitmapFactory.decodeStream(assetManager.open("game/ic_launcher.png")));
+	    bitmapTable.put("poop", BitmapFactory.decodeStream(assetManager.open("game/poop.png")));
+	    bitmapTable.put("tama", BitmapFactory.decodeStream(assetManager.open("game/tama.png")));
+	    bitmapTable.put("treasure", BitmapFactory.decodeStream(assetManager.open("game/treasure.png")));
+	    bitmapTable.put("trash", BitmapFactory.decodeStream(assetManager.open("game/trash.png")));
+	    bitmapTable.put("background", BitmapFactory.decodeStream(assetManager.open("weather/background.png")));
+	} catch (IOException e)
+	{
+	    e.printStackTrace();
+	}
+
     }
 
     public class PoopThread extends Thread
@@ -433,7 +443,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		try
 		{
 		    Thread.sleep(5000l);
-		    if(!active)
+		    if (!active)
 			break;
 		    ipo.add(makePoop());
 
@@ -528,14 +538,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	{
 	    if (tama != null)
 	    {
-		tama.setBitmap(bitmapTable.get(R.drawable.kuro));
+		tama.setBitmap(bitmapTable.get("kuro"));
 	    }
 	}
 	else if (matches.contains("go back"))
 	{
 	    if (tama != null)
 	    {
-		tama.setBitmap(bitmapTable.get(R.drawable.tama));
+		tama.setBitmap(bitmapTable.get("tama"));
 	    }
 	}
 	else if (matches.contains("stop pooping"))
