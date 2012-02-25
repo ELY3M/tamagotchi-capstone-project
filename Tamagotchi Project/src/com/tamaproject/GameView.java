@@ -7,7 +7,9 @@ import java.util.Random;
 
 import com.tamaproject.gameobjects.*;
 import com.tamaproject.util.GameObjectUtil;
+import com.tamaproject.weather.CurrentConditions;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
@@ -26,6 +28,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -44,8 +47,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private TamaThread tamaThread;
 
     private Context context = null;
-    public final String PREFS_NAME = "GRAPHICS";
-    private SharedPreferences settings;
 
     private Hashtable<String, Bitmap> bitmapTable = new Hashtable<String, Bitmap>();
 
@@ -67,6 +68,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private LinearLayout layout;
 
     private boolean pooping = true;
+    private CurrentConditions cc;
 
     public GameView(Context context)
     {
@@ -76,8 +78,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	handler = new Handler();
 
 	this.context = context;
-
-	settings = context.getSharedPreferences(PREFS_NAME, 0);
 
 	// initialize the height, width, display variables
 	initDisplay();
@@ -96,7 +96,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    items.add(new Item(bitmapTable.get("treasure")));
 	}
 
-	bp = new Backpack(items, display, playBottomBound + 45);
+	bp = new Backpack(items, width, height, playBottomBound + 45);
 
 	tama = new Tamagotchi(bitmapTable.get("tama"), width / 2, (playTopBound + playBottomBound) / 2);
 	tama.setLocked(true);
@@ -118,8 +118,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     {
 	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 	display = wm.getDefaultDisplay();
-	this.height = display.getHeight();
+	this.height = display.getHeight() - 20;
 	this.width = display.getWidth();
+	Log.d(TAG, "height: " + this.height + ", width: " + this.width);
 
 	this.playTopBound = height / 5;
 	this.playBottomBound = height / 3 * 2 - cushion;
@@ -393,6 +394,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	canvas.drawText("Battle Level: " + tama.getBattleLevel(), width / 2, (playTopBound - cushion) / 4 * 3, paint);
 	canvas.drawText("Age: " + tama.getAge(), textSize, (playTopBound - cushion) / 4 * 3, paint);
 
+	if (cc != null)
+	{
+	    canvas.drawText(cc.getCondition(), textSize, playTopBound + cushion, paint);
+	}
     }
 
     protected void initInterface()
@@ -554,6 +559,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    poopThread.setRunning(false);
 	    pooping = false;
 	}
+    }
+
+    public void updateWeather(CurrentConditions cc)
+    {
+	this.cc = cc;
     }
 
 }

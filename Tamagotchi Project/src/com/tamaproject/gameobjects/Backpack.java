@@ -21,7 +21,6 @@ public class Backpack
     private ArrayList<Item> items;
     private final int MAX_SIZE = 30; // max number of items backpack can hold
     private final int DISP_ITEMS = 10; // number of items to display on main screen
-    private Display display;
     private boolean backpackOpen = false;
     private Rect bpRectangle;
     private Paint paint = new Paint();
@@ -30,17 +29,17 @@ public class Backpack
     private final int OFFSET = 15;
     private Rect fullBPRectangle;
     private final int openSquareSize;
+    private final int width, height;
 
-    public Backpack(ArrayList<Item> items, Display display, int top)
+    public Backpack(ArrayList<Item> items, int width, int height, int top)
     {
+	this.width = width;
+	this.height = height;
 	this.items = items;
-	this.display = display;
 	this.top = top;
 	this.itemTopBound = top;
-	int width = display.getWidth();
-	int height = display.getHeight();
 	this.bpRectangle = new Rect(1, top, width - 1, height - 1);
-	this.openSquareSize = width / 20;
+	this.openSquareSize = width / 15;
 	this.fullBPRectangle = new Rect(width - openSquareSize, height - openSquareSize, width, height);
 	refreshItems();
     }
@@ -122,8 +121,6 @@ public class Backpack
 
     public void refreshItems()
     {
-	int height = display.getHeight();
-	int width = display.getWidth();
 	int SPACING = width / 6; // this centers the items
 	int c = 0;
 
@@ -155,8 +152,6 @@ public class Backpack
 
     public void refreshItemsAll()
     {
-	int height = display.getHeight();
-	int width = display.getWidth();
 	int SPACING = width / 6; // this centers the items
 	int d = MAX_SIZE / 5 + 1;
 

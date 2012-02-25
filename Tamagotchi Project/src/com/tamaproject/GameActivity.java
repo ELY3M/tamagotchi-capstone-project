@@ -11,14 +11,13 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.location.*;
 import android.net.*;
 import android.os.Bundle;
-import android.os.Looper;
 import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 public class GameActivity extends Activity
@@ -39,8 +38,8 @@ public class GameActivity extends Activity
 	// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 	gv = new GameView(this);
 	setContentView(gv);
-	startGPS();
-    }   
+	// startGPS();
+    }
 
     @Override
     protected void onDestroy() // called when back button pressed
@@ -69,12 +68,17 @@ public class GameActivity extends Activity
     {
 	Log.d(TAG, "Pausing...");
 	super.onPause();
+	stopGPS();
     }
 
     protected void onResume() // called when user returns to activity from onPause()
     {
 	super.onResume();
 	Log.d(TAG, "Resuming...");
+	if (System.currentTimeMillis() - lastWeatherRetrieve > (1000 * 60 * 60 * 3))
+	{
+	    startGPS();
+	}
 	setContentView(gv);
     }
 
@@ -165,16 +169,20 @@ public class GameActivity extends Activity
 	{
 	    double lat = loc.getLatitude();
 	    double lon = loc.getLongitude();
-	    String Text = "My current location is: " + "Latitude = " + loc.getLatitude() + "\nLongitude = " + loc.getLongitude();
+	    String Text = "My current location is: " + "Latitude = " + loc.getLatitude() + ", Longitude = " + loc.getLongitude();
 	    // Toast.makeText(getApplicationContext(), Text, Toast.LENGTH_SHORT).show();
 	    Log.d(TAG, Text);
 
 	    CurrentConditions cc = WeatherRetriever.getCurrentConditions(lat, lon);
 	    if (cc != null)
 	    {
-		Toast.makeText(getApplicationContext(), cc.toString(), Toast.LENGTH_SHORT).show();
+		// Toast.makeText(getApplicationContext(), cc.toString(), Toast.LENGTH_SHORT).show();
 		stopGPS();
 		lastWeatherRetrieve = System.currentTimeMillis();
+		if (gv != null)
+		{
+		    gv.updateWeather(cc);
+		}
 		Log.d(TAG, cc.toString());
 	    }
 	}
@@ -194,7 +202,7 @@ public class GameActivity extends Activity
 
 	}
     }
-    
+
     private void startGPS()
     {
 	Log.d(TAG, "Starting GPS...");
@@ -225,7 +233,8 @@ public class GameActivity extends Activity
 
     /**
      * Checks to see if Android is connected to the internet
-     * @return
+     * 
+     * @return if connected
      */
     private boolean isNetworkAvailable()
     {
