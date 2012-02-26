@@ -1,5 +1,10 @@
 package com.tamaproject.weather;
 
+/**
+ * Holds the current weather information gotten from Google
+ * @author Jonathan
+ *
+ */
 public class CurrentConditions
 {
     private String condition;

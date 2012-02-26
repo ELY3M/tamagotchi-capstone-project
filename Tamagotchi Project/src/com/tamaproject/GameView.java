@@ -48,20 +48,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     private Context context = null;
 
+    // hash table that holds all of the loaded bitmaps
     private Hashtable<String, Bitmap> bitmapTable = new Hashtable<String, Bitmap>();
 
     private Display display = null;
     private int height = -1, width = -1;
 
+    // bounds for the play area
     private int playTopBound, playBottomBound, playLeftBound, playRightBound, cushion;
 
     private Backpack bp; // backpack with items
     protected Tamagotchi tama; // our tamagotchi
-    protected InPlayObjects ipo;
+    protected InPlayObjects ipo; // objects in the play area
+    protected GameObject mic;
 
     private Random r = new Random();
 
     protected Handler handler;
+    private AssetManager assetManager;
 
     private Bitmap background;
     private PopupWindow popUp;
@@ -70,14 +74,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     private boolean pooping = true;
     private CurrentConditions cc;
 
+    private Paint paint = new Paint();
+    private Rect topRectangle;
+    private int textSize = 20;
+
     public GameView(Context context)
     {
 	super(context);
+
 	// adding the callback (this) to the surface holder to intercept events
 	getHolder().addCallback(this);
-	handler = new Handler();
-
+	this.handler = new Handler();
 	this.context = context;
+	this.assetManager = context.getAssets();
 
 	// initialize the height, width, display variables
 	initDisplay();
@@ -86,7 +95,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	initBitmaps();
 
 	// create dummy items
-
 	ArrayList<Item> items = new ArrayList<Item>();
 	items.add(new Item(bitmapTable.get("ic_launcher"), "Health item", 7, 0, 0, 0));
 	items.add(new Item(bitmapTable.get("ic_launcher"), "Food item", 7, -20, 0, 0));
@@ -96,11 +104,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    items.add(new Item(bitmapTable.get("treasure")));
 	}
 
+	// create backpack
 	bp = new Backpack(items, width, height, playBottomBound + 45);
 
-	tama = new Tamagotchi(bitmapTable.get("tama"), width / 2, (playTopBound + playBottomBound) / 2);
+	// create tamagotchi
+	// tama = new Tamagotchi(bitmapTable.get("tama"), width / 2, (playTopBound + playBottomBound) / 2);
+	tama = new Tamagotchi("game/tama.png", assetManager, width / 2, (playTopBound + playBottomBound) / 2);
 	tama.setLocked(true);
 
+	// create the objects that are in the play area
 	ipo = new InPlayObjects();
 
 	initPoop(tama.getPoop());
@@ -113,7 +125,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	setFocusable(true);
     }
 
-    // gets the width and height of the screen
+    /**
+     * Gets the width and height of the screen and sets the play bounds
+     */
     public void initDisplay()
     {
 	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -172,24 +186,32 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	Log.d(TAG, "Thread was shut down cleanly");
     }
 
+    /**
+     * Runs whenever the user touches the screen
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
 	int ex = (int) event.getX();
 	int ey = (int) event.getY();
 
+	/**
+	 * Executes when the user touches the screen for the first time
+	 */
 	if (event.getAction() == MotionEvent.ACTION_DOWN)
 	{
 	    Log.d(TAG, "Coords: x=" + event.getX() + ",y=" + event.getY());
 
-	    if (!bp.handleActionDown(ex, ey))
+	    if (!mic.handleActionDown(ex, ey))
 	    {
-		if (!bp.isBackpackOpen())
+		if (!bp.handleActionDown(ex, ey))
 		{
-		    // tama.handleActionDown(ex, ey);
-		    if (!ipo.handleActionDown(ex, ey))
+		    if (!bp.isBackpackOpen())
 		    {
-			tama.handleActionDown(ex, ey);
+			if (!ipo.handleActionDown(ex, ey))
+			{
+			    tama.handleActionDown(ex, ey);
+			}
 		    }
 		}
 	    }
@@ -208,6 +230,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		}
 	    }
 	}
+
+	/**
+	 * Executes when the user starts dragging their finger across screen
+	 */
 	if (event.getAction() == MotionEvent.ACTION_MOVE)
 	{
 	    // the tama was picked up and is being dragged
@@ -226,12 +252,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 		}
 		bp.refreshItems();
 	    }
-
-	    /*
-	     * if (GameObjectUtil.isTouching(temp, tama)) { tama.setBitmap(bitmapTable.get(.kuro)); } else { tama.setBitmap(bitmapTable.get(.tama)); }
-	     */
-
 	}
+
+	/**
+	 * Executes when user lifts their finger up from the screen
+	 */
 	if (event.getAction() == MotionEvent.ACTION_UP)
 	{
 	    // tama.handleActionUp();
@@ -252,16 +277,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    }
 	    else
 	    {
-		ipo.handleActionUp();
-		if (tama.handleActionUp())
+		GameObject tempIpo = ipo.handleActionUp();
+		if (mic.handleActionUp())
 		{
-		    if (!tama.isMoved())
-		    {
-			Log.d(TAG, "Starting voice recognition activity...");
-			GameActivity ga = (GameActivity) context;
-			ga.startVoiceRecognitionActivity();
-		    }
-
+		    Log.d(TAG, "Starting voice recognition activity...");
+		    GameActivity ga = (GameActivity) context;
+		    ga.startVoiceRecognitionActivity();
 		}
 	    }
 
@@ -270,6 +291,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	return true;
     }
 
+    /**
+     * Generates the pop up that shows the item description
+     * 
+     * @param i
+     *            - the item that was selected
+     */
     private void showItemDescription(Item i)
     {
 	popUp = new PopupWindow(context);
@@ -303,6 +330,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	popUp.setFocusable(true);
     }
 
+    /**
+     * Generates a number of poop objects
+     * 
+     * @param numPoop
+     */
     private void initPoop(int numPoop)
     {
 	int count = 1;
@@ -317,6 +349,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	}
     }
 
+    /**
+     * Creates a poop GameObject
+     * 
+     * @return
+     */
     protected GameObject makePoop()
     {
 	int ty = tama.getY() + cushion;
@@ -327,7 +364,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	return go;
     }
 
-    // this method is to demonstrate collisions
+    /**
+     * Gives item to tamagotchi if they are touching
+     * 
+     * @param tama
+     * @param item
+     * @return true if item was given to tama, false if not
+     */
     protected boolean giveItem(Tamagotchi tama, Item item)
     {
 	if (tama != null && item != null)
@@ -345,6 +388,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	return false;
     }
 
+    /**
+     * Draws objects on the screen
+     */
     @Override
     protected void onDraw(Canvas canvas)
     {
@@ -358,19 +404,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	    else
 	    {
 		canvas.drawBitmap(background, 0, 0, null);
+		drawInterface(canvas);
 		tama.draw(canvas);
 		ipo.draw(canvas);
 		bp.draw(canvas);
-		drawInterface(canvas);
 	    }
 	}
     }
 
-    private Paint paint = new Paint();
-    private Rect topRectangle;
-    private Rect cHealthBar, mHealthBar;
-    private int textSize = 20;
-
+    /**
+     * Draws the interface on to the screen
+     * 
+     * @param canvas
+     */
     protected void drawInterface(Canvas canvas)
     {
 	// draw the rectangle around backpack
@@ -398,14 +444,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	{
 	    canvas.drawText(cc.getCondition(), textSize, playTopBound + cushion, paint);
 	}
+
+	mic.draw(canvas);
     }
 
+    /**
+     * Creates the black rectangle at the top of the screen for interface
+     */
     protected void initInterface()
     {
-	// this.bpRectangle = new Rect(1, playBottomBound + cushion, width - 1, height - 1);
 	this.topRectangle = new Rect(1, 1, width - 1, playTopBound - cushion);
+	this.mic = new GameObject("mic.png", assetManager, width - 25, 50);
+	this.mic.setLocked(true);
+	this.mic.setGroup("microphone");
     }
 
+    /**
+     * Creates the objects in the environment and sets the background image
+     */
     private void initEnvironment()
     {
 	GameObject trash = new GameObject(bitmapTable.get("trash"), playRightBound, playBottomBound);
@@ -414,12 +470,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	ipo.add(trash);
 
 	this.background = Bitmap.createScaledBitmap(bitmapTable.get("background"), width, height, false);
+
     }
 
-    // loads up the sprites and bitmaps
+    /**
+     * Loads the bitmaps from the assets
+     */
     private void initBitmaps()
     {
-	AssetManager assetManager = context.getAssets();
 	try
 	{
 	    bitmapTable.put("kuro", BitmapFactory.decodeStream(assetManager.open("game/kuro.png")));
@@ -436,6 +494,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 
     }
 
+    /**
+     * Thread that determines when poop is made
+     */
     public class PoopThread extends Thread
     {
 	private boolean active = true;
@@ -466,6 +527,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	}
     }
 
+    /**
+     * Thread that determines when tama is dead
+     * 
+     * @author Jonathan
+     * 
+     */
     public class TamaThread extends Thread
     {
 	private boolean active = true;
@@ -536,6 +603,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	this.ipo = ipo;
     }
 
+    /**
+     * Interprets the voice command
+     * 
+     * @param matches
+     *            - a list of possible matches to the voice command
+     */
     public void onVoiceCommand(ArrayList<String> matches)
     {
 	Log.d(TAG, matches.toString());
@@ -561,6 +634,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
 	}
     }
 
+    /**
+     * Sets the CurrentConditions variable Used by GameActivity to update the weather when the gps locks on
+     * 
+     * @param cc
+     *            - CurrentConditions object from GameActivity
+     */
     public void updateWeather(CurrentConditions cc)
     {
 	this.cc = cc;

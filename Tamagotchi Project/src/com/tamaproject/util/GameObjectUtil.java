@@ -4,6 +4,12 @@ import com.tamaproject.GameObject;
 
 public class GameObjectUtil
 {
+    /**
+     * Returns true if two GameObjects are touching, false if they are not
+     * @param a
+     * @param b
+     * @return
+     */
     public static boolean isTouching(GameObject a, GameObject b)
     {
 	if (a != null & b != null)

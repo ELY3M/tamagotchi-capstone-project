@@ -1,6 +1,8 @@
 package com.tamaproject;
 
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.view.MotionEvent;
 
@@ -12,13 +14,21 @@ public class GameObject
     private int x; // the X coordinate
     private int y; // the Y coordinate
     private boolean touched;
-    private boolean moved;
-    private String group = null;
-    private boolean locked = false;
+    protected boolean moved;
+    private String group = "";
+    protected boolean locked = false;
 
     public GameObject(Bitmap bitmap, int x, int y)
     {
 	this.bitmap = bitmap;
+	this.x = x;
+	this.y = y;
+    }
+
+    public GameObject(String bitmapFileLocation, AssetManager assetManager, int x, int y)
+    {
+	this.bitmapFileLocation = bitmapFileLocation;
+	this.bitmap = loadBitmap(bitmapFileLocation, assetManager);
 	this.x = x;
 	this.y = y;
     }
@@ -87,7 +97,7 @@ public class GameObject
     public boolean handleActionDown(int eventX, int eventY)
     {
 	this.moved = false;
-
+	
 	if (eventX >= (x - bitmap.getWidth() / 2) && (eventX <= (x + bitmap.getWidth() / 2)))
 	{
 	    if (eventY >= (y - bitmap.getHeight() / 2) && (eventY <= (y + bitmap.getHeight() / 2)))
@@ -157,6 +167,17 @@ public class GameObject
     public void setLocked(boolean locked)
     {
 	this.locked = locked;
+    }
+
+    public Bitmap loadBitmap(String bitmapFileLocation, AssetManager assetManager)
+    {
+	try
+	{
+	    return BitmapFactory.decodeStream(assetManager.open(bitmapFileLocation));
+	} catch (Exception e)
+	{
+	    return null;
+	}
     }
 
 }

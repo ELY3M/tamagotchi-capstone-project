@@ -30,6 +30,9 @@ public class GameActivity extends Activity
     private LocationListener mlocListener;
     private long lastWeatherRetrieve = 0;
 
+    /**
+     * Called when Activity is first launched
+     */
     public void onCreate(Bundle savedInstanceState)
     {
 	Log.d(TAG, "Creating...");
@@ -41,6 +44,9 @@ public class GameActivity extends Activity
 	// startGPS();
     }
 
+    /**
+     * Last method called when Activity is closed
+     */
     @Override
     protected void onDestroy() // called when back button pressed
     {
@@ -51,27 +57,39 @@ public class GameActivity extends Activity
 	super.onDestroy();
     }
 
+    /**
+     * Called after onPause() and before onDestroy(). Called when the activity is no longer visible
+     */
     @Override
-    protected void onStop() // called when home button pressed, comes after onPause()
+    protected void onStop()
     {
 	Log.d(TAG, "Stopping...");
 	super.onStop();
     }
 
+    /**
+     * Called when user navigates to activity after onStop()
+     */
     protected void onRestart()
     {
 	Log.d(TAG, "Restarting...");
 	super.onRestart();
     }
 
-    protected void onPause() // called when the app is minimized because another activity comes into the foreground
+    /**
+     * Called when another activity comes into the foreground or when you press the home button
+     */
+    protected void onPause()
     {
 	Log.d(TAG, "Pausing...");
 	super.onPause();
 	stopGPS();
     }
 
-    protected void onResume() // called when user returns to activity from onPause()
+    /**
+     * Called when user returns to activity from onPause()
+     */
+    protected void onResume()
     {
 	super.onResume();
 	Log.d(TAG, "Resuming...");
@@ -120,18 +138,24 @@ public class GameActivity extends Activity
     }
 
     /**
-     * Voice recognition system
+     * Voice recognition system, starts the Activity that shows the voice prompt
      */
     public void startVoiceRecognitionActivity()
     {
 	if (isNetworkAvailable())
 	{
-	    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-	    // uses free form text input
-	    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-	    // Puts a customized message to the prompt
-	    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Command the Tama");
-	    startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+	    try
+	    {
+		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+		// uses free form text input
+		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+		// Puts a customized message to the prompt
+		intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Command the Tama");
+		startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+	    } catch (Exception e)
+	    {
+		Toast.makeText(this, "Error! Cannot start voice command", Toast.LENGTH_SHORT).show();
+	    }
 	}
 	else
 	{
@@ -203,6 +227,9 @@ public class GameActivity extends Activity
 	}
     }
 
+    /**
+     * Starts gps listener if connected to internet
+     */
     private void startGPS()
     {
 	Log.d(TAG, "Starting GPS...");
@@ -218,6 +245,9 @@ public class GameActivity extends Activity
 	}
     }
 
+    /**
+     * Stops gps listener if gps listener is active
+     */
     private void stopGPS()
     {
 	Log.d(TAG, "Stopping GPS...");
@@ -232,7 +262,7 @@ public class GameActivity extends Activity
     }
 
     /**
-     * Checks to see if Android is connected to the internet
+     * Checks to see if Android is connected to the internet *
      * 
      * @return if connected
      */

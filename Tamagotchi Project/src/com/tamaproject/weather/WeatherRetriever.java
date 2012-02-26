@@ -3,6 +3,11 @@ package com.tamaproject.weather;
 import com.tamaproject.*;
 import com.tamaproject.util.GoogleWeatherParser;
 
+/**
+ * Gets the current conditions from Google given a latitude and longitude
+ * @author Jonathan
+ *
+ */
 public class WeatherRetriever
 {
     private static final String XML_SOURCE = "http://www.google.com/ig/api?weather=,,,";

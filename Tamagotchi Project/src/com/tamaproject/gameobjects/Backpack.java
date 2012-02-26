@@ -82,6 +82,7 @@ public class Backpack
 
 	synchronized (items)
 	{
+	    refreshItems();
 	    for (Item item : items)
 	    {
 		if (!item.isLocked())
@@ -182,7 +183,7 @@ public class Backpack
 		// assume that only one item is touched at a time
 		if (item.handleActionDown(eventX, eventY))
 		{
-		    item.setLocked(false);
+		    //item.setLocked(false);
 		    return true;
 		}
 	    }

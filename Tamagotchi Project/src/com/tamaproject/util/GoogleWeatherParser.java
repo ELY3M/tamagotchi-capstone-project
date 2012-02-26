@@ -14,6 +14,11 @@ import org.xml.sax.SAXException;
 
 import com.tamaproject.weather.*;
 
+/**
+ * This class parses the XML that is retrieved from the Google Weather API into a CurrentConditions object
+ * @author Jonathan
+ *
+ */
 public class GoogleWeatherParser
 {
     private static Document dom;

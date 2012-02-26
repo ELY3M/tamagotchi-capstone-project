@@ -54,6 +54,8 @@ public class LoginActivity extends Activity
 		    // display the username and the password in string format
 		    SavePreferences(USERNAME, sUserName);
 		    SavePreferences(PASSWORD, sPassword);
+		    
+		    // if the username and password are valid, start the game
 		    if (checkLogin(sUserName, sPassword))
 			startGame();
 		}
@@ -63,12 +65,21 @@ public class LoginActivity extends Activity
 	); // end of launch.setOnclickListener
     }
 
+    /**
+     * This function checks the username and password
+     * @param username
+     * @param password
+     * @return
+     */
     private boolean checkLogin(String username, String password)
     {
 	Toast.makeText(LoginActivity.this, "Username: " + username + ", Password: " + password, Toast.LENGTH_SHORT).show();
 	return true;
     }
 
+    /**
+     * Starts the game activity
+     */
     private void startGame()
     {
 	Intent goToGame = new Intent(LoginActivity.this, GameActivity.class);
@@ -76,6 +87,11 @@ public class LoginActivity extends Activity
 	finish();
     }
 
+    /**
+     * Saves a value to a key for later use
+     * @param key
+     * @param value
+     */
     private void SavePreferences(String key, String value)
     {
 	SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
@@ -84,6 +100,9 @@ public class LoginActivity extends Activity
 	editor.commit();
     }
 
+    /**
+     * Loads the saved username and password into the fields
+     */
     private void LoadPreferences()
     {
 	SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);

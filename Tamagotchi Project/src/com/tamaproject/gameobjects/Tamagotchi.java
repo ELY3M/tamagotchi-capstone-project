@@ -1,5 +1,6 @@
 package com.tamaproject.gameobjects;
 
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 
 import com.tamaproject.GameObject;
@@ -20,6 +21,12 @@ public class Tamagotchi extends GameObject
     public Tamagotchi(Bitmap bitmap, int x, int y)
     {
 	super(bitmap, x, y);
+	setDefault();
+    }
+    
+    public Tamagotchi(String bitmapFileLocation, AssetManager assetManager, int x, int y)
+    {
+	super(bitmapFileLocation, assetManager, x, y);
 	setDefault();
     }
 
