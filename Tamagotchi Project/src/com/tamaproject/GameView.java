@@ -38,6 +38,11 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * GameView is the screen of the main game.  Interaction with the Tamagotchi is in this view.
+ * @author Jonathan
+ *
+ */
 public class GameView extends SurfaceView implements SurfaceHolder.Callback
 {
     private static final String TAG = GameView.class.getSimpleName();
@@ -334,6 +339,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
      * Generates a number of poop objects
      * 
      * @param numPoop
+     *            The number of poops to create
      */
     private void initPoop(int numPoop)
     {
@@ -352,14 +358,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
     /**
      * Creates a poop GameObject
      * 
-     * @return
+     * @return A "poop" GameObject
      */
     protected GameObject makePoop()
     {
 	int ty = tama.getY() + cushion;
 	int x = r.nextInt(width);
 	int y = r.nextInt(playBottomBound - ty) + ty;
-	GameObject go = new GameObject(bitmapTable.get("poop"), x, y);
+	GameObject go = new GameObject("game/poop.png", assetManager, x, y);
 	go.setGroup("poop");
 	return go;
     }
@@ -464,7 +470,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback
      */
     private void initEnvironment()
     {
-	GameObject trash = new GameObject(bitmapTable.get("trash"), playRightBound, playBottomBound);
+	GameObject trash = new GameObject("game/trash.png", assetManager, playRightBound, playBottomBound);
 	trash.setGroup("trashcan");
 	trash.setLocked(true);
 	ipo.add(trash);

@@ -23,13 +23,16 @@ public class Tamagotchi extends GameObject
 	super(bitmap, x, y);
 	setDefault();
     }
-    
+
     public Tamagotchi(String bitmapFileLocation, AssetManager assetManager, int x, int y)
     {
 	super(bitmapFileLocation, assetManager, x, y);
 	setDefault();
     }
 
+    /**
+     * For testing purposes.  Sets the Tamagotchi to a default state if none has been specified.
+     */
     private void setDefault()
     {
 	this.currentHealth = 100;
@@ -64,6 +67,11 @@ public class Tamagotchi extends GameObject
 	this.status = status;
     }
 
+    /**
+     * Applies an item to the Tamagotchi
+     * @param item
+     * @return true if item successfully applied, false if not
+     */
     public boolean applyItem(Item item)
     {
 	this.currentHealth += item.getHealth();
@@ -75,7 +83,9 @@ public class Tamagotchi extends GameObject
 	return true;
     }
 
-    // makes sure that the values are legit
+    /**
+     * Makes sure that the Tamagotchi's stats are legitimate.
+     */
     private void checkStats()
     {
 	if (this.currentHealth > this.maxHealth)
@@ -100,6 +110,11 @@ public class Tamagotchi extends GameObject
 	isDead();
     }
 
+    /**
+     * Checks to see if Tamagotchi is dead
+     * 
+     * @return true if dead, false if alive
+     */
     public boolean isDead()
     {
 	if (status == Tamagotchi.DEAD)
@@ -115,6 +130,11 @@ public class Tamagotchi extends GameObject
 	return false;
     }
 
+    /**
+     * Checks to see if Tamagotchi has gained a level
+     * 
+     * @return true if gained a level, false if not
+     */
     private boolean levelUp()
     {
 	boolean leveled = false;
@@ -136,6 +156,11 @@ public class Tamagotchi extends GameObject
 	return leveled;
     }
 
+    /**
+     * Gets the Tamagotchi's age by subtracting its birthday from the current time.
+     * 
+     * @return The tama's age in days.
+     */
     public int getAge()
     {
 	int age = (int) ((System.currentTimeMillis() - birthday) / (24L * 60 * 60 * 1000));

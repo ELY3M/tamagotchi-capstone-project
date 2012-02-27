@@ -6,6 +6,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.view.MotionEvent;
 
+/**
+ * This is a generic GameObject. It is an object that you can interact with in the game.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class GameObject
 {
 
@@ -18,6 +24,16 @@ public class GameObject
     private String group = "";
     protected boolean locked = false;
 
+    /**
+     * Constructor for GameObject
+     * 
+     * @param bitmap
+     *            The bitmap object.
+     * @param x
+     *            The x-position.
+     * @param y
+     *            The y-position.
+     */
     public GameObject(Bitmap bitmap, int x, int y)
     {
 	this.bitmap = bitmap;
@@ -25,6 +41,18 @@ public class GameObject
 	this.y = y;
     }
 
+    /**
+     * Constructor for GameObject
+     * 
+     * @param bitmapFileLocation
+     *            The location of the image file.
+     * @param assetManager
+     *            The asset manager used to retrieve the image file.
+     * @param x
+     *            The x-position for the GameObject.
+     * @param y
+     *            The y-position for the GameObject.
+     */
     public GameObject(String bitmapFileLocation, AssetManager assetManager, int x, int y)
     {
 	this.bitmapFileLocation = bitmapFileLocation;
@@ -94,10 +122,19 @@ public class GameObject
 	canvas.drawBitmap(bitmap, x - (bitmap.getWidth() / 2), y - (bitmap.getHeight() / 2), null);
     }
 
+    /**
+     * Handles when the GameObject is touched
+     * 
+     * @param eventX
+     *            The x-position of the input event.
+     * @param eventY
+     *            The y-position of the input event.
+     * @return true if the GameObject has been touched, false if not.
+     */
     public boolean handleActionDown(int eventX, int eventY)
     {
 	this.moved = false;
-	
+
 	if (eventX >= (x - bitmap.getWidth() / 2) && (eventX <= (x + bitmap.getWidth() / 2)))
 	{
 	    if (eventY >= (y - bitmap.getHeight() / 2) && (eventY <= (y + bitmap.getHeight() / 2)))
@@ -120,6 +157,15 @@ public class GameObject
 
     }
 
+    /**
+     * Handles when the GameObject is moved.
+     * 
+     * @param x
+     *            The x-position of input event.
+     * @param y
+     *            The y-position of input event.
+     * @return true if the GameObject was moved, false if not
+     */
     public boolean handleActionMove(int x, int y)
     {
 	if (locked)
@@ -133,6 +179,11 @@ public class GameObject
 	return false;
     }
 
+    /**
+     * Handles when the user lets go of GameObject
+     * 
+     * @return true if the GameObject was being touched and has been let go, false if GameObject wasn't being touched to begin with
+     */
     public boolean handleActionUp()
     {
 	if (isTouched())
@@ -169,6 +220,15 @@ public class GameObject
 	this.locked = locked;
     }
 
+    /**
+     * Loads the bitmap from the file location into the GameObject
+     * 
+     * @param bitmapFileLocation
+     *            Location of image file.
+     * @param assetManager
+     *            AssetManager that is used to get the image file from the assets.
+     * @return The Bitmap that was loaded, null if it could not be loaded.
+     */
     public Bitmap loadBitmap(String bitmapFileLocation, AssetManager assetManager)
     {
 	try

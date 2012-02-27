@@ -31,6 +31,18 @@ public class Backpack
     private final int openSquareSize;
     private final int width, height;
 
+    /**
+     * Constructor for Backpack
+     * 
+     * @param items
+     *            ArrayList of items to be put in backpack.
+     * @param width
+     *            Width of the screen.
+     * @param height
+     *            Height of the screen.
+     * @param top
+     *            The top border of the backpack for when it is drawn.
+     */
     public Backpack(ArrayList<Item> items, int width, int height, int top)
     {
 	this.width = width;
@@ -49,6 +61,12 @@ public class Backpack
 	return openSquareSize;
     }
 
+    /**
+     * Adds an item to the backpack.
+     * 
+     * @param item
+     * @return true if item was added, false if backpack is full and item not added
+     */
     public boolean addItem(Item item)
     {
 	synchronized (items)
@@ -66,6 +84,11 @@ public class Backpack
 	}
     }
 
+    /**
+     * Draws the first 10 items of backpack at the bottom of the main screen.
+     * 
+     * @param canvas
+     */
     public void draw(Canvas canvas)
     {
 	paint.setColor(Color.BLACK);
@@ -91,6 +114,11 @@ public class Backpack
 	}
     }
 
+    /**
+     * Draws all the items when backpack is opened
+     * 
+     * @param canvas
+     */
     public void drawAllItems(Canvas canvas)
     {
 	canvas.drawColor(Color.BLACK);
@@ -120,6 +148,9 @@ public class Backpack
 	return MAX_SIZE;
     }
 
+    /**
+     * Sets the items positions for when backpack is minimized
+     */
     public void refreshItems()
     {
 	int SPACING = width / 6; // this centers the items
@@ -151,6 +182,9 @@ public class Backpack
 	}
     }
 
+    /**
+     * Set the items positions for when backpack is maximized
+     */
     public void refreshItemsAll()
     {
 	int SPACING = width / 6; // this centers the items
@@ -183,7 +217,7 @@ public class Backpack
 		// assume that only one item is touched at a time
 		if (item.handleActionDown(eventX, eventY))
 		{
-		    //item.setLocked(false);
+		    // item.setLocked(false);
 		    return true;
 		}
 	    }
@@ -225,6 +259,12 @@ public class Backpack
 	return null;
     }
 
+    /**
+     * Removes an item from the backpack.
+     * 
+     * @param item
+     * @return true if successfully removed, false if not
+     */
     public boolean removeItem(Item item)
     {
 	synchronized (items)
