@@ -4,6 +4,14 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry kind="lib" path="gson-1.7.1.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andengine.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andengineaugmentedrealityextension.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andenginelivewallpaperextension.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andenginemodplayerextension.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andenginemultiplayerextension.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andenginemultitouchextension.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andenginephysicsbox2dextension.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andenginesvgtextureregionextension.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andenginetexturepackerextension.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

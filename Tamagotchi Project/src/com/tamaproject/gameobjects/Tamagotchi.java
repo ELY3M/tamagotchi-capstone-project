@@ -1,5 +1,7 @@
 package com.tamaproject.gameobjects;
 
+import java.util.ArrayList;
+
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 
@@ -15,6 +17,7 @@ public class Tamagotchi extends GameObject
     private int battleLevel;
     private int status;
     private long birthday;
+    private Item equippedItem;
 
     public final static int ALIVE = 1, DEAD = 0;
 
@@ -31,7 +34,7 @@ public class Tamagotchi extends GameObject
     }
 
     /**
-     * For testing purposes.  Sets the Tamagotchi to a default state if none has been specified.
+     * For testing purposes. Sets the Tamagotchi to a default state if none has been specified.
      */
     private void setDefault()
     {
@@ -69,6 +72,7 @@ public class Tamagotchi extends GameObject
 
     /**
      * Applies an item to the Tamagotchi
+     * 
      * @param item
      * @return true if item successfully applied, false if not
      */
@@ -81,6 +85,28 @@ public class Tamagotchi extends GameObject
 
 	checkStats();
 	return true;
+    }
+
+    /**
+     * Equips an item to Tamagotchi and returns the previously equipped item.
+     * 
+     * @param item
+     *            Item to be equipped.
+     * @return Previously equipped item, null if nothing was equipped.
+     */
+    public Item equipItem(Item item)
+    {
+	if (equippedItem != null)
+	{
+	    Item oldItem = equippedItem;
+	    equippedItem = item;
+	    return oldItem;
+	}
+	else
+	{
+	    equippedItem = item;
+	    return null;
+	}
     }
 
     /**

@@ -15,6 +15,7 @@ import android.graphics.Rect;
 import android.location.*;
 import android.net.*;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.Window;
@@ -29,6 +30,7 @@ public class GameActivity extends Activity
     private LocationManager mlocManager;
     private LocationListener mlocListener;
     private long lastWeatherRetrieve = 0;
+    private PowerManager.WakeLock wakeLock;
 
     /**
      * Called when Activity is first launched
@@ -39,6 +41,9 @@ public class GameActivity extends Activity
 	super.onCreate(savedInstanceState);
 	requestWindowFeature(Window.FEATURE_NO_TITLE);
 	// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+	PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+	this.wakeLock = pm.newWakeLock(pm.SCREEN_DIM_WAKE_LOCK, "My wakelock");
+	this.wakeLock.acquire();
 	gv = new GameView(this);
 	setContentView(gv);
 	// startGPS();
@@ -54,6 +59,7 @@ public class GameActivity extends Activity
 	Toast.makeText(this, "Closing game...", Toast.LENGTH_SHORT).show();
 	// stop gps listener
 	stopGPS();
+	this.wakeLock.release();
 	super.onDestroy();
     }
 
