@@ -84,7 +84,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "tama.png", 0, 0);
 	this.mPoopTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "poop.png", 0, 107);
 	this.mTreasureTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "treasure.png", 0, 156);
-	this.mPlaceHolderTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "ic_launcher.png", 0, 156);
+	this.mPlaceHolderTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "ic_launcher.png", 0, 205);
 	this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
     }
 
@@ -172,6 +172,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	this.mainLayer.setVisible(true);
 	this.backpackLayer.setVisible(false);
+	this.mScene.setOnAreaTouchTraversalFrontToBack();
+
 
 	return this.mScene;
     }
@@ -190,11 +192,25 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     {
 	final Sprite poop = new Sprite(pX, pY, this.mPoopTextureRegion)
 	{
+	    private boolean touched = false;
+
 	    @Override
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    touched = true;
+		}
+		else if (pSceneTouchEvent.isActionMove())
+		{
+		    if (touched)
+			this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
+		}
+		else if(pSceneTouchEvent.isActionUp())
+		{
+		    touched = false;
+		}
 		return true;
 	    }
 	};
@@ -221,12 +237,10 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     {
 	if (pSceneTouchEvent.isActionDown())
 	{
-	    // this.addPoop(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
 	    return true;
 	}
 	else if (pSceneTouchEvent.isActionUp())
 	{
-	    bp.resetPositions(cameraWidth, cameraHeight);
 	    return true;
 	}
 
