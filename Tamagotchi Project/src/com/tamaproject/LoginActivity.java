@@ -1,5 +1,7 @@
 package com.tamaproject;
 
+import com.tamaproject.minigames.TamaShooter;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -82,7 +84,7 @@ public class LoginActivity extends Activity
      */
     private void startGame()
     {
-	Intent goToGame = new Intent(LoginActivity.this, GameActivity.class);
+	Intent goToGame = new Intent(LoginActivity.this, TamaShooter.class);
 	startActivity(goToGame);
 	finish();
     }
