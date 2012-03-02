@@ -1,10 +1,11 @@
 package com.tamaproject;
 
-import com.tamaproject.minigames.TamaShooter;
+import java.io.IOException;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.SQLException;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -12,6 +13,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.ImageView;
+
+import com.tamaproject.database.*;
 
 public class LoginActivity extends Activity
 {
@@ -32,6 +35,29 @@ public class LoginActivity extends Activity
 	usernameEditText = (EditText) findViewById(R.id.txt_username);
 	passwordEditText = (EditText) findViewById(R.id.txt_password);
 	LoadPreferences();
+	
+	DatabaseHelper myDbHelper;
+    myDbHelper = new DatabaseHelper(this);
+
+    try {
+
+    	myDbHelper.createDatabase();
+
+	} catch (IOException e) {
+
+		e.printStackTrace();
+
+	}
+
+	try {
+
+		myDbHelper.openDatabase();
+
+	}catch(SQLException e){
+
+		e.printStackTrace();
+
+	}
 
 	// this is the action listener
 	launch.setOnClickListener(new OnClickListener()
@@ -84,7 +110,7 @@ public class LoginActivity extends Activity
      */
     private void startGame()
     {
-	Intent goToGame = new Intent(LoginActivity.this, TamaShooter.class);
+	Intent goToGame = new Intent(LoginActivity.this, GameActivity.class);
 	startActivity(goToGame);
 	finish();
     }
