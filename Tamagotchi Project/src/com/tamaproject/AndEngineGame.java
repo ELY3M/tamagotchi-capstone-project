@@ -13,12 +13,10 @@ import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
 import org.anddev.andengine.entity.primitive.Rectangle;
-import org.anddev.andengine.entity.scene.CameraScene;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnAreaTouchListener;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.Scene.ITouchArea;
-import org.anddev.andengine.entity.scene.background.ColorBackground;
 import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
@@ -35,7 +33,7 @@ import org.anddev.andengine.util.MathUtils;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.view.Display;
+import android.view.KeyEvent;
 import android.widget.Toast;
 
 public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchListener,
@@ -47,6 +45,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
     private final int cameraWidth = 480, cameraHeight = 800;
     private static final int CONFIRM_APPLYITEM = 0;
+    private static final int CONFIRM_QUITGAME = 1;
 
     // ===========================================================
     // Fields
@@ -67,6 +66,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private ArrayList<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>();
     private Tamagotchi tama;
     private float pTopBound, pBottomBound;
+
+    // Selection boxes for bottom bar
+    private ArrayList<Rectangle> selectBoxes = new ArrayList<Rectangle>();
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -179,13 +181,16 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
     }
 
+    /**
+     * Specify dialogs
+     */
     @Override
     protected Dialog onCreateDialog(int id)
     {
+	AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
 	switch (id)
 	{
 	case AndEngineGame.CONFIRM_APPLYITEM:
-	    AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
 	    builder2.setTitle("Apply Item");
 	    builder2.setIcon(android.R.drawable.btn_star);
 	    builder2.setMessage("Are you sure you want to apply this item?");
@@ -227,20 +232,60 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    });
 
 	    return builder2.create();
+
+	case AndEngineGame.CONFIRM_QUITGAME:
+	    builder2.setTitle("Quit Game");
+	    builder2.setIcon(android.R.drawable.btn_star);
+	    builder2.setMessage("Are you sure you want to quit the game?");
+	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
+	    {
+		public void onClick(DialogInterface dialog, int which)
+		{
+		    finish();
+		    return;
+		}
+	    });
+
+	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
+	    {
+		public void onClick(DialogInterface dialog, int which)
+		{
+		    return;
+		}
+	    });
+
+	    return builder2.create();
+
 	}
 
 	return null;
+    }
+
+    @Override
+    public boolean onKeyDown(final int pKeyCode, final KeyEvent pEvent)
+    {
+	// if menu button is pressed
+	if (pKeyCode == KeyEvent.KEYCODE_MENU && pEvent.getAction() == KeyEvent.ACTION_DOWN)
+	{
+	    return true;
+	}
+	// if back key was pressed
+	else if (pKeyCode == KeyEvent.KEYCODE_BACK && pEvent.getAction() == KeyEvent.ACTION_DOWN)
+	{
+	    showDialog(AndEngineGame.CONFIRM_QUITGAME);
+	    return true;
+	}
+	return super.onKeyDown(pKeyCode, pEvent);
     }
 
     // ===========================================================
     // Methods
     // ===========================================================
 
-    private Rectangle selectionBox1;
-
     private void loadInterface()
     {
-	int iconSpacer = cameraWidth / 7;
+	int numIcons = 6;
+	int iconSpacer = cameraWidth / (numIcons + 1);
 	float mid = (cameraHeight - pBottomBound) / 2;
 
 	/**
@@ -265,12 +310,16 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mScene.attachChild(topRect);
 
 	/**
-	 * Make selection box
+	 * Make selection boxes
 	 */
-	this.selectionBox1 = new Rectangle(iconSpacer * 1 - 25f, 0, 50, bottomRect.getHeight());
-	this.selectionBox1.setColor(1, 1, 1);
-	this.selectionBox1.setVisible(false);
-	bottomRect.attachChild(this.selectionBox1);
+	for (int i = 1; i <= numIcons; i++)
+	{
+	    final Rectangle selectBox = new Rectangle(iconSpacer * i - 25f, 0, 50, bottomRect.getHeight());
+	    selectBox.setColor(1, 1, 1);
+	    selectBox.setVisible(false);
+	    selectBoxes.add(selectBox);
+	    bottomRect.attachChild(selectBox);
+	}
 
 	/**
 	 * Load the open backpack icon
@@ -343,36 +392,45 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		float y = pSceneTouchEvent.getY();
 
 		// don't respond to touch unless sprite's parent is visible
-		if (!this.getParent().isVisible())
-		    return false;
-
-		if (pSceneTouchEvent.isActionDown())
+		if (this.getParent().isVisible())
 		{
-		    touched = true;
-		}
-		else if (pSceneTouchEvent.isActionMove())
-		{
-		    if (touched)
+		    Debug.d("Touched poop");
+		    if (pSceneTouchEvent.isActionDown())
 		    {
-			if (y < pTopBound)
+			touched = true;
+		    }
+		    else if (pSceneTouchEvent.isActionMove())
+		    {
+			if (touched)
 			{
-			    this.setPosition(x - this.getWidth() / 2, pTopBound - this.getHeight() / 2);
-			}
-			else if (y > pBottomBound)
-			{
-			    this.setPosition(x - this.getWidth() / 2, pBottomBound - this.getHeight() / 2);
+			    if (y < pTopBound)
+			    {
+				this.setPosition(x - this.getWidth() / 2, pTopBound - this.getHeight() / 2);
+			    }
+			    else if (y > pBottomBound)
+			    {
+				this.setPosition(x - this.getWidth() / 2, pBottomBound - this.getHeight() / 2);
+			    }
+			    else
+			    {
+				this.setPosition(x - this.getWidth() / 2, y - this.getHeight() / 2);
+			    }
 			}
 			else
 			{
-			    this.setPosition(x - this.getWidth() / 2, y - this.getHeight() / 2);
+			    return false;
 			}
 		    }
+		    else if (pSceneTouchEvent.isActionUp())
+		    {
+			touched = false;
+		    }
+		    return true;
 		}
-		else if (pSceneTouchEvent.isActionUp())
+		else
 		{
-		    touched = false;
+		    return false;
 		}
-		return true;
 	    }
 	};
 	poop.setUserData("poop");
@@ -425,79 +483,94 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		Item item = new Item((xSpacing * j) - mTreasureTextureRegion.getWidth() / 2, (ySpacing * i) - mTreasureTextureRegion.getHeight() / 2, mTreasureTextureRegion)
 		{
 		    private boolean touched = false;
+		    private boolean moved = false;
 
 		    @Override
 		    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 			    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 		    {
-
 			if (this.getParent().isVisible())
 			{
 			    if (pSceneTouchEvent.isActionDown())
 			    {
 				Debug.d("Item action down");
 				touched = true;
-
-				if (this.getParent().equals(backpackLayer))
-				{
-				    takeOut = this;
-				    runOnUpdateThread(new Runnable()
-				    {
-					@Override
-					public void run()
-					{
-					    Debug.d("Taking out item");
-					    backpackLayer.detachChild(takeOut);
-					    mainLayer.attachChild(takeOut);
-					    takeOut = null;
-					}
-				    });
-				    closeBackpack();
-				}
 			    }
 			    else if (pSceneTouchEvent.isActionMove())
 			    {
 				Debug.d("Item action move");
 				if (touched)
 				{
+				    if (this.getParent().equals(backpackLayer))
+				    {
+					takeOut = this;
+					runOnUpdateThread(new Runnable()
+					{
+					    @Override
+					    public void run()
+					    {
+						Debug.d("Taking out item");
+						backpackLayer.detachChild(takeOut);
+						mainLayer.attachChild(takeOut);
+						takeOut = null;
+					    }
+					});
+					closeBackpack();
+				    }
 				    this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
+				    moved = true;
+				    return true;
+				}
+				else
+				{
+				    return false;
 				}
 			    }
 			    else if (pSceneTouchEvent.isActionUp())
 			    {
 				Debug.d("Item action up");
 				touched = false;
-				if (this.getParent().equals(backpackLayer))
+				if (moved)
 				{
-				    this.setInitialPosition();
-				}
-				else if (this.getParent().equals(mainLayer))
-				{
-				    if (this.collidesWith(tama.getSprite()))
+				    moved = false;
+				    if (this.getParent().equals(backpackLayer))
 				    {
-					itemToApply = this;
-					showDialog(AndEngineGame.CONFIRM_APPLYITEM);
+					this.setInitialPosition();
 				    }
-				    else
+				    else if (this.getParent().equals(mainLayer))
 				    {
-					putBack = this;
-					runOnUpdateThread(new Runnable()
+					if (this.collidesWith(tama.getSprite()))
 					{
-					    @Override
-					    public void run()
+					    itemToApply = this;
+					    showDialog(AndEngineGame.CONFIRM_APPLYITEM);
+					}
+					else
+					{
+					    putBack = this;
+					    runOnUpdateThread(new Runnable()
 					    {
-						Debug.d("Putting back item");
-						mainLayer.detachChild(putBack);
-						backpackLayer.attachChild(putBack);
-						putBack = null;
-					    }
-					}); // End runOnUpdateThread
+						@Override
+						public void run()
+						{
+						    Debug.d("Putting back item");
+						    mainLayer.detachChild(putBack);
+						    backpackLayer.attachChild(putBack);
+						    putBack = null;
+						}
+					    }); // End runOnUpdateThread
+					}
 				    }
+				}
+				else
+				{
+				    // show item description
+
 				}
 			    }
+			    return true;
 			}
 
-			return true;
+			return false;
 		    }
 		}; // End new Sprite
 		this.bp.addItem(item);
@@ -518,8 +591,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.backpackLayer.setVisible(true);
 	this.mainLayer.setVisible(false);
 	this.bp.setBackpackOpen(true);
-	this.selectionBox1.setVisible(true);
+	this.selectBoxes.get(0).setVisible(true);
 	this.bp.resetPositions(cameraWidth, cameraHeight);
+	this.mScene.setOnAreaTouchTraversalBackToFront();
     }
 
     private void closeBackpack()
@@ -528,7 +602,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mainLayer.setVisible(true);
 	this.bp.setBackpackOpen(false);
 	this.bp.resetPositions(cameraWidth, cameraHeight);
-	this.selectionBox1.setVisible(false);
+	this.selectBoxes.get(0).setVisible(false);
+	this.mScene.setOnAreaTouchTraversalFrontToBack();
     }
     // ===========================================================
     // Inner and Anonymous Classes
