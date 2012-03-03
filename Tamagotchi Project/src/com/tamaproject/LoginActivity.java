@@ -35,27 +35,31 @@ public class LoginActivity extends Activity
 	usernameEditText = (EditText) findViewById(R.id.txt_username);
 	passwordEditText = (EditText) findViewById(R.id.txt_password);
 	LoadPreferences();
-	
+
 	DatabaseHelper myDbHelper;
-    myDbHelper = new DatabaseHelper(this);
+	myDbHelper = new DatabaseHelper(this);
 
-    try {
+	try
+	{
 
-    	myDbHelper.createDatabase();
+	    myDbHelper.createDatabase();
 
-	} catch (IOException e) {
+	} catch (IOException e)
+	{
 
-		e.printStackTrace();
+	    e.printStackTrace();
 
 	}
 
-	try {
+	try
+	{
 
-		myDbHelper.openDatabase();
+	    myDbHelper.openDatabase();
 
-	}catch(SQLException e){
+	} catch (SQLException e)
+	{
 
-		e.printStackTrace();
+	    e.printStackTrace();
 
 	}
 
@@ -82,7 +86,7 @@ public class LoginActivity extends Activity
 		    // display the username and the password in string format
 		    SavePreferences(USERNAME, sUserName);
 		    SavePreferences(PASSWORD, sPassword);
-		    
+
 		    // if the username and password are valid, start the game
 		    if (checkLogin(sUserName, sPassword))
 			startGame();
@@ -95,6 +99,7 @@ public class LoginActivity extends Activity
 
     /**
      * This function checks the username and password
+     * 
      * @param username
      * @param password
      * @return
@@ -117,6 +122,7 @@ public class LoginActivity extends Activity
 
     /**
      * Saves a value to a key for later use
+     * 
      * @param key
      * @param value
      */

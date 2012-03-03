@@ -4,7 +4,7 @@ import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 
 
-public class Tamagotchi extends Sprite
+public class Tamagotchi
 {
     private int currentHealth, maxHealth;
     private int currentHunger, maxHunger;
@@ -15,12 +15,12 @@ public class Tamagotchi extends Sprite
     private int status;
     private long birthday;
     private Item equippedItem;
+    private Sprite sprite;
 
     public final static int ALIVE = 1, DEAD = 0;
 
-    public Tamagotchi(float x, float y, TextureRegion textureRegion)
+    public Tamagotchi()
     {
-	super(x, y, textureRegion);
 	setDefault();
     }
 
@@ -43,11 +43,10 @@ public class Tamagotchi extends Sprite
 	this.birthday = 1325376000000l;
     }
 
-    public Tamagotchi(float x, float y, TextureRegion textureRegion, int currentHealth, int maxHealth,
+    public Tamagotchi(int currentHealth, int maxHealth,
 	    int currentHunger, int maxHunger, int currentXP, int maxXP, int currentSickness,
 	    int maxSickness, int poop, int battleLevel, int status)
     {
-	super(x, y, textureRegion);
 	this.currentHealth = currentHealth;
 	this.maxHealth = maxHealth;
 	this.currentHunger = currentHunger;
@@ -302,5 +301,25 @@ public class Tamagotchi extends Sprite
     public void setBirthday(long birthday)
     {
 	this.birthday = birthday;
+    }
+
+    public Item getEquippedItem()
+    {
+        return equippedItem;
+    }
+
+    public Sprite getSprite()
+    {
+        return sprite;
+    }
+
+    public void setEquippedItem(Item equippedItem)
+    {
+        this.equippedItem = equippedItem;
+    }
+
+    public void setSprite(Sprite sprite)
+    {
+        this.sprite = sprite;
     }
 }

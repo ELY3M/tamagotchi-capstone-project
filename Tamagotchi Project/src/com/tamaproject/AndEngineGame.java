@@ -12,18 +12,22 @@ import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
+import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.CameraScene;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnAreaTouchListener;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.Scene.ITouchArea;
 import org.anddev.andengine.entity.scene.background.ColorBackground;
+import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
+import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
+import org.anddev.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextureAtlasSource;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.MathUtils;
@@ -46,6 +50,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private BitmapTextureAtlas mBitmapTextureAtlas;
     private TextureRegion mTamaTextureRegion, mPoopTextureRegion, mTreasureTextureRegion,
 	    mPlaceHolderTextureRegion;
+    private RepeatingSpriteBackground mGrassBackground;
     private int cameraWidth, cameraHeight;
     private Scene mScene;
     private Backpack bp;
@@ -53,6 +58,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private Entity backpackLayer = new Entity();
     private ArrayList<Entity> takeOut = new ArrayList<Entity>();
     private ArrayList<Entity> putBack = new ArrayList<Entity>();
+    private ArrayList<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>();
+    private Tamagotchi tama;
+    private float pTopBound, pBottomBound;
 
     // ===========================================================
     // Constructors
@@ -72,6 +80,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	final Display display = getWindowManager().getDefaultDisplay();
 	this.cameraWidth = display.getWidth();
 	this.cameraHeight = display.getHeight();
+	this.pTopBound = 50;
+	this.pBottomBound = cameraHeight - 100;
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
 	return new Engine(new EngineOptions(true, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
     }
@@ -85,6 +95,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mPoopTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "poop.png", 0, 107);
 	this.mTreasureTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "treasure.png", 0, 156);
 	this.mPlaceHolderTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "ic_launcher.png", 0, 205);
+	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 	this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
     }
 
@@ -94,7 +105,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mEngine.registerUpdateHandler(new FPSLogger());
 
 	this.mScene = new Scene();
-	this.mScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	this.mScene.setBackground(this.mGrassBackground);
 	this.mScene.attachChild(mainLayer);
 	this.mScene.attachChild(backpackLayer);
 
@@ -102,36 +113,19 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.loadItems();
 	for (Item item : bp.getItems())
 	{
-	    this.backpackLayer.attachChild(item);
-	    this.mScene.registerTouchArea(item);
+	    this.backpackLayer.attachChild(item.getSprite());
+	    this.mScene.registerTouchArea(item.getSprite());
 	}
 
 	final int centerX = (cameraWidth - this.mTamaTextureRegion.getWidth()) / 2;
 	final int centerY = (cameraHeight - this.mTamaTextureRegion.getHeight()) / 2;
 
-	final Tamagotchi tama = new Tamagotchi(centerX, centerY, this.mTamaTextureRegion);
-	this.mainLayer.attachChild(tama);
-	this.mScene.registerTouchArea(tama);
+	this.tama = new Tamagotchi();
+	this.tama.setSprite(new Sprite(centerX, centerY, this.mTamaTextureRegion));
+	this.mainLayer.attachChild(tama.getSprite());
+	this.mScene.registerTouchArea(tama.getSprite());
 
-	final Sprite openBackpackIcon = new Sprite(cameraWidth - this.mPlaceHolderTextureRegion.getWidth(), cameraHeight - this.mPlaceHolderTextureRegion.getHeight(), mPlaceHolderTextureRegion)
-	{
-	    @Override
-	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
-		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
-	    {
-		if (pSceneTouchEvent.isActionUp())
-		{
-		    if (!bp.isBackpackOpen())
-			openBackpack();
-		    else
-			closeBackpack();
-		    return true;
-		}
-		return false;
-	    }
-	};
-	this.mScene.attachChild(openBackpackIcon);
-	this.mScene.registerTouchArea(openBackpackIcon);
+	this.loadInterface();
 
 	this.mScene.setTouchAreaBindingEnabled(true);
 	this.mScene.setOnSceneTouchListener(this);
@@ -174,7 +168,6 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.backpackLayer.setVisible(false);
 	this.mScene.setOnAreaTouchTraversalFrontToBack();
 
-
 	return this.mScene;
     }
 
@@ -188,6 +181,46 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     // Methods
     // ===========================================================
 
+    private void loadInterface()
+    {
+	/**
+	 * Draw top rectangle bar
+	 */
+	final Rectangle topRect = new Rectangle(0, 0, cameraWidth, 50);
+	topRect.setColor(60 / 255, 1.0f, 81 / 255);
+	this.mScene.attachChild(topRect);
+
+	/**
+	 * Load the open backpack icon
+	 */
+	// final Sprite openBackpackIcon = new Sprite(cameraWidth - this.mPlaceHolderTextureRegion.getWidth(), cameraHeight - this.mPlaceHolderTextureRegion.getHeight(), mPlaceHolderTextureRegion)
+	final Sprite openBackpackIcon = new Sprite(0, 0, mPlaceHolderTextureRegion)
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (pSceneTouchEvent.isActionUp())
+		{
+		    if (!bp.isBackpackOpen())
+			openBackpack();
+		    else
+			closeBackpack();
+		    return true;
+		}
+		return false;
+	    }
+	};
+	this.mScene.attachChild(openBackpackIcon);
+	this.mScene.registerTouchArea(openBackpackIcon);
+    }
+
+    /**
+     * Adds poop to scene at specified coordinates
+     * 
+     * @param pX
+     * @param pY
+     */
     public void addPoop(final float pX, final float pY)
     {
 	final Sprite poop = new Sprite(pX, pY, this.mPoopTextureRegion)
@@ -198,6 +231,13 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
+		float x = pSceneTouchEvent.getX();
+		float y = pSceneTouchEvent.getY();
+
+		// don't respond to touch unless sprite's parent is visible
+		if (!this.getParent().isVisible())
+		    return false;
+
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    touched = true;
@@ -205,9 +245,22 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		else if (pSceneTouchEvent.isActionMove())
 		{
 		    if (touched)
-			this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
+		    {
+			if (y < pTopBound)
+			{
+			    this.setPosition(x - this.getWidth() / 2, pTopBound - this.getHeight() / 2);
+			}
+			else if (y > pBottomBound)
+			{
+			    this.setPosition(x - this.getWidth() / 2, pBottomBound - this.getHeight() / 2);
+			}
+			else
+			{
+			    this.setPosition(x - this.getWidth() / 2, y - this.getHeight() / 2);
+			}
+		    }
 		}
-		else if(pSceneTouchEvent.isActionUp())
+		else if (pSceneTouchEvent.isActionUp())
 		{
 		    touched = false;
 		}
@@ -215,6 +268,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    }
 	};
 	poop.setUserData("poop");
+	inPlayObjects.add(poop);
 
 	this.mainLayer.attachChild(poop);
 	this.mScene.registerTouchArea(poop);
@@ -247,6 +301,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	return false;
     }
 
+    /**
+     * This method just adds a bunch of dummy items to the backpack
+     */
     private void loadItems()
     {
 	float xSpacing = this.cameraWidth / 6;
@@ -255,7 +312,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	{
 	    for (int j = 1; j <= 5; j++)
 	    {
-		Item item = new Item((xSpacing * j) - mTreasureTextureRegion.getWidth() / 2, (ySpacing * i) - mTreasureTextureRegion.getHeight() / 2, mTreasureTextureRegion)
+		Item item = new Item();
+
+		item.setSprite(new Sprite((xSpacing * j) - mTreasureTextureRegion.getWidth() / 2, (ySpacing * i) - mTreasureTextureRegion.getHeight() / 2, mTreasureTextureRegion)
 		{
 		    private boolean touched = false;
 
@@ -264,32 +323,35 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 		    {
 
-			if (backpackLayer.isVisible() && this.getParent().equals(backpackLayer))
+			if (this.getParent().isVisible())
 			{
 			    if (pSceneTouchEvent.isActionDown())
 			    {
 				Debug.d("Item action down");
 				touched = true;
 
-				takeOut.add(this);
-				runOnUpdateThread(new Runnable()
+				if (this.getParent().equals(backpackLayer))
 				{
-				    @Override
-				    public void run()
+				    takeOut.add(this);
+				    runOnUpdateThread(new Runnable()
 				    {
-					Debug.d("Taking out item");
-					synchronized (takeOut)
+					@Override
+					public void run()
 					{
-					    for (Entity e : takeOut)
+					    Debug.d("Taking out item");
+					    synchronized (takeOut)
 					    {
-						backpackLayer.detachChild(e);
-						mainLayer.attachChild(e);
-						takeOut.remove(e);
+						for (Entity e : takeOut)
+						{
+						    backpackLayer.detachChild(e);
+						    mainLayer.attachChild(e);
+						    takeOut.remove(e);
+						}
 					    }
 					}
-				    }
-				});
-				closeBackpack();
+				    });
+				    closeBackpack();
+				}
 			    }
 			    else if (pSceneTouchEvent.isActionMove())
 			    {
@@ -303,52 +365,38 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			    {
 				Debug.d("Item action up");
 				touched = false;
-				this.setInitialPosition();
-			    }
-			}
-			else if (mainLayer.isVisible() && this.getParent().equals(mainLayer))
-			{
-			    if (pSceneTouchEvent.isActionDown())
-			    {
-				Debug.d("Item action down");
-				touched = true;
-			    }
-			    else if (pSceneTouchEvent.isActionMove())
-			    {
-				Debug.d("Item action move");
-				if (touched)
+				if (this.getParent().equals(backpackLayer))
 				{
-				    this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
+				    this.setInitialPosition();
+				}
+				else if (this.getParent().equals(mainLayer))
+				{
+				    putBack.add(this);
+					runOnUpdateThread(new Runnable()
+					{
+					    @Override
+					    public void run()
+					    {
+						Debug.d("Putting back item");
+						synchronized (putBack)
+						{
+						    for (Entity e : putBack)
+						    {
+							mainLayer.detachChild(e);
+							backpackLayer.attachChild(e);
+							e.setInitialPosition();
+							putBack.remove(e);
+						    }
+						}
+					    }
+					}); // End runOnUpdateThread
 				}
 			    }
-			    else if (pSceneTouchEvent.isActionUp())
-			    {
-				Debug.d("Item action up");
-				touched = false;
-				putBack.add(this);
-				runOnUpdateThread(new Runnable()
-				{
-				    @Override
-				    public void run()
-				    {
-					Debug.d("Putting back item");
-					synchronized (putBack)
-					{
-					    for (Entity e : putBack)
-					    {
-						mainLayer.detachChild(e);
-						backpackLayer.attachChild(e);
-						e.setInitialPosition();
-						putBack.remove(e);
-					    }
-					}
-				    }
-				});
-			    }
 			}
+			
 			return true;
 		    }
-		};
+		}); // End new Sprite
 		this.bp.addItem(item);
 	    }
 	}

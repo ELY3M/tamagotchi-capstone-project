@@ -7,22 +7,21 @@ import android.graphics.Bitmap;
 
 import com.tamaproject.GameObject;
 
-public class Item extends Sprite
+public class Item 
 {
     private String name;
     private String description;
     private int health, hunger, sickness, xp;
+    private Sprite sprite;
 
-    public Item(float x, float y, TextureRegion textureRegion)
+    public Item()
     {
-	super(x, y, textureRegion);
 	setDefault();
     }
 
-    public Item(float x, float y, TextureRegion textureRegion, String name, String description,
+    public Item(String name, String description,
 	    int health, int hunger, int sickness, int xp)
     {
-	super(x, y, textureRegion);
 	this.name = name;
 	this.description = description;
 	this.health = health;
@@ -31,10 +30,9 @@ public class Item extends Sprite
 	this.xp = xp;
     }
 
-    public Item(float x, float y, TextureRegion textureRegion, String name, int health, int hunger,
+    public Item(String name, int health, int hunger,
 	    int sickness, int xp)
     {
-	super(x, y, textureRegion);
 	this.name = name;
 	this.description = "Item name: " + name + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp;
 	this.health = health;
@@ -111,6 +109,16 @@ public class Item extends Sprite
     public void setDescription(String description)
     {
 	this.description = description;
+    }
+
+    public Sprite getSprite()
+    {
+        return sprite;
+    }
+
+    public void setSprite(Sprite sprite)
+    {
+        this.sprite = sprite;
     }
 
 }
