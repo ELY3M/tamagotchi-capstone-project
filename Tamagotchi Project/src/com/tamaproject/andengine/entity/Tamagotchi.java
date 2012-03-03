@@ -6,10 +6,10 @@ import org.anddev.andengine.opengl.texture.region.TextureRegion;
 
 public class Tamagotchi
 {
-    private int currentHealth, maxHealth;
-    private int currentHunger, maxHunger;
-    private int currentXP, maxXP;
-    private int currentSickness, maxSickness;
+    private float currentHealth, maxHealth;
+    private float currentHunger, maxHunger;
+    private float currentXP, maxXP;
+    private float currentSickness, maxSickness;
     private int poop;
     private int battleLevel;
     private int status;
@@ -183,45 +183,7 @@ public class Tamagotchi
 	return age;
     }
 
-    public int getCurrentHealth()
-    {
-	return currentHealth;
-    }
-
-    public int getMaxHealth()
-    {
-	return maxHealth;
-    }
-
-    public int getCurrentHunger()
-    {
-	return currentHunger;
-    }
-
-    public int getMaxHunger()
-    {
-	return maxHunger;
-    }
-
-    public int getCurrentXP()
-    {
-	return currentXP;
-    }
-
-    public int getMaxXP()
-    {
-	return maxXP;
-    }
-
-    public int getCurrentSickness()
-    {
-	return currentSickness;
-    }
-
-    public int getMaxSickness()
-    {
-	return maxSickness;
-    }
+   
 
     public int getPoop()
     {
@@ -321,5 +283,85 @@ public class Tamagotchi
     public void setSprite(Sprite sprite)
     {
         this.sprite = sprite;
+    }
+
+    public float getCurrentHealth()
+    {
+        return currentHealth;
+    }
+
+    public float getMaxHealth()
+    {
+        return maxHealth;
+    }
+
+    public float getCurrentHunger()
+    {
+        return currentHunger;
+    }
+
+    public float getMaxHunger()
+    {
+        return maxHunger;
+    }
+
+    public float getCurrentXP()
+    {
+        return currentXP;
+    }
+
+    public float getMaxXP()
+    {
+        return maxXP;
+    }
+
+    public float getCurrentSickness()
+    {
+        return currentSickness;
+    }
+
+    public float getMaxSickness()
+    {
+        return maxSickness;
+    }
+
+    public void setCurrentHealth(float currentHealth)
+    {
+        this.currentHealth = currentHealth;
+    }
+
+    public void setMaxHealth(float maxHealth)
+    {
+        this.maxHealth = maxHealth;
+    }
+
+    public void setCurrentHunger(float currentHunger)
+    {
+        this.currentHunger = currentHunger;
+    }
+
+    public void setMaxHunger(float maxHunger)
+    {
+        this.maxHunger = maxHunger;
+    }
+
+    public void setCurrentXP(float currentXP)
+    {
+        this.currentXP = currentXP;
+    }
+
+    public void setMaxXP(float maxXP)
+    {
+        this.maxXP = maxXP;
+    }
+
+    public void setCurrentSickness(float currentSickness)
+    {
+        this.currentSickness = currentSickness;
+    }
+
+    public void setMaxSickness(float maxSickness)
+    {
+        this.maxSickness = maxSickness;
     }
 }

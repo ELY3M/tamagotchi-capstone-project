@@ -49,9 +49,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private Camera mCamera;
     private BitmapTextureAtlas mBitmapTextureAtlas;
     private TextureRegion mTamaTextureRegion, mPoopTextureRegion, mTreasureTextureRegion,
-	    mPlaceHolderTextureRegion;
+	    mPlaceHolderTextureRegion, mMicRegion, mBackpackIconRegion;
     private RepeatingSpriteBackground mGrassBackground;
-    private int cameraWidth, cameraHeight;
+    private final int cameraWidth = 480, cameraHeight = 800;
     private Scene mScene;
     private Backpack bp;
     private Entity mainLayer = new Entity();
@@ -77,11 +77,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     @Override
     public Engine onLoadEngine()
     {
-	final Display display = getWindowManager().getDefaultDisplay();
-	this.cameraWidth = display.getWidth();
-	this.cameraHeight = display.getHeight();
-	this.pTopBound = 50;
-	this.pBottomBound = cameraHeight - 100;
+	this.pTopBound = 100;
+	this.pBottomBound = cameraHeight - 60;
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
 	return new Engine(new EngineOptions(true, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
     }
@@ -95,6 +92,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mPoopTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "poop.png", 0, 107);
 	this.mTreasureTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "treasure.png", 0, 156);
 	this.mPlaceHolderTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "ic_launcher.png", 0, 205);
+	this.mMicRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "mic.png", 50, 107);
+	this.mBackpackIconRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "backpack.png", 100, 107);
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 	this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
     }
@@ -106,8 +105,23 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	this.mScene = new Scene();
 	this.mScene.setBackground(this.mGrassBackground);
+
+	final int centerX = (cameraWidth - this.mTamaTextureRegion.getWidth()) / 2;
+	final int centerY = (cameraHeight - this.mTamaTextureRegion.getHeight()) / 2;
+
+	// Load tamagotchi first
+	this.tama = new Tamagotchi();
+	this.tama.setSprite(new Sprite(centerX, centerY, this.mTamaTextureRegion));
+	tama.getSprite().setScale(0.85f);
+	this.mainLayer.attachChild(tama.getSprite());
+
+	this.loadInterface();
+
 	this.mScene.attachChild(mainLayer);
 	this.mScene.attachChild(backpackLayer);
+
+	this.mainLayer.setVisible(true);
+	this.backpackLayer.setVisible(false);
 
 	this.bp = new Backpack();
 	this.loadItems();
@@ -117,15 +131,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    this.mScene.registerTouchArea(item.getSprite());
 	}
 
-	final int centerX = (cameraWidth - this.mTamaTextureRegion.getWidth()) / 2;
-	final int centerY = (cameraHeight - this.mTamaTextureRegion.getHeight()) / 2;
-
-	this.tama = new Tamagotchi();
-	this.tama.setSprite(new Sprite(centerX, centerY, this.mTamaTextureRegion));
-	this.mainLayer.attachChild(tama.getSprite());
 	this.mScene.registerTouchArea(tama.getSprite());
-
-	this.loadInterface();
 
 	this.mScene.setTouchAreaBindingEnabled(true);
 	this.mScene.setOnSceneTouchListener(this);
@@ -159,13 +165,11 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
 		final float xPos = MathUtils.random(30.0f, (cameraWidth - 30.0f));
-		final float yPos = MathUtils.random(30.0f, (cameraHeight - 30.0f));
+		final float yPos = MathUtils.random(pTopBound, (pBottomBound - pTopBound));
 		addPoop(xPos, yPos);
 	    }
 	}));
 
-	this.mainLayer.setVisible(true);
-	this.backpackLayer.setVisible(false);
 	this.mScene.setOnAreaTouchTraversalFrontToBack();
 
 	return this.mScene;
@@ -183,18 +187,35 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
     private void loadInterface()
     {
+	int iconSpacer = cameraWidth / 7;
+	float mid = (cameraHeight - pBottomBound) / 2;
+
+	/**
+	 * Load backpack background
+	 */
+	final Rectangle backpackBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
+	backpackBackground.setColor(87 / 255f, 57 / 255f, 20 / 255f);
+	backpackLayer.attachChild(backpackBackground);
+
+	/**
+	 * Draw bottom rectangle bar
+	 */
+	final Rectangle bottomRect = new Rectangle(0, pBottomBound, cameraWidth, cameraHeight);
+	bottomRect.setColor(70 / 255f, 132 / 255f, 163 / 255f);
+	this.mScene.attachChild(bottomRect);
+
 	/**
 	 * Draw top rectangle bar
 	 */
-	final Rectangle topRect = new Rectangle(0, 0, cameraWidth, 50);
-	topRect.setColor(60 / 255, 1.0f, 81 / 255);
+	final Rectangle topRect = new Rectangle(0, 0, cameraWidth, pTopBound);
+	topRect.setColor(70 / 255f, 132 / 255f, 163 / 255f);
 	this.mScene.attachChild(topRect);
 
 	/**
 	 * Load the open backpack icon
 	 */
 	// final Sprite openBackpackIcon = new Sprite(cameraWidth - this.mPlaceHolderTextureRegion.getWidth(), cameraHeight - this.mPlaceHolderTextureRegion.getHeight(), mPlaceHolderTextureRegion)
-	final Sprite openBackpackIcon = new Sprite(0, 0, mPlaceHolderTextureRegion)
+	final Sprite openBackpackIcon = new Sprite(iconSpacer * 1 - mBackpackIconRegion.getWidth() / 2, mid - mBackpackIconRegion.getHeight() / 2, mBackpackIconRegion)
 	{
 	    @Override
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
@@ -211,8 +232,32 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		return false;
 	    }
 	};
-	this.mScene.attachChild(openBackpackIcon);
+	bottomRect.attachChild(openBackpackIcon);
 	this.mScene.registerTouchArea(openBackpackIcon);
+
+	/**
+	 * Load microphone icon
+	 */
+	final Sprite micIcon = new Sprite(iconSpacer * 2 - mMicRegion.getWidth() / 2, mid - mMicRegion.getHeight() / 2, mMicRegion);
+	bottomRect.attachChild(micIcon);
+	this.mScene.registerTouchArea(micIcon);
+
+	float barLength = 150;
+	float barHeight = 15;
+	float smallBarHeight = 10;
+
+	/**
+	 * Load health bar
+	 */
+	final Rectangle healthBar = new Rectangle(10, 10, barLength, barHeight);
+	healthBar.setColor(1, 1, 1);
+	topRect.attachChild(healthBar);
+
+	float ratio = tama.getCurrentHealth() / tama.getMaxHealth();
+	Debug.d("Tama health ratio: " + ratio);
+	final Rectangle currHealthBar = new Rectangle(3, (barHeight / 2) - (smallBarHeight / 2), ratio * (barLength - 3), smallBarHeight);
+	currHealthBar.setColor(1, 0, 0);
+	healthBar.attachChild(currHealthBar);
     }
 
     /**
@@ -268,6 +313,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    }
 	};
 	poop.setUserData("poop");
+	float scale = MathUtils.random(0.75f, (2.0f - 0.75f));
+	poop.setScale(scale);
 	inPlayObjects.add(poop);
 
 	this.mainLayer.attachChild(poop);
@@ -372,28 +419,28 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 				else if (this.getParent().equals(mainLayer))
 				{
 				    putBack.add(this);
-					runOnUpdateThread(new Runnable()
+				    runOnUpdateThread(new Runnable()
+				    {
+					@Override
+					public void run()
 					{
-					    @Override
-					    public void run()
+					    Debug.d("Putting back item");
+					    synchronized (putBack)
 					    {
-						Debug.d("Putting back item");
-						synchronized (putBack)
+						for (Entity e : putBack)
 						{
-						    for (Entity e : putBack)
-						    {
-							mainLayer.detachChild(e);
-							backpackLayer.attachChild(e);
-							e.setInitialPosition();
-							putBack.remove(e);
-						    }
+						    mainLayer.detachChild(e);
+						    backpackLayer.attachChild(e);
+						    e.setInitialPosition();
+						    putBack.remove(e);
 						}
 					    }
-					}); // End runOnUpdateThread
+					}
+				    }); // End runOnUpdateThread
 				}
 			    }
 			}
-			
+
 			return true;
 		    }
 		}); // End new Sprite
