@@ -42,6 +42,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     // Constants
     // ===========================================================
 
+    private final int cameraWidth = 480, cameraHeight = 800;
+
     // ===========================================================
     // Fields
     // ===========================================================
@@ -51,24 +53,16 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private TextureRegion mTamaTextureRegion, mPoopTextureRegion, mTreasureTextureRegion,
 	    mPlaceHolderTextureRegion, mMicRegion, mBackpackIconRegion;
     private RepeatingSpriteBackground mGrassBackground;
-    private final int cameraWidth = 480, cameraHeight = 800;
     private Scene mScene;
     private Backpack bp;
     private Entity mainLayer = new Entity();
     private Entity backpackLayer = new Entity();
-    private ArrayList<Entity> takeOut = new ArrayList<Entity>();
-    private ArrayList<Entity> putBack = new ArrayList<Entity>();
+    private ArrayList<Item> takeOut = new ArrayList<Item>();
+    private ArrayList<Item> putBack = new ArrayList<Item>();
+    private Item itemToApply;
     private ArrayList<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>();
     private Tamagotchi tama;
     private float pTopBound, pBottomBound;
-
-    // ===========================================================
-    // Constructors
-    // ===========================================================
-
-    // ===========================================================
-    // Getter & Setter
-    // ===========================================================
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -127,8 +121,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.loadItems();
 	for (Item item : bp.getItems())
 	{
-	    this.backpackLayer.attachChild(item.getSprite());
-	    this.mScene.registerTouchArea(item.getSprite());
+	    this.backpackLayer.attachChild(item);
+	    this.mScene.registerTouchArea(item);
 	}
 
 	this.mScene.registerTouchArea(tama.getSprite());
@@ -185,6 +179,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     // Methods
     // ===========================================================
 
+    private Rectangle selectionBox1;
+
     private void loadInterface()
     {
 	int iconSpacer = cameraWidth / 7;
@@ -212,9 +208,16 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mScene.attachChild(topRect);
 
 	/**
+	 * Make selection box
+	 */
+	this.selectionBox1 = new Rectangle(iconSpacer * 1 - 25f, 0, 50, bottomRect.getHeight());
+	this.selectionBox1.setColor(1, 1, 1);
+	this.selectionBox1.setVisible(false);
+	bottomRect.attachChild(this.selectionBox1);
+
+	/**
 	 * Load the open backpack icon
 	 */
-	// final Sprite openBackpackIcon = new Sprite(cameraWidth - this.mPlaceHolderTextureRegion.getWidth(), cameraHeight - this.mPlaceHolderTextureRegion.getHeight(), mPlaceHolderTextureRegion)
 	final Sprite openBackpackIcon = new Sprite(iconSpacer * 1 - mBackpackIconRegion.getWidth() / 2, mid - mBackpackIconRegion.getHeight() / 2, mBackpackIconRegion)
 	{
 	    @Override
@@ -224,9 +227,13 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		if (pSceneTouchEvent.isActionUp())
 		{
 		    if (!bp.isBackpackOpen())
+		    {
 			openBackpack();
+		    }
 		    else
+		    {
 			closeBackpack();
+		    }
 		    return true;
 		}
 		return false;
@@ -244,7 +251,6 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	float barLength = 150;
 	float barHeight = 15;
-	float smallBarHeight = 10;
 
 	/**
 	 * Load health bar
@@ -255,7 +261,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	float ratio = tama.getCurrentHealth() / tama.getMaxHealth();
 	Debug.d("Tama health ratio: " + ratio);
-	final Rectangle currHealthBar = new Rectangle(3, (barHeight / 2) - (smallBarHeight / 2), ratio * (barLength - 3), smallBarHeight);
+	final Rectangle currHealthBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currHealthBar.setColor(1, 0, 0);
 	healthBar.attachChild(currHealthBar);
     }
@@ -359,9 +365,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	{
 	    for (int j = 1; j <= 5; j++)
 	    {
-		Item item = new Item();
-
-		item.setSprite(new Sprite((xSpacing * j) - mTreasureTextureRegion.getWidth() / 2, (ySpacing * i) - mTreasureTextureRegion.getHeight() / 2, mTreasureTextureRegion)
+		Item item = new Item((xSpacing * j) - mTreasureTextureRegion.getWidth() / 2, (ySpacing * i) - mTreasureTextureRegion.getHeight() / 2, mTreasureTextureRegion)
 		{
 		    private boolean touched = false;
 
@@ -418,35 +422,59 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 				}
 				else if (this.getParent().equals(mainLayer))
 				{
-				    putBack.add(this);
-				    runOnUpdateThread(new Runnable()
+				    if (this.collidesWith(tama.getSprite()))
 				    {
-					@Override
-					public void run()
+					itemToApply = this;
+					runOnUpdateThread(new Runnable()
 					{
-					    Debug.d("Putting back item");
-					    synchronized (putBack)
+					    @Override
+					    public void run()
 					    {
-						for (Entity e : putBack)
+						Debug.d("Apply item");
+						applyItem(itemToApply);
+						itemToApply = null;
+					    }
+					}); // End runOnUpdateThread
+				    }
+				    else
+				    {
+					putBack.add(this);
+					runOnUpdateThread(new Runnable()
+					{
+					    @Override
+					    public void run()
+					    {
+						Debug.d("Putting back item");
+						synchronized (putBack)
 						{
-						    mainLayer.detachChild(e);
-						    backpackLayer.attachChild(e);
-						    e.setInitialPosition();
-						    putBack.remove(e);
+						    for (Entity e : putBack)
+						    {
+							mainLayer.detachChild(e);
+							backpackLayer.attachChild(e);
+							putBack.remove(e);
+						    }
 						}
 					    }
-					}
-				    }); // End runOnUpdateThread
+					}); // End runOnUpdateThread
+				    }
 				}
 			    }
 			}
 
 			return true;
 		    }
-		}); // End new Sprite
+		}; // End new Sprite
 		this.bp.addItem(item);
 	    }
 	}
+    }
+
+    private void applyItem(Item item)
+    {
+	this.tama.applyItem(item);
+	this.bp.removeItem(item);
+	this.mainLayer.detachChild(item);
+	this.mScene.unregisterTouchArea(item);
     }
 
     private void openBackpack()
@@ -454,6 +482,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.backpackLayer.setVisible(true);
 	this.mainLayer.setVisible(false);
 	this.bp.setBackpackOpen(true);
+	this.selectionBox1.setVisible(true);
+	this.bp.resetPositions(cameraWidth, cameraHeight);
     }
 
     private void closeBackpack()
@@ -462,6 +492,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mainLayer.setVisible(true);
 	this.bp.setBackpackOpen(false);
 	this.bp.resetPositions(cameraWidth, cameraHeight);
+	this.selectionBox1.setVisible(false);
     }
     // ===========================================================
     // Inner and Anonymous Classes
