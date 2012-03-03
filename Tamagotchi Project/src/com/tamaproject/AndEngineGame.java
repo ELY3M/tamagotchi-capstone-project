@@ -32,6 +32,9 @@ import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.MathUtils;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.view.Display;
 import android.widget.Toast;
 
@@ -43,6 +46,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     // ===========================================================
 
     private final int cameraWidth = 480, cameraHeight = 800;
+    private static final int CONFIRM_APPLYITEM = 0;
 
     // ===========================================================
     // Fields
@@ -57,8 +61,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private Backpack bp;
     private Entity mainLayer = new Entity();
     private Entity backpackLayer = new Entity();
-    private ArrayList<Item> takeOut = new ArrayList<Item>();
-    private ArrayList<Item> putBack = new ArrayList<Item>();
+    private Item takeOut;
+    private Item putBack;
     private Item itemToApply;
     private ArrayList<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>();
     private Tamagotchi tama;
@@ -173,6 +177,59 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     public void onLoadComplete()
     {
 
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id)
+    {
+	switch (id)
+	{
+	case AndEngineGame.CONFIRM_APPLYITEM:
+	    AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
+	    builder2.setTitle("Apply Item");
+	    builder2.setIcon(android.R.drawable.btn_star);
+	    builder2.setMessage("Are you sure you want to apply this item?");
+	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
+	    {
+		public void onClick(DialogInterface dialog, int which)
+		{
+		    runOnUpdateThread(new Runnable()
+		    {
+			@Override
+			public void run()
+			{
+			    Debug.d("Applying item");
+			    applyItem(itemToApply);
+			    itemToApply = null;
+			}
+		    }); // End runOnUpdateThread
+		    return;
+		}
+	    });
+
+	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
+	    {
+		public void onClick(DialogInterface dialog, int which)
+		{
+		    runOnUpdateThread(new Runnable()
+		    {
+			@Override
+			public void run()
+			{
+			    Debug.d("Putting back item");
+			    mainLayer.detachChild(itemToApply);
+			    backpackLayer.attachChild(itemToApply);
+			    itemToApply = null;
+			}
+		    }); // End runOnUpdateThread
+		    return;
+		}
+	    });
+
+	    return builder2.create();
+	}
+
+	return null;
     }
 
     // ===========================================================
@@ -383,22 +440,16 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 				if (this.getParent().equals(backpackLayer))
 				{
-				    takeOut.add(this);
+				    takeOut = this;
 				    runOnUpdateThread(new Runnable()
 				    {
 					@Override
 					public void run()
 					{
 					    Debug.d("Taking out item");
-					    synchronized (takeOut)
-					    {
-						for (Entity e : takeOut)
-						{
-						    backpackLayer.detachChild(e);
-						    mainLayer.attachChild(e);
-						    takeOut.remove(e);
-						}
-					    }
+					    backpackLayer.detachChild(takeOut);
+					    mainLayer.attachChild(takeOut);
+					    takeOut = null;
 					}
 				    });
 				    closeBackpack();
@@ -425,35 +476,20 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 				    if (this.collidesWith(tama.getSprite()))
 				    {
 					itemToApply = this;
-					runOnUpdateThread(new Runnable()
-					{
-					    @Override
-					    public void run()
-					    {
-						Debug.d("Apply item");
-						applyItem(itemToApply);
-						itemToApply = null;
-					    }
-					}); // End runOnUpdateThread
+					showDialog(AndEngineGame.CONFIRM_APPLYITEM);
 				    }
 				    else
 				    {
-					putBack.add(this);
+					putBack = this;
 					runOnUpdateThread(new Runnable()
 					{
 					    @Override
 					    public void run()
 					    {
 						Debug.d("Putting back item");
-						synchronized (putBack)
-						{
-						    for (Entity e : putBack)
-						    {
-							mainLayer.detachChild(e);
-							backpackLayer.attachChild(e);
-							putBack.remove(e);
-						    }
-						}
+						mainLayer.detachChild(putBack);
+						backpackLayer.attachChild(putBack);
+						putBack = null;
 					    }
 					}); // End runOnUpdateThread
 				    }
