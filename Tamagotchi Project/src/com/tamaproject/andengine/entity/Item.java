@@ -3,25 +3,22 @@ package com.tamaproject.andengine.entity;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 
-import android.graphics.Bitmap;
-
-import com.tamaproject.GameObject;
-
-public class Item 
+public class Item extends Sprite
 {
     private String name;
     private String description;
     private int health, hunger, sickness, xp;
-    private Sprite sprite;
 
-    public Item()
+    public Item(float x, float y, TextureRegion textureRegion)
     {
+	super(x, y, textureRegion);
 	setDefault();
     }
 
-    public Item(String name, String description,
+    public Item(float x, float y, TextureRegion textureRegion, String name, String description,
 	    int health, int hunger, int sickness, int xp)
     {
+	super(x, y, textureRegion);
 	this.name = name;
 	this.description = description;
 	this.health = health;
@@ -30,9 +27,10 @@ public class Item
 	this.xp = xp;
     }
 
-    public Item(String name, int health, int hunger,
+    public Item(float x, float y, TextureRegion textureRegion, String name, int health, int hunger,
 	    int sickness, int xp)
     {
+	super(x, y, textureRegion);
 	this.name = name;
 	this.description = "Item name: " + name + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp;
 	this.health = health;
@@ -109,16 +107,6 @@ public class Item
     public void setDescription(String description)
     {
 	this.description = description;
-    }
-
-    public Sprite getSprite()
-    {
-        return sprite;
-    }
-
-    public void setSprite(Sprite sprite)
-    {
-        this.sprite = sprite;
     }
 
 }
