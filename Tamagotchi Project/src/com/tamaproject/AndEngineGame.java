@@ -1,8 +1,14 @@
 package com.tamaproject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.List;
 
 import com.tamaproject.andengine.entity.*;
+
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.handler.IUpdateHandler;
@@ -22,19 +28,33 @@ import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.input.touch.TouchEvent;
+import org.anddev.andengine.opengl.texture.Texture;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextureAtlasSource;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
+import org.anddev.andengine.opengl.texture.region.TextureRegionFactory;
+import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.MathUtils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.BitmapFactory;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.LinearLayout.LayoutParams;
 
 public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchListener,
 	IOnAreaTouchListener
@@ -53,8 +73,6 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
     private Camera mCamera;
     private BitmapTextureAtlas mBitmapTextureAtlas;
-    private TextureRegion mTamaTextureRegion, mPoopTextureRegion, mTreasureTextureRegion,
-	    mPlaceHolderTextureRegion, mMicRegion, mBackpackIconRegion;
     private RepeatingSpriteBackground mGrassBackground;
     private Scene mScene;
     private Backpack bp;
@@ -66,9 +84,17 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private ArrayList<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>();
     private Tamagotchi tama;
     private float pTopBound, pBottomBound;
+    private Sprite trashCan;
+    private List<BaseSprite> ipoToRemove = new ArrayList<BaseSprite>();
 
     // Selection boxes for bottom bar
     private ArrayList<Rectangle> selectBoxes = new ArrayList<Rectangle>();
+
+    // TextureRegions
+    public Hashtable<String, TextureRegion> listTR = new Hashtable<String, TextureRegion>();
+    public List<BitmapTextureAtlas> texturelist = new ArrayList<BitmapTextureAtlas>();
+    private String[] fileNames;
+    private String[] folderNameArray = new String[] { new String("gfx/") };
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -86,16 +112,66 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     @Override
     public void onLoadResources()
     {
-	this.mBitmapTextureAtlas = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
-	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "tama.png", 0, 0);
-	this.mPoopTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "poop.png", 0, 107);
-	this.mTreasureTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "treasure.png", 0, 156);
-	this.mPlaceHolderTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "ic_launcher.png", 0, 205);
-	this.mMicRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "mic.png", 50, 107);
-	this.mBackpackIconRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "backpack.png", 100, 107);
+	/*
+	 * this.mBitmapTextureAtlas = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA); BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
+	 * this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "tama.png", 0, 0); this.listTR.get("poop.png") =
+	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "poop.png", 0, 107); this.this.listTR.get("treasure.png") =
+	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "treasure.png", 0, 156); this.this.listTR.get("ic_launcher.png") =
+	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "ic_launcher.png", 0, 205); this.this.listTR.get("mic.png") =
+	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "mic.png", 50, 107); this.this.listTR.get("backpack.png") =
+	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "backpack.png", 100, 107); this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth,
+	 * cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png")); this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
+	 */
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
-	this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
+	loadTextures(this, this.mEngine);
+	Debug.d(listTR.toString());
+    }
+
+    public void loadTextures(Context context, Engine pEngine)
+    {
+	BitmapFactory.Options opt = new BitmapFactory.Options();
+	opt.inJustDecodeBounds = true;
+
+	for (int i = 0; i < folderNameArray.length; i++)
+	{
+	    BitmapTextureAtlasTextureRegionFactory.setAssetBasePath(folderNameArray[i]);
+	    try
+	    {
+		fileNames = context.getResources().getAssets().list(folderNameArray[i].substring(0, folderNameArray[i].lastIndexOf("/")));
+		Arrays.sort(fileNames);
+		for (int j = 0; j < fileNames.length; j++)
+		{
+
+		    String rscPath = folderNameArray[i].concat(fileNames[j]);
+		    InputStream in = context.getResources().getAssets().open(rscPath);
+		    BitmapFactory.decodeStream(in, null, opt);
+
+		    int width = opt.outWidth;
+		    int height = opt.outHeight;
+
+		    boolean flag = MathUtils.isPowerOfTwo(width);
+
+		    if (!flag)
+		    {
+			width = MathUtils.nextPowerOfTwo(opt.outWidth);
+		    }
+		    flag = MathUtils.isPowerOfTwo(height);
+		    if (!flag)
+		    {
+			height = MathUtils.nextPowerOfTwo(opt.outHeight);
+		    }
+		    texturelist.add(new BitmapTextureAtlas(width, height, TextureOptions.BILINEAR_PREMULTIPLYALPHA));
+
+		    listTR.put(fileNames[j], BitmapTextureAtlasTextureRegionFactory.createFromAsset(texturelist.get(j), context, fileNames[j], 0, 0));
+		    pEngine.getTextureManager().loadTexture(texturelist.get(j));
+		}
+	    } catch (IOException e)
+	    {
+		e.printStackTrace();
+		return;
+	    }
+	}
+	context = null;
     }
 
     @Override
@@ -106,12 +182,12 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mScene = new Scene();
 	this.mScene.setBackground(this.mGrassBackground);
 
-	final int centerX = (cameraWidth - this.mTamaTextureRegion.getWidth()) / 2;
-	final int centerY = (cameraHeight - this.mTamaTextureRegion.getHeight()) / 2;
+	final int centerX = (cameraWidth - this.listTR.get("tama.png").getWidth()) / 2;
+	final int centerY = (cameraHeight - this.listTR.get("tama.png").getHeight()) / 2;
 
 	// Load tamagotchi first
 	this.tama = new Tamagotchi();
-	this.tama.setSprite(new Sprite(centerX, centerY, this.mTamaTextureRegion));
+	this.tama.setSprite(new Sprite(centerX, centerY, this.listTR.get("tama.png")));
 	tama.getSprite().setScale(0.85f);
 	this.mainLayer.attachChild(tama.getSprite());
 
@@ -133,6 +209,10 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	this.mScene.registerTouchArea(tama.getSprite());
 
+	// Add trash can
+	this.trashCan = new Sprite(cameraWidth - listTR.get("trash.png").getWidth(), pBottomBound - listTR.get("trash.png").getHeight(), listTR.get("trash.png"));
+	this.mainLayer.attachChild(trashCan);
+
 	this.mScene.setTouchAreaBindingEnabled(true);
 	this.mScene.setOnSceneTouchListener(this);
 	this.mScene.setOnAreaTouchListener(this);
@@ -148,7 +228,12 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    {
 		try
 		{
-
+		    for(BaseSprite s : ipoToRemove)
+		    {
+			mainLayer.detachChild(s);
+			mScene.unregisterTouchArea(s);
+			inPlayObjects.remove(s);
+		    }
 		} catch (Exception e)
 		{
 		    Debug.d("onUpdate EXCEPTION:" + e);
@@ -324,7 +409,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	/**
 	 * Load the open backpack icon
 	 */
-	final Sprite openBackpackIcon = new Sprite(iconSpacer * 1 - mBackpackIconRegion.getWidth() / 2, mid - mBackpackIconRegion.getHeight() / 2, mBackpackIconRegion)
+	final Sprite openBackpackIcon = new Sprite(iconSpacer * 1 - this.listTR.get("backpack.png").getWidth() / 2, mid - this.listTR.get("backpack.png").getHeight() / 2, this.listTR.get("backpack.png"))
 	{
 	    @Override
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
@@ -351,7 +436,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	/**
 	 * Load microphone icon
 	 */
-	final Sprite micIcon = new Sprite(iconSpacer * 2 - mMicRegion.getWidth() / 2, mid - mMicRegion.getHeight() / 2, mMicRegion);
+	final Sprite micIcon = new Sprite(iconSpacer * 2 - this.listTR.get("mic.png").getWidth() / 2, mid - this.listTR.get("mic.png").getHeight() / 2, this.listTR.get("mic.png"));
 	bottomRect.attachChild(micIcon);
 	this.mScene.registerTouchArea(micIcon);
 
@@ -380,7 +465,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
      */
     public void addPoop(final float pX, final float pY)
     {
-	final Sprite poop = new Sprite(pX, pY, this.mPoopTextureRegion)
+	final Sprite poop = new Sprite(pX, pY, this.listTR.get("poop.png"))
 	{
 	    private boolean touched = false;
 
@@ -424,6 +509,10 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		    else if (pSceneTouchEvent.isActionUp())
 		    {
 			touched = false;
+			if (this.collidesWith(trashCan))
+			{
+			    ipoToRemove.add(this);
+			}
 		    }
 		    return true;
 		}
@@ -480,7 +569,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	{
 	    for (int j = 1; j <= 5; j++)
 	    {
-		Item item = new Item((xSpacing * j) - mTreasureTextureRegion.getWidth() / 2, (ySpacing * i) - mTreasureTextureRegion.getHeight() / 2, mTreasureTextureRegion)
+		Item item = new Item((xSpacing * j) - this.listTR.get("treasure.png").getWidth() / 2, (ySpacing * i) - this.listTR.get("treasure.png").getHeight() / 2, this.listTR.get("treasure.png"))
 		{
 		    private boolean touched = false;
 		    private boolean moved = false;
@@ -564,7 +653,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 				else
 				{
 				    // show item description
-
+				    if (popUp != null)
+					popUp.dismiss();
+				    showItemDescription(this);
 				}
 			    }
 			    return true;
@@ -604,7 +695,53 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.bp.resetPositions(cameraWidth, cameraHeight);
 	this.selectBoxes.get(0).setVisible(false);
 	this.mScene.setOnAreaTouchTraversalFrontToBack();
+
+	if (popUp != null)
+	    popUp.dismiss();
     }
+
+    private PopupWindow popUp;
+    private LinearLayout layout;
+
+    /**
+     * Generates the pop up that shows the item description
+     * 
+     * @param i
+     *            - the item that was selected
+     */
+    private void showItemDescription(Item i)
+    {
+	popUp = new PopupWindow(this);
+	layout = new LinearLayout(this);
+	TextView tv = new TextView(this);
+	Button but = new Button(this);
+	ImageView iv = new ImageView(this);
+	LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+
+	layout.setOrientation(LinearLayout.HORIZONTAL);
+	params.setMargins(10, 10, 10, 10);
+	tv.setText(i.getDescription() + "\n");
+	// iv.setImageBitmap(i.getTextureRegion().getTexture().g);
+	but.setText("Close");
+	but.setOnClickListener(new OnClickListener()
+	{
+	    public void onClick(View v)
+	    {
+		popUp.dismiss();
+	    }
+
+	});
+
+	layout.addView(iv, params);
+	layout.addView(tv, params);
+	layout.addView(but, params);
+	popUp.setContentView(layout);
+
+	popUp.showAtLocation(layout, Gravity.NO_GRAVITY, 0, cameraHeight / 2);
+	popUp.update(cameraWidth, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound)));
+	popUp.setFocusable(true);
+    }
+
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
