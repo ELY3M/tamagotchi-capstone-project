@@ -191,7 +191,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 	loadTextures(this, this.mEngine);
 	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-	this.mFont = new Font(this.mFontTexture, Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 15, true, Color.BLACK);
+	this.mFont = new Font(this.mFontTexture, Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 24, true, Color.WHITE);
 	this.mEngine.getTextureManager().loadTexture(this.mFontTexture);
 	this.mEngine.getFontManager().loadFont(this.mFont);
 
@@ -481,6 +481,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	final Rectangle backpackBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
 	backpackBackground.setColor(87 / 255f, 57 / 255f, 20 / 255f);
 	backpackLayer.attachChild(backpackBackground);
+	
+	final Text backpackLabel = new Text(15, 15, mFont, "Backpack", HorizontalAlign.LEFT);
+	backpackBackground.attachChild(backpackLabel);
 
 	/**
 	 * Load stats background
@@ -488,6 +491,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	final Rectangle statsBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
 	statsBackground.setColor(0, 0, 0);
 	statsLayer.attachChild(statsBackground);
+	
+	final Text statsLabel = new Text(15, 15, mFont, "Tamagotchi Stats", HorizontalAlign.LEFT);
+	statsBackground.attachChild(statsLabel);
 
 	/**
 	 * Draw bottom rectangle bar

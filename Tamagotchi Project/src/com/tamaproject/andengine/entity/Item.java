@@ -5,9 +5,11 @@ import org.anddev.andengine.opengl.texture.region.TextureRegion;
 
 public class Item extends Sprite
 {
+    private static final int EQUIP = 1, NORMAL = 0;
     private String name;
     private String description;
     private int health, hunger, sickness, xp;
+    private int type = NORMAL;
 
     public Item(float x, float y, TextureRegion textureRegion)
     {
@@ -107,6 +109,16 @@ public class Item extends Sprite
     public void setDescription(String description)
     {
 	this.description = description;
+    }
+
+    public int getType()
+    {
+	return type;
+    }
+
+    public void setType(int type)
+    {
+	this.type = type;
     }
 
 }
