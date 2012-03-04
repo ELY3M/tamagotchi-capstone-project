@@ -7,8 +7,12 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
+import javax.microedition.khronos.opengles.GL10;
+
+import com.badlogic.gdx.math.Vector2;
 import com.tamaproject.GameActivity.MyLocationListener;
 import com.tamaproject.andengine.entity.*;
+import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
 import com.tamaproject.weather.WeatherRetriever;
 
@@ -21,6 +25,17 @@ import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
+import org.anddev.andengine.entity.particle.ParticleSystem;
+import org.anddev.andengine.entity.particle.emitter.PointParticleEmitter;
+import org.anddev.andengine.entity.particle.emitter.RectangleParticleEmitter;
+import org.anddev.andengine.entity.particle.initializer.AccelerationInitializer;
+import org.anddev.andengine.entity.particle.initializer.ColorInitializer;
+import org.anddev.andengine.entity.particle.initializer.RotationInitializer;
+import org.anddev.andengine.entity.particle.initializer.VelocityInitializer;
+import org.anddev.andengine.entity.particle.modifier.AlphaModifier;
+import org.anddev.andengine.entity.particle.modifier.ColorModifier;
+import org.anddev.andengine.entity.particle.modifier.ExpireModifier;
+import org.anddev.andengine.entity.particle.modifier.ScaleModifier;
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnAreaTouchListener;
@@ -29,8 +44,12 @@ import org.anddev.andengine.entity.scene.Scene.ITouchArea;
 import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
+import org.anddev.andengine.entity.sprite.batch.SpriteBatch;
+import org.anddev.andengine.entity.text.Text;
 import org.anddev.andengine.entity.util.FPSLogger;
+import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
 import org.anddev.andengine.input.touch.TouchEvent;
+import org.anddev.andengine.opengl.font.Font;
 import org.anddev.andengine.opengl.texture.Texture;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
@@ -40,19 +59,25 @@ import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TextureRegionFactory;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
+import org.anddev.andengine.util.HorizontalAlign;
 import org.anddev.andengine.util.MathUtils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -76,6 +101,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private final int cameraWidth = 480, cameraHeight = 800;
     private static final int CONFIRM_APPLYITEM = 0;
     private static final int CONFIRM_QUITGAME = 1;
+    private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
+    private static final boolean FULLSCREEN = true;
 
     // ===========================================================
     // Fields
@@ -88,6 +115,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private Backpack bp;
     private Entity mainLayer = new Entity();
     private Entity backpackLayer = new Entity();
+    private Entity weatherLayer = new Entity();
     private Item takeOut; // item to take out of backpack
     private Item putBack; // item to put back into packpack
     private Item itemToApply; // item to apply to Tama
@@ -97,7 +125,11 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private Sprite trashCan;
     private PopupWindow popUp;
     private LinearLayout layout;
-
+    private PhysicsWorld mPhysicsWorld;
+    private ParticleSystem particleSystem;
+    private int weather = Weather.NONE;
+    private BitmapTextureAtlas mFontTexture;
+    private Font mFont;
     // Status bars that need to be updated
     private Rectangle currHealthBar, currSicknessBar, currHungerBar;
 
@@ -132,7 +164,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.pTopBound = 100;
 	this.pBottomBound = cameraHeight - 60;
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
-	return new Engine(new EngineOptions(false, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
+	return new Engine(new EngineOptions(FULLSCREEN, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
     }
 
     @Override
@@ -140,6 +172,11 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     {
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 	loadTextures(this, this.mEngine);
+	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mFont = new Font(this.mFontTexture, Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 15, true, Color.BLACK);
+	this.mEngine.getTextureManager().loadTexture(this.mFontTexture);
+	this.mEngine.getFontManager().loadFont(this.mFont);
+
 	Debug.d(listTR.toString());
     }
 
@@ -164,6 +201,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.loadInterface();
 
 	this.mScene.attachChild(mainLayer);
+	this.mScene.attachChild(weatherLayer);
 	this.mScene.attachChild(backpackLayer);
 
 	this.mainLayer.setVisible(true);
@@ -204,6 +242,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			mScene.unregisterTouchArea(s);
 			inPlayObjects.remove(s);
 		    }
+		    updateStatusBars();
 		} catch (Exception e)
 		{
 		    Debug.d("onUpdate EXCEPTION:" + e);
@@ -243,6 +282,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	this.mScene.setOnAreaTouchTraversalFrontToBack();
 
+	// this.mPhysicsWorld = new PhysicsWorld(new Vector2(0, SensorManager.GRAVITY_EARTH), false);
+	// this.mScene.registerUpdateHandler(this.mPhysicsWorld);
 	return this.mScene;
     }
 
@@ -352,6 +393,28 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	return super.onKeyDown(pKeyCode, pEvent);
     }
 
+    @Override
+    public void onPause()
+    {
+	super.onPause();
+	this.mEngine.stop();
+    }
+
+    @Override
+    public void onResume()
+    {
+	super.onResume();
+	this.mEngine.start();
+    }
+
+    @Override
+    public void onDestroy()
+    {
+	super.onDestroy();
+	stopGPS();
+	finish();
+    }
+
     // ===========================================================
     // Methods
     // ===========================================================
@@ -407,14 +470,14 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!bp.isBackpackOpen())
-		    {
 			openBackpack();
-		    }
 		    else
-		    {
 			closeBackpack();
-		    }
 		    return true;
+		}
+		else if (pSceneTouchEvent.isActionUp())
+		{
+		    this.setScale(1);
 		}
 		return false;
 	    }
@@ -425,7 +488,20 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	/**
 	 * Load microphone icon
 	 */
-	final Sprite micIcon = new Sprite(iconSpacer * 2 - this.listTR.get("mic.png").getWidth() / 2, mid - this.listTR.get("mic.png").getHeight() / 2, this.listTR.get("mic.png"));
+	final Sprite micIcon = new Sprite(iconSpacer * 2 - this.listTR.get("mic.png").getWidth() / 2, mid - this.listTR.get("mic.png").getHeight() / 2, this.listTR.get("mic.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    startVoiceRecognitionActivity();
+		    return true;
+		}
+		return false;
+	    }
+	};
 	bottomRect.attachChild(micIcon);
 	this.mScene.registerTouchArea(micIcon);
 
@@ -452,7 +528,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	 * Load health bar
 	 */
 	float ratio = tama.getCurrentHealth() / tama.getMaxHealth();
-	Debug.d("Tama health ratio: " + ratio);
+	// Debug.d("Tama health ratio: " + ratio);
 	this.currHealthBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currHealthBar.setColor(1, 0, 0);
 	healthBar.attachChild(currHealthBar);
@@ -468,7 +544,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	 * Load sickness bar
 	 */
 	ratio = tama.getCurrentSickness() / tama.getMaxSickness();
-	Debug.d("Tama sick ratio: " + ratio);
+	// Debug.d("Tama sick ratio: " + ratio);
 	this.currSicknessBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currSicknessBar.setColor(1, 0, 0);
 	sicknessBar.attachChild(currSicknessBar);
@@ -484,7 +560,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	 * Load hunger bar
 	 */
 	ratio = tama.getCurrentHunger() / tama.getMaxHunger();
-	Debug.d("Tama hunger ratio: " + ratio);
+	// Debug.d("Tama hunger ratio: " + ratio);
 	this.currHungerBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currHungerBar.setColor(1, 0, 0);
 	hungerBar.attachChild(currHungerBar);
@@ -495,11 +571,25 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	temp = listTR.get("food.png");
 	final Sprite hungerIcon = new Sprite(hungerBar.getX() - iconSpacing, hungerBar.getY() - temp.getHeight() / 2, temp);
 	topRect.attachChild(hungerIcon);
+
     }
 
-    private void updateBars()
+    /**
+     * Updates the status bars with Tama info
+     */
+    private void updateStatusBars()
     {
+	float ratio = tama.getCurrentHealth() / tama.getMaxHealth();
+	// Debug.d("Tama health ratio: " + ratio);
+	this.currHealthBar.setSize(ratio * (barLength - 4), barHeight - 4);
 
+	ratio = tama.getCurrentSickness() / tama.getMaxSickness();
+	// Debug.d("Tama sick ratio: " + ratio);
+	this.currSicknessBar.setSize(ratio * (barLength - 4), barHeight - 4);
+
+	ratio = tama.getCurrentHunger() / tama.getMaxHunger();
+	// Debug.d("Tama hunger ratio: " + ratio);
+	this.currHungerBar.setSize(ratio * (barLength - 4), barHeight - 4);
     }
 
     /**
@@ -534,17 +624,16 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			if (touched)
 			{
 			    if (y < pTopBound)
-			    {
 				this.setPosition(x - this.getWidth() / 2, pTopBound - this.getHeight() / 2);
-			    }
 			    else if (y > pBottomBound)
-			    {
 				this.setPosition(x - this.getWidth() / 2, pBottomBound - this.getHeight() / 2);
-			    }
 			    else
-			    {
 				this.setPosition(x - this.getWidth() / 2, y - this.getHeight() / 2);
-			    }
+
+			    if (this.collidesWith(trashCan))
+				trashCan.setScale(1.5f);
+			    else
+				trashCan.setScale(1);
 			}
 			else
 			{
@@ -557,6 +646,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			if (this.collidesWith(trashCan))
 			{
 			    ipoToRemove.add(this);
+			    trashCan.setScale(1);
 			}
 		    }
 		    return true;
@@ -614,7 +704,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	{
 	    for (int j = 1; j <= 5; j++)
 	    {
-		Item item = new Item((xSpacing * j) - this.listTR.get("treasure.png").getWidth() / 2, (ySpacing * i) - this.listTR.get("treasure.png").getHeight() / 2, this.listTR.get("treasure.png"))
+		Item item = new Item((xSpacing * j) - this.listTR.get("treasure.png").getWidth() / 2, (ySpacing * i) - this.listTR.get("treasure.png").getHeight() / 2, this.listTR.get("treasure.png"), "Health item", 7, 0, 0, 0)
 		{
 		    private boolean touched = false;
 		    private boolean moved = false;
@@ -629,6 +719,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			    {
 				Debug.d("Item action down");
 				touched = true;
+				this.setScale(1.5f);
 			    }
 			    else if (pSceneTouchEvent.isActionMove())
 			    {
@@ -664,6 +755,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			    {
 				Debug.d("Item action up");
 				touched = false;
+				this.setScale(1);
 				if (moved)
 				{
 				    moved = false;
@@ -799,6 +891,23 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    cc = WeatherRetriever.getCurrentConditions(lat, lon);
 	    if (cc != null)
 	    {
+		Debug.d(cc.toString());
+		/**
+		 * For debugging, display current weather
+		 */
+		final Text weatherText = new Text(0, pBottomBound - 60, mFont, cc.getCondition(), HorizontalAlign.LEFT);
+		mainLayer.attachChild(weatherText);
+
+		String[] temp = cc.getCondition().split(" ");
+		for (String s : temp)
+		{
+		    if (s.equalsIgnoreCase("rain"))
+			loadWeather(Weather.RAIN);
+		    else if (s.equalsIgnoreCase("snow"))
+			loadWeather(Weather.SNOW);
+		    else
+			loadWeather(Weather.NONE);
+		}
 		lastWeatherRetrieve = System.currentTimeMillis();
 		stopGPS();
 	    }
@@ -919,6 +1028,112 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	context = null;
     }
 
+    private void loadWeather(int type)
+    {
+	if (particleSystem != null)
+	{
+	    this.weatherLayer.detachChild(particleSystem);
+	    this.particleSystem = null;
+	}
+
+	if (type == Weather.SNOW)
+	{
+	    weather = type;
+	    final RectangleParticleEmitter particleEmitter = new RectangleParticleEmitter(cameraWidth / 2, pTopBound, cameraWidth, 1);
+	    this.particleSystem = new ParticleSystem(particleEmitter, 6, 10, 200, listTR.get("snowflake.png"));
+	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
+
+	    particleSystem.addParticleInitializer(new VelocityInitializer(-10, 10, 60, 90));
+	    particleSystem.addParticleInitializer(new AccelerationInitializer(5, 15));
+	    particleSystem.addParticleInitializer(new RotationInitializer(0.0f, 360.0f));
+
+	    particleSystem.addParticleModifier(new ExpireModifier(11.5f));
+	    this.weatherLayer.attachChild(particleSystem);
+	}
+	else if (type == Weather.RAIN)
+	{
+	    weather = type;
+	    final RectangleParticleEmitter particleEmitter = new RectangleParticleEmitter(cameraWidth / 2, pTopBound, cameraWidth, 1);
+	    this.particleSystem = new ParticleSystem(particleEmitter, 6, 10, 200, listTR.get("raindrop.png"));
+	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
+
+	    particleSystem.addParticleInitializer(new VelocityInitializer(-10, 10, 60, 90));
+	    particleSystem.addParticleInitializer(new AccelerationInitializer(5, 15));
+
+	    particleSystem.addParticleModifier(new ExpireModifier(11.5f));
+	    this.weatherLayer.attachChild(particleSystem);
+	}
+	else
+	{
+	    weather = Weather.NONE;
+	}
+    }
+
+    /**
+     * Voice recognition system, starts the Activity that shows the voice prompt
+     */
+    public void startVoiceRecognitionActivity()
+    {
+	if (isNetworkAvailable())
+	{
+	    try
+	    {
+		this.mEngine.stop();
+		Debug.d("Starting voice recognition");
+		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+		// uses free form text input
+		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+		// Puts a customized message to the prompt
+		intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say a command");
+		startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+	    } catch (Exception e)
+	    {
+		Toast.makeText(this, "Error! Cannot start voice command", Toast.LENGTH_SHORT).show();
+	    }
+	}
+	else
+	{
+	    Toast.makeText(this, "Cannot start voice commands, there is no internet connection", Toast.LENGTH_SHORT).show();
+	}
+    }
+
+    /**
+     * Handles the results from the recognition activity.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+	if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK)
+	{
+	    Debug.d("Interpret results");
+	    // Fill the list view with the strings the recognizer thought it could have heard
+	    ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+	    if (matches.contains("toggle snow"))
+	    {
+		if (weather == Weather.SNOW)
+		{
+		    loadWeather(Weather.NONE);
+		}
+		else
+		{
+		    loadWeather(Weather.SNOW);
+		}
+	    }
+	    else if (matches.contains("toggle rain"))
+	    {
+		if (weather == Weather.RAIN)
+		{
+		    loadWeather(Weather.NONE);
+		}
+		else
+		{
+		    loadWeather(Weather.RAIN);
+		}
+	    }
+	    super.onActivityResult(requestCode, resultCode, data);
+	    this.mEngine.start();
+	}
+    }
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
