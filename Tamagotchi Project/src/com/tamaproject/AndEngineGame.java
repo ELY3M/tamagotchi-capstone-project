@@ -7,7 +7,10 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
+import com.tamaproject.GameActivity.MyLocationListener;
 import com.tamaproject.andengine.entity.*;
+import com.tamaproject.weather.CurrentConditions;
+import com.tamaproject.weather.WeatherRetriever;
 
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
@@ -44,6 +47,13 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -78,23 +88,39 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private Backpack bp;
     private Entity mainLayer = new Entity();
     private Entity backpackLayer = new Entity();
-    private Item takeOut;
-    private Item putBack;
-    private Item itemToApply;
-    private ArrayList<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>();
-    private Tamagotchi tama;
+    private Item takeOut; // item to take out of backpack
+    private Item putBack; // item to put back into packpack
+    private Item itemToApply; // item to apply to Tama
+    private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
+    private Tamagotchi tama; // Tamagotchi
     private float pTopBound, pBottomBound;
     private Sprite trashCan;
+    private PopupWindow popUp;
+    private LinearLayout layout;
+
+    // Status bars that need to be updated
+    private Rectangle currHealthBar, currSicknessBar, currHungerBar;
+
+    // List of in play objects to be removed at next update thread
     private List<BaseSprite> ipoToRemove = new ArrayList<BaseSprite>();
 
+    // Length of health bars, etc.
+    private final float barLength = 150;
+    private final float barHeight = 15;
+
     // Selection boxes for bottom bar
-    private ArrayList<Rectangle> selectBoxes = new ArrayList<Rectangle>();
+    private List<Rectangle> selectBoxes = new ArrayList<Rectangle>();
 
     // TextureRegions
     public Hashtable<String, TextureRegion> listTR = new Hashtable<String, TextureRegion>();
     public List<BitmapTextureAtlas> texturelist = new ArrayList<BitmapTextureAtlas>();
     private String[] fileNames;
     private String[] folderNameArray = new String[] { new String("gfx/") };
+
+    private LocationManager mlocManager;
+    private LocationListener mlocListener;
+    private long lastWeatherRetrieve = 0;
+    private CurrentConditions cc;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -106,72 +132,15 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.pTopBound = 100;
 	this.pBottomBound = cameraHeight - 60;
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
-	return new Engine(new EngineOptions(true, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
+	return new Engine(new EngineOptions(false, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
     }
 
     @Override
     public void onLoadResources()
     {
-	/*
-	 * this.mBitmapTextureAtlas = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA); BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
-	 * this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "tama.png", 0, 0); this.listTR.get("poop.png") =
-	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "poop.png", 0, 107); this.this.listTR.get("treasure.png") =
-	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "treasure.png", 0, 156); this.this.listTR.get("ic_launcher.png") =
-	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "ic_launcher.png", 0, 205); this.this.listTR.get("mic.png") =
-	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "mic.png", 50, 107); this.this.listTR.get("backpack.png") =
-	 * BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "backpack.png", 100, 107); this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth,
-	 * cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png")); this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
-	 */
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 	loadTextures(this, this.mEngine);
 	Debug.d(listTR.toString());
-    }
-
-    public void loadTextures(Context context, Engine pEngine)
-    {
-	BitmapFactory.Options opt = new BitmapFactory.Options();
-	opt.inJustDecodeBounds = true;
-
-	for (int i = 0; i < folderNameArray.length; i++)
-	{
-	    BitmapTextureAtlasTextureRegionFactory.setAssetBasePath(folderNameArray[i]);
-	    try
-	    {
-		fileNames = context.getResources().getAssets().list(folderNameArray[i].substring(0, folderNameArray[i].lastIndexOf("/")));
-		Arrays.sort(fileNames);
-		for (int j = 0; j < fileNames.length; j++)
-		{
-
-		    String rscPath = folderNameArray[i].concat(fileNames[j]);
-		    InputStream in = context.getResources().getAssets().open(rscPath);
-		    BitmapFactory.decodeStream(in, null, opt);
-
-		    int width = opt.outWidth;
-		    int height = opt.outHeight;
-
-		    boolean flag = MathUtils.isPowerOfTwo(width);
-
-		    if (!flag)
-		    {
-			width = MathUtils.nextPowerOfTwo(opt.outWidth);
-		    }
-		    flag = MathUtils.isPowerOfTwo(height);
-		    if (!flag)
-		    {
-			height = MathUtils.nextPowerOfTwo(opt.outHeight);
-		    }
-		    texturelist.add(new BitmapTextureAtlas(width, height, TextureOptions.BILINEAR_PREMULTIPLYALPHA));
-
-		    listTR.put(fileNames[j], BitmapTextureAtlasTextureRegionFactory.createFromAsset(texturelist.get(j), context, fileNames[j], 0, 0));
-		    pEngine.getTextureManager().loadTexture(texturelist.get(j));
-		}
-	    } catch (IOException e)
-	    {
-		e.printStackTrace();
-		return;
-	    }
-	}
-	context = null;
     }
 
     @Override
@@ -191,6 +160,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	tama.getSprite().setScale(0.85f);
 	this.mainLayer.attachChild(tama.getSprite());
 
+	// Load interface
 	this.loadInterface();
 
 	this.mScene.attachChild(mainLayer);
@@ -228,7 +198,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    {
 		try
 		{
-		    for(BaseSprite s : ipoToRemove)
+		    for (BaseSprite s : ipoToRemove)
 		    {
 			mainLayer.detachChild(s);
 			mScene.unregisterTouchArea(s);
@@ -244,6 +214,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    }
 	});
 
+	/**
+	 * Timer to generate poop
+	 */
 	this.mScene.registerUpdateHandler(new TimerHandler(10, true, new ITimerCallback()
 	{
 	    @Override
@@ -252,6 +225,19 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		final float xPos = MathUtils.random(30.0f, (cameraWidth - 30.0f));
 		final float yPos = MathUtils.random(pTopBound, (pBottomBound - pTopBound));
 		addPoop(xPos, yPos);
+	    }
+	}));
+
+	/**
+	 * Timer to run GPS to check weather every hour
+	 */
+	startGPS();
+	this.mScene.registerUpdateHandler(new TimerHandler(60 * 60, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		startGPS();
 	    }
 	}));
 
@@ -346,6 +332,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	return null;
     }
 
+    /**
+     * Captures the back key and menu key presses
+     */
     @Override
     public boolean onKeyDown(final int pKeyCode, final KeyEvent pEvent)
     {
@@ -415,7 +404,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		if (pSceneTouchEvent.isActionUp())
+		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!bp.isBackpackOpen())
 		    {
@@ -440,21 +429,77 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	bottomRect.attachChild(micIcon);
 	this.mScene.registerTouchArea(micIcon);
 
-	float barLength = 150;
-	float barHeight = 15;
+	float leftSpacing = 50;
+	float vSpacing = 25;
+	float iconSpacing = 30;
+	TextureRegion temp;
+	/**
+	 * Load status bars
+	 */
+	final Rectangle healthBar = new Rectangle(leftSpacing, vSpacing, barLength, barHeight);
+	healthBar.setColor(1, 1, 1);
+	topRect.attachChild(healthBar);
+
+	final Rectangle sicknessBar = new Rectangle(leftSpacing, healthBar.getY() + barHeight + vSpacing, barLength, barHeight);
+	sicknessBar.setColor(1, 1, 1);
+	topRect.attachChild(sicknessBar);
+
+	final Rectangle hungerBar = new Rectangle(healthBar.getX() + barLength + leftSpacing, vSpacing, barLength, barHeight);
+	hungerBar.setColor(1, 1, 1);
+	topRect.attachChild(hungerBar);
 
 	/**
 	 * Load health bar
 	 */
-	final Rectangle healthBar = new Rectangle(10, 10, barLength, barHeight);
-	healthBar.setColor(1, 1, 1);
-	topRect.attachChild(healthBar);
-
 	float ratio = tama.getCurrentHealth() / tama.getMaxHealth();
 	Debug.d("Tama health ratio: " + ratio);
-	final Rectangle currHealthBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
+	this.currHealthBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currHealthBar.setColor(1, 0, 0);
 	healthBar.attachChild(currHealthBar);
+
+	/**
+	 * Load health icon
+	 */
+	temp = listTR.get("heart.png");
+	final Sprite healthIcon = new Sprite(healthBar.getX() - iconSpacing, healthBar.getY() - temp.getHeight() / 2, temp);
+	topRect.attachChild(healthIcon);
+
+	/**
+	 * Load sickness bar
+	 */
+	ratio = tama.getCurrentSickness() / tama.getMaxSickness();
+	Debug.d("Tama sick ratio: " + ratio);
+	this.currSicknessBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
+	currSicknessBar.setColor(1, 0, 0);
+	sicknessBar.attachChild(currSicknessBar);
+
+	/**
+	 * Load sickness icon
+	 */
+	temp = listTR.get("sick.png");
+	final Sprite sickIcon = new Sprite(sicknessBar.getX() - iconSpacing, sicknessBar.getY() - temp.getHeight() / 2, temp);
+	topRect.attachChild(sickIcon);
+
+	/**
+	 * Load hunger bar
+	 */
+	ratio = tama.getCurrentHunger() / tama.getMaxHunger();
+	Debug.d("Tama hunger ratio: " + ratio);
+	this.currHungerBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
+	currHungerBar.setColor(1, 0, 0);
+	hungerBar.attachChild(currHungerBar);
+
+	/**
+	 * Load hunger icon
+	 */
+	temp = listTR.get("food.png");
+	final Sprite hungerIcon = new Sprite(hungerBar.getX() - iconSpacing, hungerBar.getY() - temp.getHeight() / 2, temp);
+	topRect.attachChild(hungerIcon);
+    }
+
+    private void updateBars()
+    {
+
     }
 
     /**
@@ -537,7 +582,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     {
 	if (pSceneTouchEvent.isActionDown())
 	{
-	    return true;
+
 	}
 
 	return false;
@@ -548,11 +593,11 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     {
 	if (pSceneTouchEvent.isActionDown())
 	{
-	    return true;
+
 	}
 	else if (pSceneTouchEvent.isActionUp())
 	{
-	    return true;
+
 	}
 
 	return false;
@@ -684,7 +729,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.bp.setBackpackOpen(true);
 	this.selectBoxes.get(0).setVisible(true);
 	this.bp.resetPositions(cameraWidth, cameraHeight);
-	this.mScene.setOnAreaTouchTraversalBackToFront();
+	// this.mScene.setOnAreaTouchTraversalBackToFront();
     }
 
     private void closeBackpack()
@@ -694,14 +739,11 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.bp.setBackpackOpen(false);
 	this.bp.resetPositions(cameraWidth, cameraHeight);
 	this.selectBoxes.get(0).setVisible(false);
-	this.mScene.setOnAreaTouchTraversalFrontToBack();
+	// this.mScene.setOnAreaTouchTraversalFrontToBack();
 
 	if (popUp != null)
 	    popUp.dismiss();
     }
-
-    private PopupWindow popUp;
-    private LinearLayout layout;
 
     /**
      * Generates the pop up that shows the item description
@@ -740,6 +782,141 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	popUp.showAtLocation(layout, Gravity.NO_GRAVITY, 0, cameraHeight / 2);
 	popUp.update(cameraWidth, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound)));
 	popUp.setFocusable(true);
+    }
+
+    /**
+     * GPS Location Listener
+     */
+    public class MyLocationListener implements LocationListener
+    {
+	public void onLocationChanged(Location loc)
+	{
+	    double lat = loc.getLatitude();
+	    double lon = loc.getLongitude();
+	    String Text = "My current location is: " + "Latitude = " + loc.getLatitude() + ", Longitude = " + loc.getLongitude();
+	    // Toast.makeText(getApplicationContext(), Text, Toast.LENGTH_SHORT).show();
+	    Debug.d(Text);
+	    cc = WeatherRetriever.getCurrentConditions(lat, lon);
+	    if (cc != null)
+	    {
+		lastWeatherRetrieve = System.currentTimeMillis();
+		stopGPS();
+	    }
+	}
+
+	public void onProviderDisabled(String provider)
+	{
+	    Toast.makeText(getApplicationContext(), "Gps Disabled", Toast.LENGTH_SHORT).show();
+	}
+
+	public void onProviderEnabled(String provider)
+	{
+	    Toast.makeText(getApplicationContext(), "Gps Enabled", Toast.LENGTH_SHORT).show();
+	}
+
+	public void onStatusChanged(String provider, int status, Bundle extras)
+	{
+
+	}
+    }
+
+    /**
+     * Starts gps listener if connected to internet
+     */
+    private void startGPS()
+    {
+	Debug.d("Starting GPS...");
+	if (isNetworkAvailable())
+	{
+	    mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+	    mlocListener = new MyLocationListener();
+	    mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
+	}
+	else
+	{
+	    Debug.d("Internet connection not available, not starting GPS.");
+	}
+    }
+
+    /**
+     * Stops gps listener if gps listener is active
+     */
+    private void stopGPS()
+    {
+	Debug.d("Stopping GPS...");
+	if (mlocManager != null)
+	    try
+	    {
+		mlocManager.removeUpdates(mlocListener);
+	    } catch (Exception e)
+	    {
+		e.printStackTrace();
+	    }
+    }
+
+    /**
+     * Checks to see if Android is connected to the internet *
+     * 
+     * @return if connected
+     */
+    private boolean isNetworkAvailable()
+    {
+	ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+	NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+	return activeNetworkInfo != null;
+    }
+
+    /**
+     * Loads all bitmaps into TextureRegions from the gfx folder into hashtable with file name as the key
+     * 
+     * @param context
+     * @param pEngine
+     */
+    public void loadTextures(Context context, Engine pEngine)
+    {
+	BitmapFactory.Options opt = new BitmapFactory.Options();
+	opt.inJustDecodeBounds = true;
+
+	for (int i = 0; i < folderNameArray.length; i++)
+	{
+	    BitmapTextureAtlasTextureRegionFactory.setAssetBasePath(folderNameArray[i]);
+	    try
+	    {
+		fileNames = context.getResources().getAssets().list(folderNameArray[i].substring(0, folderNameArray[i].lastIndexOf("/")));
+		Arrays.sort(fileNames);
+		for (int j = 0; j < fileNames.length; j++)
+		{
+
+		    String rscPath = folderNameArray[i].concat(fileNames[j]);
+		    InputStream in = context.getResources().getAssets().open(rscPath);
+		    BitmapFactory.decodeStream(in, null, opt);
+
+		    int width = opt.outWidth;
+		    int height = opt.outHeight;
+
+		    boolean flag = MathUtils.isPowerOfTwo(width);
+
+		    if (!flag)
+		    {
+			width = MathUtils.nextPowerOfTwo(opt.outWidth);
+		    }
+		    flag = MathUtils.isPowerOfTwo(height);
+		    if (!flag)
+		    {
+			height = MathUtils.nextPowerOfTwo(opt.outHeight);
+		    }
+		    texturelist.add(new BitmapTextureAtlas(width, height, TextureOptions.BILINEAR_PREMULTIPLYALPHA));
+
+		    listTR.put(fileNames[j], BitmapTextureAtlasTextureRegionFactory.createFromAsset(texturelist.get(j), context, fileNames[j], 0, 0));
+		    pEngine.getTextureManager().loadTexture(texturelist.get(j));
+		}
+	    } catch (IOException e)
+	    {
+		e.printStackTrace();
+		return;
+	    }
+	}
+	context = null;
     }
 
     // ===========================================================
