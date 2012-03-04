@@ -219,6 +219,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mainLayer.attachChild(tama.getSprite());
 
 	final Item eItem = new GameItem(0, 0, this.listTR.get("treasure.png"));
+	eItem.setType(Item.EQUIP);
 	equipItem(eItem);
 
 	// Load interface
@@ -1203,25 +1204,29 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	bottomRect.attachChild(selectBox);
     }
 
+    /**
+     * Equips item to tamagotchi
+     * @param item Item to be equipped
+     */
     private void equipItem(Item item)
     {
 	unequipItem();
-
+	
 	try
 	{
-	    item.detachSelf();
-	    mScene.unregisterTouchArea(item);
+	    item.detachSelf();  // detach item from any other entities
+	    mScene.unregisterTouchArea(item);  // try to unregister to touch area
 	} catch (Exception e)
 	{
-
+	    // item was not previously registered with touch
 	}
 
 	try
 	{
-	    bp.removeItem(item);
+	    bp.removeItem(item);  // try to remove from backpack
 	} catch (Exception e)
 	{
-
+	    // item was not taken from backpack
 	}
 
 	tama.setEquippedItem(item);
@@ -1229,6 +1234,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	tama.getSprite().attachChild(item);
     }
 
+    /**
+     * Unequips item from tamagotchi and puts it into backpack
+     */
     private void unequipItem()
     {
 	try
@@ -1238,6 +1246,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    bp.addItem(previousItem);
 	    backpackLayer.attachChild(previousItem);
 	    mScene.registerTouchArea(previousItem);
+	    tama.setEquippedItem(null);
 	} catch (Exception e)
 	{
 
