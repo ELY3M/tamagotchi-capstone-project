@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -104,6 +105,16 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
     private static final boolean FULLSCREEN = true;
 
+    // Length of health bars, etc.
+    private final float barLength = 150;
+    private final float barHeight = 25;
+    private final float leftSpacing = 50;
+    private final float vSpacing = 15;
+    private float iconSpacing = 30;
+
+    private final int numIcons = 6;  // number of icons in the bottom bar
+    private final int iconSpacer = cameraWidth / (numIcons + 1);
+
     // ===========================================================
     // Fields
     // ===========================================================
@@ -113,15 +124,23 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private RepeatingSpriteBackground mGrassBackground;
     private Scene mScene;
     private Backpack bp;
+    
+    // Layers
     private Entity mainLayer = new Entity();
     private Entity backpackLayer = new Entity();
     private Entity weatherLayer = new Entity();
+    private Entity statsLayer = new Entity();
+    private List<Entity> subLayers = new ArrayList<Entity>();  // layers that are opened by icons in the bottom bar
+    private List<Entity> mainLayers = new ArrayList<Entity>();  // layers that belong to the main gameplay
+    private HashMap<Entity, Rectangle> selectBoxes = new HashMap<Entity, Rectangle>();  // mapping of layers to icon select boxes
+    
     private Item takeOut; // item to take out of backpack
     private Item putBack; // item to put back into packpack
     private Item itemToApply; // item to apply to Tama
+    
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
-    private float pTopBound, pBottomBound;
+    private float pTopBound, pBottomBound;  // top and bottom bounds of play area
     private Sprite trashCan;
     private PopupWindow popUp;
     private LinearLayout layout;
@@ -130,18 +149,14 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private int weather = Weather.NONE;
     private BitmapTextureAtlas mFontTexture;
     private Font mFont;
+    
     // Status bars that need to be updated
     private Rectangle currHealthBar, currSicknessBar, currHungerBar;
 
     // List of in play objects to be removed at next update thread
     private List<BaseSprite> ipoToRemove = new ArrayList<BaseSprite>();
 
-    // Length of health bars, etc.
-    private final float barLength = 150;
-    private final float barHeight = 15;
-
     // Selection boxes for bottom bar
-    private List<Rectangle> selectBoxes = new ArrayList<Rectangle>();
 
     // TextureRegions
     public Hashtable<String, TextureRegion> listTR = new Hashtable<String, TextureRegion>();
@@ -149,10 +164,13 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private String[] fileNames;
     private String[] folderNameArray = new String[] { new String("gfx/") };
 
+    // Weather and GPS fields
     private LocationManager mlocManager;
     private LocationListener mlocListener;
     private long lastWeatherRetrieve = 0;
     private CurrentConditions cc;
+
+    private Rectangle topRect, bottomRect;  // top and bottom bars
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -200,12 +218,19 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	// Load interface
 	this.loadInterface();
 
+	this.mainLayers.add(mainLayer);
+	this.mainLayers.add(weatherLayer);
+	this.subLayers.add(backpackLayer);
+	this.subLayers.add(statsLayer);
+
 	this.mScene.attachChild(mainLayer);
 	this.mScene.attachChild(weatherLayer);
 	this.mScene.attachChild(backpackLayer);
+	this.mScene.attachChild(statsLayer);
 
 	this.mainLayer.setVisible(true);
 	this.backpackLayer.setVisible(false);
+	this.statsLayer.setVisible(false);
 
 	this.bp = new Backpack();
 	this.loadItems();
@@ -242,7 +267,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 			mScene.unregisterTouchArea(s);
 			inPlayObjects.remove(s);
 		    }
+
 		    updateStatusBars();
+
 		} catch (Exception e)
 		{
 		    Debug.d("onUpdate EXCEPTION:" + e);
@@ -414,6 +441,30 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	stopGPS();
 	finish();
     }
+    
+    @Override
+    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent, final ITouchArea pTouchArea,
+	    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+    {
+	if (pSceneTouchEvent.isActionDown())
+	{
+
+	}
+
+	return false;
+    }
+
+    @Override
+    public boolean onSceneTouchEvent(final Scene pScene, final TouchEvent pSceneTouchEvent)
+    {
+	if (pSceneTouchEvent.isActionDown())
+	{
+
+	}
+	
+	return false;
+    }
+
 
     // ===========================================================
     // Methods
@@ -421,8 +472,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
     private void loadInterface()
     {
-	int numIcons = 6;
-	int iconSpacer = cameraWidth / (numIcons + 1);
+
 	float mid = (cameraHeight - pBottomBound) / 2;
 
 	/**
@@ -433,34 +483,30 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	backpackLayer.attachChild(backpackBackground);
 
 	/**
+	 * Load stats background
+	 */
+	final Rectangle statsBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
+	statsBackground.setColor(0, 0, 0);
+	statsLayer.attachChild(statsBackground);
+
+	/**
 	 * Draw bottom rectangle bar
 	 */
-	final Rectangle bottomRect = new Rectangle(0, pBottomBound, cameraWidth, cameraHeight);
+	bottomRect = new Rectangle(0, pBottomBound, cameraWidth, cameraHeight);
 	bottomRect.setColor(70 / 255f, 132 / 255f, 163 / 255f);
 	this.mScene.attachChild(bottomRect);
 
 	/**
 	 * Draw top rectangle bar
 	 */
-	final Rectangle topRect = new Rectangle(0, 0, cameraWidth, pTopBound);
+	topRect = new Rectangle(0, 0, cameraWidth, pTopBound);
 	topRect.setColor(70 / 255f, 132 / 255f, 163 / 255f);
 	this.mScene.attachChild(topRect);
 
 	/**
-	 * Make selection boxes
-	 */
-	for (int i = 1; i <= numIcons; i++)
-	{
-	    final Rectangle selectBox = new Rectangle(iconSpacer * i - 25f, 0, 50, bottomRect.getHeight());
-	    selectBox.setColor(1, 1, 1);
-	    selectBox.setVisible(false);
-	    selectBoxes.add(selectBox);
-	    bottomRect.attachChild(selectBox);
-	}
-
-	/**
 	 * Load the open backpack icon
 	 */
+	createSelectBox(backpackLayer, 1);
 	final Sprite openBackpackIcon = new Sprite(iconSpacer * 1 - this.listTR.get("backpack.png").getWidth() / 2, mid - this.listTR.get("backpack.png").getHeight() / 2, this.listTR.get("backpack.png"))
 	{
 	    @Override
@@ -469,7 +515,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    {
 		if (pSceneTouchEvent.isActionDown())
 		{
-		    if (!bp.isBackpackOpen())
+		    if (!backpackLayer.isVisible())
 			openBackpack();
 		    else
 			closeBackpack();
@@ -505,9 +551,31 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	bottomRect.attachChild(micIcon);
 	this.mScene.registerTouchArea(micIcon);
 
-	float leftSpacing = 50;
-	float vSpacing = 25;
-	float iconSpacing = 30;
+	/**
+	 * Load stats icon
+	 */
+	createSelectBox(statsLayer, 3);
+	final Sprite statsIcon = new Sprite(iconSpacer * 3 - this.listTR.get("statsicon.png").getWidth() / 2, mid - this.listTR.get("statsicon.png").getHeight() / 2, this.listTR.get("statsicon.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    if (!statsLayer.isVisible())
+			openLayer(statsLayer);
+		    else
+			closeSubLayers();
+
+		    return true;
+		}
+		return false;
+	    }
+	};
+	bottomRect.attachChild(statsIcon);
+	this.mScene.registerTouchArea(statsIcon);
+
 	TextureRegion temp;
 	/**
 	 * Load status bars
@@ -537,7 +605,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	 * Load health icon
 	 */
 	temp = listTR.get("heart.png");
-	final Sprite healthIcon = new Sprite(healthBar.getX() - iconSpacing, healthBar.getY() - temp.getHeight() / 2, temp);
+	final Sprite healthIcon = new Sprite(healthBar.getX() - iconSpacing, healthBar.getY(), temp);
 	topRect.attachChild(healthIcon);
 
 	/**
@@ -553,7 +621,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	 * Load sickness icon
 	 */
 	temp = listTR.get("sick.png");
-	final Sprite sickIcon = new Sprite(sicknessBar.getX() - iconSpacing, sicknessBar.getY() - temp.getHeight() / 2, temp);
+	final Sprite sickIcon = new Sprite(sicknessBar.getX() - iconSpacing, sicknessBar.getY(), temp);
 	topRect.attachChild(sickIcon);
 
 	/**
@@ -569,7 +637,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	 * Load hunger icon
 	 */
 	temp = listTR.get("food.png");
-	final Sprite hungerIcon = new Sprite(hungerBar.getX() - iconSpacing, hungerBar.getY() - temp.getHeight() / 2, temp);
+	final Sprite hungerIcon = new Sprite(hungerBar.getX() - iconSpacing, hungerBar.getY(), temp);
 	topRect.attachChild(hungerIcon);
 
     }
@@ -665,34 +733,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mainLayer.attachChild(poop);
 	this.mScene.registerTouchArea(poop);
     }
-
-    @Override
-    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent, final ITouchArea pTouchArea,
-	    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
-    {
-	if (pSceneTouchEvent.isActionDown())
-	{
-
-	}
-
-	return false;
-    }
-
-    @Override
-    public boolean onSceneTouchEvent(final Scene pScene, final TouchEvent pSceneTouchEvent)
-    {
-	if (pSceneTouchEvent.isActionDown())
-	{
-
-	}
-	else if (pSceneTouchEvent.isActionUp())
-	{
-
-	}
-
-	return false;
-    }
-
+   
     /**
      * This method just adds a bunch of dummy items to the backpack
      */
@@ -806,6 +847,12 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	}
     }
 
+    /**
+     * Applies an item to the Tamagotchi and removes the item from the backpack. It also detaches the item from the scene and unregisters its touch area.
+     * 
+     * @param item
+     *            Item to be applied
+     */
     private void applyItem(Item item)
     {
 	this.tama.applyItem(item);
@@ -816,25 +863,14 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
     private void openBackpack()
     {
-	this.backpackLayer.setVisible(true);
-	this.mainLayer.setVisible(false);
-	this.bp.setBackpackOpen(true);
-	this.selectBoxes.get(0).setVisible(true);
+	this.openLayer(backpackLayer);
 	this.bp.resetPositions(cameraWidth, cameraHeight);
-	// this.mScene.setOnAreaTouchTraversalBackToFront();
     }
 
     private void closeBackpack()
     {
-	this.backpackLayer.setVisible(false);
-	this.mainLayer.setVisible(true);
-	this.bp.setBackpackOpen(false);
+	this.closeSubLayers();
 	this.bp.resetPositions(cameraWidth, cameraHeight);
-	this.selectBoxes.get(0).setVisible(false);
-	// this.mScene.setOnAreaTouchTraversalFrontToBack();
-
-	if (popUp != null)
-	    popUp.dismiss();
     }
 
     /**
@@ -886,7 +922,6 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    double lat = loc.getLatitude();
 	    double lon = loc.getLongitude();
 	    String Text = "My current location is: " + "Latitude = " + loc.getLatitude() + ", Longitude = " + loc.getLongitude();
-	    // Toast.makeText(getApplicationContext(), Text, Toast.LENGTH_SHORT).show();
 	    Debug.d(Text);
 	    cc = WeatherRetriever.getCurrentConditions(lat, lon);
 	    if (cc != null)
@@ -898,16 +933,26 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		final Text weatherText = new Text(0, pBottomBound - 60, mFont, cc.getCondition(), HorizontalAlign.LEFT);
 		mainLayer.attachChild(weatherText);
 
+		// Parse the result and see if there is rain or snow
 		String[] temp = cc.getCondition().split(" ");
+		Debug.d(temp.toString());
+		int weatherType = Weather.NONE;
 		for (String s : temp)
 		{
 		    if (s.equalsIgnoreCase("rain"))
-			loadWeather(Weather.RAIN);
+		    {
+			weatherType = Weather.RAIN;
+			break;
+		    }
 		    else if (s.equalsIgnoreCase("snow"))
-			loadWeather(Weather.SNOW);
-		    else
-			loadWeather(Weather.NONE);
+		    {
+			weatherType = Weather.SNOW;
+			break;
+		    }
 		}
+		loadWeather(weatherType);
+
+		// Stop GPS listener to save battery
 		lastWeatherRetrieve = System.currentTimeMillis();
 		stopGPS();
 	    }
@@ -1028,6 +1073,12 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	context = null;
     }
 
+    /**
+     * Loads the selected weather into the environment.
+     * 
+     * @param type
+     *            Specified by Weather class. (e.g. Weather.SNOW, Weather.RAIN, Weather.NONE)
+     */
     private void loadWeather(int type)
     {
 	if (particleSystem != null)
@@ -1134,6 +1185,86 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    this.mEngine.start();
 	}
     }
+
+    /**
+     * Opens the specified sublayer and hides the other layers
+     * 
+     * @param layer
+     *            subLayer to be opened
+     * @return
+     */
+    private boolean openLayer(Entity layer)
+    {
+	try
+	{
+	    layer.setVisible(true);
+	    selectBoxes.get(layer).setVisible(true);
+	    for (Entity e : subLayers)
+	    {
+		if (!e.equals(layer))
+		{
+		    e.setVisible(false);
+		    selectBoxes.get(e).setVisible(false);
+		}
+	    }
+
+	    for (Entity e : mainLayers)
+	    {
+		e.setVisible(false);
+	    }
+
+	    return true;
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	    return false;
+	}
+    }
+
+    /**
+     * Closes all subLayers and sets the main layers to visible
+     */
+    private void closeSubLayers()
+    {
+	for (Entity e : subLayers)
+	{
+	    e.setVisible(false);
+	    try
+	    {
+		selectBoxes.get(e).setVisible(false);
+	    } catch (Exception ex)
+	    {
+
+	    }
+	}
+
+	for (Entity e : mainLayers)
+	{
+	    e.setVisible(true);
+	}
+
+	if (popUp != null)
+	    popUp.dismiss();
+    }
+
+    /**
+     * Creates a select box for an icon, which is mapped to the sublayer that the icon opens. Should be created before the icon is created.
+     * 
+     * @param entity
+     *            The subLayer that the icon is meant to open
+     * @param index
+     *            The icon's placement in the bottom bar. (starting at 1)
+     */
+    private void createSelectBox(Entity entity, int index)
+    {
+	final Rectangle selectBox = new Rectangle(iconSpacer * index - 25f, 0, 50, bottomRect.getHeight());
+	selectBox.setColor(1, 1, 1);
+	selectBox.setVisible(false);
+	selectBoxes.put(entity, selectBox);
+	bottomRect.attachChild(selectBox);
+    }
+    
+    
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
