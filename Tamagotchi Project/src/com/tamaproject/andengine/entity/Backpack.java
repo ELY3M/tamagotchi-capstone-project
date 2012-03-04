@@ -2,22 +2,6 @@ package com.tamaproject.andengine.entity;
 
 import java.util.ArrayList;
 
-import org.anddev.andengine.input.touch.TouchEvent;
-
-import com.tamaproject.GameObject;
-import com.tamaproject.R;
-import com.tamaproject.util.GameObjectUtil;
-
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.view.Display;
-import android.widget.Toast;
-import android.graphics.Rect;
-import android.graphics.Paint.Style;
-
 public class Backpack
 {
     private ArrayList<Item> items;

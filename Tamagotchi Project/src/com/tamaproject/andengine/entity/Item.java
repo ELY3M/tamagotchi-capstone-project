@@ -5,7 +5,7 @@ import org.anddev.andengine.opengl.texture.region.TextureRegion;
 
 public class Item extends Sprite
 {
-    private static final int EQUIP = 1, NORMAL = 0;
+    public static final int EQUIP = 1, NORMAL = 0;
     private String name;
     private String description;
     private int health, hunger, sickness, xp;
@@ -16,7 +16,7 @@ public class Item extends Sprite
 	super(x, y, textureRegion);
 	setDefault();
     }
-
+    
     public Item(float x, float y, TextureRegion textureRegion, String name, String description,
 	    int health, int hunger, int sickness, int xp)
     {

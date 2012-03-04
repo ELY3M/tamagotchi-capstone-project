@@ -1,8 +1,11 @@
 package com.tamaproject.andengine.entity;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
-
 
 public class Tamagotchi
 {
@@ -15,13 +18,37 @@ public class Tamagotchi
     private int status;
     private long birthday;
     private Item equippedItem;
+
     private Sprite sprite;
+    private DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+    private Calendar calendar = Calendar.getInstance();
 
     public final static int ALIVE = 1, DEAD = 0;
 
     public Tamagotchi()
     {
 	setDefault();
+	this.calendar.setTimeInMillis(birthday);
+    }
+
+    public Tamagotchi(float currentHealth, float maxHealth, float currentHunger, float maxHunger,
+	    float currentXP, float maxXP, float currentSickness, float maxSickness, int poop,
+	    int battleLevel, int status, long birthday, Item equippedItem)
+    {
+	this.currentHealth = currentHealth;
+	this.maxHealth = maxHealth;
+	this.currentHunger = currentHunger;
+	this.maxHunger = maxHunger;
+	this.currentXP = currentXP;
+	this.maxXP = maxXP;
+	this.currentSickness = currentSickness;
+	this.maxSickness = maxSickness;
+	this.poop = poop;
+	this.battleLevel = battleLevel;
+	this.status = status;
+	this.birthday = birthday;
+	this.equippedItem = equippedItem;
+	this.calendar.setTimeInMillis(birthday);
     }
 
     /**
@@ -43,9 +70,9 @@ public class Tamagotchi
 	this.birthday = 1325376000000l;
     }
 
-    public Tamagotchi(int currentHealth, int maxHealth,
-	    int currentHunger, int maxHunger, int currentXP, int maxXP, int currentSickness,
-	    int maxSickness, int poop, int battleLevel, int status)
+    public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
+	    int currentXP, int maxXP, int currentSickness, int maxSickness, int poop,
+	    int battleLevel, int status)
     {
 	this.currentHealth = currentHealth;
 	this.maxHealth = maxHealth;
@@ -183,8 +210,6 @@ public class Tamagotchi
 	return age;
     }
 
-   
-
     public int getPoop()
     {
 	return poop;
@@ -203,6 +228,11 @@ public class Tamagotchi
     public long getBirthday()
     {
 	return birthday;
+    }
+
+    public String getFormattedBirthday()
+    {
+	return formatter.format(calendar.getTime());
     }
 
     public void setCurrentHealth(int currentHealth)
@@ -267,101 +297,122 @@ public class Tamagotchi
 
     public Item getEquippedItem()
     {
-        return equippedItem;
+	return equippedItem;
+    }
+
+    public String getEquippedItemName()
+    {
+	if (equippedItem == null)
+	    return "None";
+	else
+	    return equippedItem.getName();
     }
 
     public Sprite getSprite()
     {
-        return sprite;
+	return sprite;
     }
 
     public void setEquippedItem(Item equippedItem)
     {
-        this.equippedItem = equippedItem;
+	this.equippedItem = equippedItem;
     }
 
     public void setSprite(Sprite sprite)
     {
-        this.sprite = sprite;
+	this.sprite = sprite;
     }
 
     public float getCurrentHealth()
     {
-        return currentHealth;
+	return currentHealth;
     }
 
     public float getMaxHealth()
     {
-        return maxHealth;
+	return maxHealth;
     }
 
     public float getCurrentHunger()
     {
-        return currentHunger;
+	return currentHunger;
     }
 
     public float getMaxHunger()
     {
-        return maxHunger;
+	return maxHunger;
     }
 
     public float getCurrentXP()
     {
-        return currentXP;
+	return currentXP;
     }
 
     public float getMaxXP()
     {
-        return maxXP;
+	return maxXP;
     }
 
     public float getCurrentSickness()
     {
-        return currentSickness;
+	return currentSickness;
     }
 
     public float getMaxSickness()
     {
-        return maxSickness;
+	return maxSickness;
     }
 
     public void setCurrentHealth(float currentHealth)
     {
-        this.currentHealth = currentHealth;
+	this.currentHealth = currentHealth;
     }
 
     public void setMaxHealth(float maxHealth)
     {
-        this.maxHealth = maxHealth;
+	this.maxHealth = maxHealth;
     }
 
     public void setCurrentHunger(float currentHunger)
     {
-        this.currentHunger = currentHunger;
+	this.currentHunger = currentHunger;
     }
 
     public void setMaxHunger(float maxHunger)
     {
-        this.maxHunger = maxHunger;
+	this.maxHunger = maxHunger;
     }
 
     public void setCurrentXP(float currentXP)
     {
-        this.currentXP = currentXP;
+	this.currentXP = currentXP;
     }
 
     public void setMaxXP(float maxXP)
     {
-        this.maxXP = maxXP;
+	this.maxXP = maxXP;
     }
 
     public void setCurrentSickness(float currentSickness)
     {
-        this.currentSickness = currentSickness;
+	this.currentSickness = currentSickness;
     }
 
     public void setMaxSickness(float maxSickness)
     {
-        this.maxSickness = maxSickness;
+	this.maxSickness = maxSickness;
+    }
+
+    public String getStats()
+    {
+	String s = "Age: "+getAge()+
+		"\nHealth: "+currentHealth+"/"+maxHealth+
+		"\nSickness: "+currentSickness+"/"+maxSickness+
+		"\nHunger: "+currentHunger+"/"+maxHunger+
+		"\nExperience: "+currentXP+"/"+maxXP+
+		"\nBattle Level: "+battleLevel+
+		"\nBirthday: "+getFormattedBirthday()+
+		"\nEquipped Item: "+getEquippedItemName();		
+	return s;
     }
 }

@@ -46,6 +46,7 @@ import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.sprite.batch.SpriteBatch;
+import org.anddev.andengine.entity.text.ChangeableText;
 import org.anddev.andengine.entity.text.Text;
 import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
@@ -112,7 +113,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private final float vSpacing = 15;
     private float iconSpacing = 30;
 
-    private final int numIcons = 6;  // number of icons in the bottom bar
+    private final int numIcons = 6; // number of icons in the bottom bar
     private final int iconSpacer = cameraWidth / (numIcons + 1);
 
     // ===========================================================
@@ -124,23 +125,23 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private RepeatingSpriteBackground mGrassBackground;
     private Scene mScene;
     private Backpack bp;
-    
+
     // Layers
     private Entity mainLayer = new Entity();
     private Entity backpackLayer = new Entity();
     private Entity weatherLayer = new Entity();
     private Entity statsLayer = new Entity();
-    private List<Entity> subLayers = new ArrayList<Entity>();  // layers that are opened by icons in the bottom bar
-    private List<Entity> mainLayers = new ArrayList<Entity>();  // layers that belong to the main gameplay
-    private HashMap<Entity, Rectangle> selectBoxes = new HashMap<Entity, Rectangle>();  // mapping of layers to icon select boxes
-    
+    private List<Entity> subLayers = new ArrayList<Entity>(); // layers that are opened by icons in the bottom bar
+    private List<Entity> mainLayers = new ArrayList<Entity>(); // layers that belong to the main gameplay
+    private HashMap<Entity, Rectangle> selectBoxes = new HashMap<Entity, Rectangle>(); // mapping of layers to icon select boxes
+
     private Item takeOut; // item to take out of backpack
     private Item putBack; // item to put back into packpack
     private Item itemToApply; // item to apply to Tama
-    
+
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
-    private float pTopBound, pBottomBound;  // top and bottom bounds of play area
+    private float pTopBound, pBottomBound; // top and bottom bounds of play area
     private Sprite trashCan;
     private PopupWindow popUp;
     private LinearLayout layout;
@@ -149,7 +150,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private int weather = Weather.NONE;
     private BitmapTextureAtlas mFontTexture;
     private Font mFont;
-    
+
     // Status bars that need to be updated
     private Rectangle currHealthBar, currSicknessBar, currHungerBar;
 
@@ -170,7 +171,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     private long lastWeatherRetrieve = 0;
     private CurrentConditions cc;
 
-    private Rectangle topRect, bottomRect;  // top and bottom bars
+    private Rectangle topRect, bottomRect; // top and bottom bars
+
+    private ChangeableText stats;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -214,6 +217,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.tama.setSprite(new Sprite(centerX, centerY, this.listTR.get("tama.png")));
 	tama.getSprite().setScale(0.85f);
 	this.mainLayer.attachChild(tama.getSprite());
+
+	final Item eItem = new GameItem(0, 0, this.listTR.get("treasure.png"));
+	equipItem(eItem);
 
 	// Load interface
 	this.loadInterface();
@@ -261,14 +267,21 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    {
 		try
 		{
-		    for (BaseSprite s : ipoToRemove)
+		    if (ipoToRemove.size() > 0)
 		    {
-			mainLayer.detachChild(s);
-			mScene.unregisterTouchArea(s);
-			inPlayObjects.remove(s);
+			for (BaseSprite s : ipoToRemove)
+			{
+			    mainLayer.detachChild(s);
+			    mScene.unregisterTouchArea(s);
+			    inPlayObjects.remove(s);
+			}
 		    }
 
-		    updateStatusBars();
+		    if (statsLayer.isVisible())
+			stats.setText(tama.getStats());
+
+		    if (mainLayer.isVisible())
+			updateStatusBars();
 
 		} catch (Exception e)
 		{
@@ -441,7 +454,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	stopGPS();
 	finish();
     }
-    
+
     @Override
     public boolean onAreaTouched(final TouchEvent pSceneTouchEvent, final ITouchArea pTouchArea,
 	    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
@@ -461,15 +474,17 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	{
 
 	}
-	
+
 	return false;
     }
-
 
     // ===========================================================
     // Methods
     // ===========================================================
 
+    /**
+     * Loads everything related to the interface (icons, bars, menus)
+     */
     private void loadInterface()
     {
 
@@ -481,7 +496,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	final Rectangle backpackBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
 	backpackBackground.setColor(87 / 255f, 57 / 255f, 20 / 255f);
 	backpackLayer.attachChild(backpackBackground);
-	
+
 	final Text backpackLabel = new Text(15, 15, mFont, "Backpack", HorizontalAlign.LEFT);
 	backpackBackground.attachChild(backpackLabel);
 
@@ -491,9 +506,13 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	final Rectangle statsBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
 	statsBackground.setColor(0, 0, 0);
 	statsLayer.attachChild(statsBackground);
-	
+
 	final Text statsLabel = new Text(15, 15, mFont, "Tamagotchi Stats", HorizontalAlign.LEFT);
 	statsBackground.attachChild(statsLabel);
+
+	this.stats = new ChangeableText(25, statsLabel.getY() + 100, mFont, tama.getStats(), HorizontalAlign.LEFT, 512);
+	stats.setScale(0.95f);
+	statsBackground.attachChild(stats);
 
 	/**
 	 * Draw bottom rectangle bar
@@ -570,7 +589,10 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!statsLayer.isVisible())
+		    {
+			stats.setText(tama.getStats());
 			openLayer(statsLayer);
+		    }
 		    else
 			closeSubLayers();
 
@@ -739,7 +761,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	this.mainLayer.attachChild(poop);
 	this.mScene.registerTouchArea(poop);
     }
-   
+
     /**
      * This method just adds a bunch of dummy items to the backpack
      */
@@ -751,106 +773,14 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	{
 	    for (int j = 1; j <= 5; j++)
 	    {
-		Item item = new Item((xSpacing * j) - this.listTR.get("treasure.png").getWidth() / 2, (ySpacing * i) - this.listTR.get("treasure.png").getHeight() / 2, this.listTR.get("treasure.png"), "Health item", 7, 0, 0, 0)
-		{
-		    private boolean touched = false;
-		    private boolean moved = false;
-
-		    @Override
-		    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
-			    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
-		    {
-			if (this.getParent().isVisible())
-			{
-			    if (pSceneTouchEvent.isActionDown())
-			    {
-				Debug.d("Item action down");
-				touched = true;
-				this.setScale(1.5f);
-			    }
-			    else if (pSceneTouchEvent.isActionMove())
-			    {
-				Debug.d("Item action move");
-				if (touched)
-				{
-				    if (this.getParent().equals(backpackLayer))
-				    {
-					takeOut = this;
-					runOnUpdateThread(new Runnable()
-					{
-					    @Override
-					    public void run()
-					    {
-						Debug.d("Taking out item");
-						backpackLayer.detachChild(takeOut);
-						mainLayer.attachChild(takeOut);
-						takeOut = null;
-					    }
-					});
-					closeBackpack();
-				    }
-				    this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
-				    moved = true;
-				    return true;
-				}
-				else
-				{
-				    return false;
-				}
-			    }
-			    else if (pSceneTouchEvent.isActionUp())
-			    {
-				Debug.d("Item action up");
-				touched = false;
-				this.setScale(1);
-				if (moved)
-				{
-				    moved = false;
-				    if (this.getParent().equals(backpackLayer))
-				    {
-					this.setInitialPosition();
-				    }
-				    else if (this.getParent().equals(mainLayer))
-				    {
-					if (this.collidesWith(tama.getSprite()))
-					{
-					    itemToApply = this;
-					    showDialog(AndEngineGame.CONFIRM_APPLYITEM);
-					}
-					else
-					{
-					    putBack = this;
-					    runOnUpdateThread(new Runnable()
-					    {
-						@Override
-						public void run()
-						{
-						    Debug.d("Putting back item");
-						    mainLayer.detachChild(putBack);
-						    backpackLayer.attachChild(putBack);
-						    putBack = null;
-						}
-					    }); // End runOnUpdateThread
-					}
-				    }
-				}
-				else
-				{
-				    // show item description
-				    if (popUp != null)
-					popUp.dismiss();
-				    showItemDescription(this);
-				}
-			    }
-			    return true;
-			}
-
-			return false;
-		    }
-		}; // End new Sprite
+		Item item = new GameItem((xSpacing * j) - this.listTR.get("treasure.png").getWidth() / 2, (ySpacing * i) - this.listTR.get("treasure.png").getHeight() / 2, this.listTR.get("treasure.png"), "Health item", 7, 0, 0, 0);
 		this.bp.addItem(item);
 	    }
 	}
+
+	Item item = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Equip item", 7, 0, 0, 0);
+	item.setType(Item.EQUIP);
+	this.bp.addItem(item);
     }
 
     /**
@@ -913,8 +843,8 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	layout.addView(but, params);
 	popUp.setContentView(layout);
 
-	popUp.showAtLocation(layout, Gravity.NO_GRAVITY, 0, cameraHeight / 2);
-	popUp.update(cameraWidth, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound)));
+	popUp.showAtLocation(layout, Gravity.NO_GRAVITY, 10, cameraHeight / 2);
+	popUp.update(cameraWidth - 20, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound) - 10));
 	popUp.setFocusable(true);
     }
 
@@ -1219,6 +1149,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		e.setVisible(false);
 	    }
 
+	    if (popUp != null)
+		popUp.dismiss();
+
 	    return true;
 	} catch (Exception e)
 	{
@@ -1269,9 +1202,172 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	selectBoxes.put(entity, selectBox);
 	bottomRect.attachChild(selectBox);
     }
-    
-    
+
+    private void equipItem(Item item)
+    {
+	unequipItem();
+
+	try
+	{
+	    item.detachSelf();
+	    mScene.unregisterTouchArea(item);
+	} catch (Exception e)
+	{
+
+	}
+
+	try
+	{
+	    bp.removeItem(item);
+	} catch (Exception e)
+	{
+
+	}
+
+	tama.setEquippedItem(item);
+	item.setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
+	tama.getSprite().attachChild(item);
+    }
+
+    private void unequipItem()
+    {
+	try
+	{
+	    Item previousItem = tama.getEquippedItem();
+	    tama.getSprite().detachChild(previousItem);
+	    bp.addItem(previousItem);
+	    backpackLayer.attachChild(previousItem);
+	    mScene.registerTouchArea(previousItem);
+	} catch (Exception e)
+	{
+
+	}
+    }
+
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
+
+    private class GameItem extends Item
+    {
+
+	public GameItem(float x, float y, TextureRegion textureRegion)
+	{
+	    super(x, y, textureRegion);
+	}
+
+	public GameItem(float x, float y, TextureRegion textureRegion, String name, int health,
+		int hunger, int sickness, int xp)
+	{
+	    super(x, y, textureRegion, name, health, hunger, sickness, xp);
+	}
+
+	public GameItem(float x, float y, TextureRegion textureRegion, String name,
+		String description, int health, int hunger, int sickness, int xp)
+	{
+	    super(x, y, textureRegion, name, description, health, hunger, sickness, xp);
+	}
+
+	private boolean touched = false;
+	private boolean moved = false;
+
+	@Override
+	public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	{
+	    if (this.getParent().isVisible())
+	    {
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    Debug.d("Item action down");
+		    touched = true;
+		    this.setScale(1.5f);
+		}
+		else if (pSceneTouchEvent.isActionMove())
+		{
+		    Debug.d("Item action move");
+		    if (touched)
+		    {
+			if (this.getParent().equals(backpackLayer))
+			{
+			    takeOut = this;
+			    runOnUpdateThread(new Runnable()
+			    {
+				@Override
+				public void run()
+				{
+				    Debug.d("Taking out item");
+				    backpackLayer.detachChild(takeOut);
+				    mainLayer.attachChild(takeOut);
+				    takeOut = null;
+				}
+			    });
+			    closeBackpack();
+			}
+			this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
+			moved = true;
+			return true;
+		    }
+		    else
+		    {
+			return false;
+		    }
+		}
+		else if (pSceneTouchEvent.isActionUp())
+		{
+		    Debug.d("Item action up");
+		    touched = false;
+		    this.setScale(1);
+		    if (moved)
+		    {
+			moved = false;
+			if (this.getParent().equals(backpackLayer))
+			{
+			    this.setInitialPosition();
+			}
+			else if (this.getParent().equals(mainLayer))
+			{
+			    if (this.collidesWith(tama.getSprite()))
+			    {
+				if (this.getType() == Item.NORMAL)
+				{
+				    itemToApply = this;
+				    showDialog(AndEngineGame.CONFIRM_APPLYITEM);
+				}
+				else if (this.getType() == Item.EQUIP)
+				{
+				    equipItem(this);
+				}
+			    }
+			    else
+			    {
+				putBack = this;
+				runOnUpdateThread(new Runnable()
+				{
+				    @Override
+				    public void run()
+				    {
+					Debug.d("Putting back item");
+					mainLayer.detachChild(putBack);
+					backpackLayer.attachChild(putBack);
+					putBack = null;
+				    }
+				}); // End runOnUpdateThread
+			    }
+			}
+		    }
+		    else
+		    {
+			// show item description
+			if (popUp != null)
+			    popUp.dismiss();
+			showItemDescription(this);
+		    }
+		}
+		return true;
+	    }
+
+	    return false;
+	}
+    }
 }
