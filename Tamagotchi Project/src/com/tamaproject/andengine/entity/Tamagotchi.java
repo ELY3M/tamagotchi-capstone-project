@@ -22,7 +22,7 @@ public class Tamagotchi
     private DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
     private Calendar calendar = Calendar.getInstance();
 
-    public final static int ALIVE = 1, DEAD = 0;
+    public final static int ALIVE = 1, DEAD = 0, LEVEL_UP = 2;
 
     public Tamagotchi()
     {
@@ -87,20 +87,20 @@ public class Tamagotchi
     }
 
     /**
-     * Applies an item to the Tamagotchi
+     * Applies item to Tamagotchi
      * 
      * @param item
-     * @return true if item successfully applied, false if not
+     *            Item to be applied
+     * @return DEAD, ALIVE, or LEVEL_UP
      */
-    public boolean applyItem(Item item)
+    public int applyItem(Item item)
     {
 	this.currentHealth += item.getHealth();
 	this.currentHunger += item.getHunger();
 	this.currentSickness += item.getSickness();
 	this.currentXP += item.getXp();
 
-	checkStats();
-	return true;
+	return checkStats();
     }
 
     /**
@@ -126,9 +126,11 @@ public class Tamagotchi
     }
 
     /**
-     * Makes sure that the Tamagotchi's stats are legitimate.
+     * Checks the stats of Tamagotchi
+     * 
+     * @return Tamagotchi.DEAD, LEVEL_UP, or ALIVE
      */
-    private void checkStats()
+    private int checkStats()
     {
 	if (this.currentHealth > this.maxHealth)
 	{
@@ -145,11 +147,17 @@ public class Tamagotchi
 	    this.currentSickness = 0;
 	}
 
-	// check if tama leveled up
-	levelUp();
-
 	// check if tama is dead
-	isDead();
+	if (isDead())
+	    return Tamagotchi.DEAD;
+
+	// check if tama leveled up
+
+	if (levelUp())
+	    return Tamagotchi.LEVEL_UP;
+
+	return Tamagotchi.ALIVE;
+
     }
 
     /**

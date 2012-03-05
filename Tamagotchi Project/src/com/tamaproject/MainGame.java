@@ -20,11 +20,16 @@ import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
 import org.anddev.andengine.entity.particle.ParticleSystem;
+import org.anddev.andengine.entity.particle.emitter.CircleOutlineParticleEmitter;
 import org.anddev.andengine.entity.particle.emitter.RectangleParticleEmitter;
 import org.anddev.andengine.entity.particle.initializer.AccelerationInitializer;
+import org.anddev.andengine.entity.particle.initializer.AlphaInitializer;
 import org.anddev.andengine.entity.particle.initializer.RotationInitializer;
 import org.anddev.andengine.entity.particle.initializer.VelocityInitializer;
+import org.anddev.andengine.entity.particle.modifier.AlphaModifier;
+import org.anddev.andengine.entity.particle.modifier.ColorModifier;
 import org.anddev.andengine.entity.particle.modifier.ExpireModifier;
+import org.anddev.andengine.entity.particle.modifier.ScaleModifier;
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnAreaTouchListener;
@@ -82,7 +87,7 @@ import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
 import com.tamaproject.weather.WeatherRetriever;
 
-public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchListener,
+public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener,
 	IOnAreaTouchListener
 {
     // ===========================================================
@@ -332,7 +337,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
 	switch (id)
 	{
-	case AndEngineGame.CONFIRM_APPLYITEM:
+	case MainGame.CONFIRM_APPLYITEM:
 	    builder2.setTitle("Apply Item");
 	    builder2.setIcon(android.R.drawable.btn_star);
 	    builder2.setMessage("Are you sure you want to apply this item?");
@@ -377,7 +382,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	    return builder2.create();
 
-	case AndEngineGame.CONFIRM_QUITGAME:
+	case MainGame.CONFIRM_QUITGAME:
 	    builder2.setTitle("Quit Game");
 	    builder2.setIcon(android.R.drawable.btn_star);
 	    builder2.setMessage("Are you sure you want to quit the game?");
@@ -421,7 +426,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	// if back key was pressed
 	else if (pKeyCode == KeyEvent.KEYCODE_BACK && pEvent.getAction() == KeyEvent.ACTION_DOWN)
 	{
-	    showDialog(AndEngineGame.CONFIRM_QUITGAME);
+	    showDialog(MainGame.CONFIRM_QUITGAME);
 	    return true;
 	}
 	return super.onKeyDown(pKeyCode, pEvent);
@@ -775,6 +780,9 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	Item item = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Equip item", 7, 0, 0, 0);
 	item.setType(Item.EQUIP);
 	this.bp.addItem(item);
+
+	final Item newItem = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Level item", 7, 0, 0, 10000);
+	this.bp.addItem(newItem);
     }
 
     /**
@@ -785,7 +793,34 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
      */
     private void applyItem(Item item)
     {
-	this.tama.applyItem(item);
+	int tamaStatus = this.tama.applyItem(item);
+	if (tamaStatus == Tamagotchi.LEVEL_UP)
+	{
+	    final CircleOutlineParticleEmitter particleEmitter = new CircleOutlineParticleEmitter(tama.getSprite().getX() + tama.getSprite().getWidth() / 2, tama.getSprite().getY() + tama.getSprite().getHeight() / 2, 80);
+	    final ParticleSystem particleSystem = new ParticleSystem(particleEmitter, 60, 60, 360, listTR.get("particle_point.png"));
+	    particleSystem.addParticleInitializer(new AlphaInitializer(0));
+	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
+	    particleSystem.addParticleInitializer(new VelocityInitializer(-2, 2, -20, -10));
+	    particleSystem.addParticleInitializer(new RotationInitializer(0.0f, 360.0f));
+
+	    particleSystem.addParticleModifier(new ScaleModifier(1.0f, 2.0f, 0, 5));
+	    particleSystem.addParticleModifier(new ColorModifier(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 11.5f));
+	    particleSystem.addParticleModifier(new AlphaModifier(0, 1, 0, 1));
+	    particleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
+	    particleSystem.addParticleModifier(new ExpireModifier(6, 6));
+	    mScene.attachChild(particleSystem);
+
+	    mScene.registerUpdateHandler(new TimerHandler(5f, new ITimerCallback()
+	    {
+		@Override
+		public void onTimePassed(final TimerHandler pTimerHandler)
+		{
+		    mScene.detachChild(particleSystem);
+		    mScene.unregisterUpdateHandler(pTimerHandler);
+		}
+	    }));
+
+	}
 	this.bp.removeItem(item);
 	this.mainLayer.detachChild(item);
 	this.mScene.unregisterTouchArea(item);
@@ -1365,7 +1400,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 				if (this.getType() == Item.NORMAL)
 				{
 				    itemToApply = this;
-				    showDialog(AndEngineGame.CONFIRM_APPLYITEM);
+				    showDialog(MainGame.CONFIRM_APPLYITEM);
 				}
 				else if (this.getType() == Item.EQUIP)
 				{
