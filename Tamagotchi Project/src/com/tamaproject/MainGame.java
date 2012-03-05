@@ -275,7 +275,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    if (statsLayer.isVisible())
 			stats.setText(tama.getStats());
 
-		    if (mainLayer.isVisible())
+		    else if (mainLayer.isVisible())
 			updateStatusBars();
 
 		} catch (Exception e)
@@ -793,34 +793,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void applyItem(Item item)
     {
-	int tamaStatus = this.tama.applyItem(item);
-	if (tamaStatus == Tamagotchi.LEVEL_UP)
-	{
-	    final CircleOutlineParticleEmitter particleEmitter = new CircleOutlineParticleEmitter(tama.getSprite().getX() + tama.getSprite().getWidth() / 2, tama.getSprite().getY() + tama.getSprite().getHeight() / 2, 80);
-	    final ParticleSystem particleSystem = new ParticleSystem(particleEmitter, 60, 60, 360, listTR.get("particle_point.png"));
-	    particleSystem.addParticleInitializer(new AlphaInitializer(0));
-	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
-	    particleSystem.addParticleInitializer(new VelocityInitializer(-2, 2, -20, -10));
-	    particleSystem.addParticleInitializer(new RotationInitializer(0.0f, 360.0f));
-
-	    particleSystem.addParticleModifier(new ScaleModifier(1.0f, 2.0f, 0, 5));
-	    particleSystem.addParticleModifier(new ColorModifier(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 11.5f));
-	    particleSystem.addParticleModifier(new AlphaModifier(0, 1, 0, 1));
-	    particleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
-	    particleSystem.addParticleModifier(new ExpireModifier(6, 6));
-	    mScene.attachChild(particleSystem);
-
-	    mScene.registerUpdateHandler(new TimerHandler(5f, new ITimerCallback()
-	    {
-		@Override
-		public void onTimePassed(final TimerHandler pTimerHandler)
-		{
-		    mScene.detachChild(particleSystem);
-		    mScene.unregisterUpdateHandler(pTimerHandler);
-		}
-	    }));
-
-	}
+	int tamaStatus = this.tama.applyItem(item);	
+	showEffect(tamaStatus);
+	
 	this.bp.removeItem(item);
 	this.mainLayer.detachChild(item);
 	this.mScene.unregisterTouchArea(item);
@@ -1310,6 +1285,46 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    return false;
 	}
 	return true;
+    }
+    
+    private void showEffect(int status)
+    {
+	if (status == Tamagotchi.LEVEL_UP)
+	{
+	    final CircleOutlineParticleEmitter particleEmitter = new CircleOutlineParticleEmitter(tama.getSprite().getX() + tama.getSprite().getWidth() / 2, tama.getSprite().getY() + tama.getSprite().getHeight() / 2, 60);
+	    final ParticleSystem particleSystem = new ParticleSystem(particleEmitter, 25, 25, 360, listTR.get("particle_point.png"));
+	    particleSystem.addParticleInitializer(new AlphaInitializer(0));
+	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
+	    particleSystem.addParticleInitializer(new VelocityInitializer(-2, 2, -20, -10));
+	    particleSystem.addParticleInitializer(new RotationInitializer(0.0f, 360.0f));
+
+	    particleSystem.addParticleModifier(new ScaleModifier(1.0f, 2.0f, 0, 5));
+	    particleSystem.addParticleModifier(new ColorModifier(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 2f));
+	    particleSystem.addParticleModifier(new AlphaModifier(0, 1, 0, 1));
+	    particleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
+	    particleSystem.addParticleModifier(new ExpireModifier(2, 2));
+	    mScene.attachChild(particleSystem);
+	    mScene.registerUpdateHandler(new TimerHandler(2f, new ITimerCallback()
+	    {
+		@Override
+		public void onTimePassed(final TimerHandler pTimerHandler)
+		{
+		    particleSystem.setParticlesSpawnEnabled(false);
+		    mScene.unregisterUpdateHandler(pTimerHandler);
+		}
+
+	    }));
+	    mScene.registerUpdateHandler(new TimerHandler(5f, new ITimerCallback()
+	    {
+		@Override
+		public void onTimePassed(final TimerHandler pTimerHandler)
+		{
+		    mScene.detachChild(particleSystem);
+		    mScene.unregisterUpdateHandler(pTimerHandler);
+		}
+	    }));
+
+	}
     }
 
     // ===========================================================
