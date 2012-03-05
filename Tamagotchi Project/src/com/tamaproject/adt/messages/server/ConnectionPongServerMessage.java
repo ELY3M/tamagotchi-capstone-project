@@ -7,72 +7,81 @@ import java.io.IOException;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
 /**
- * (c) 2010 Nicolas Gramlich 
- * (c) 2011 Zynga Inc.
+ * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
  * 
  * @author Nicolas Gramlich
  * @since 12:23:20 - 21.05.2011
  */
-public class ConnectionPongServerMessage extends ServerMessage implements ServerMessageFlags {
-	// ===========================================================
-	// Constants
-	// ===========================================================
+public class ConnectionPongServerMessage extends ServerMessage implements ServerMessageFlags
+{
+    // ===========================================================
+    // Constants
+    // ===========================================================
 
-	// ===========================================================
-	// Fields
-	// ===========================================================
+    // ===========================================================
+    // Fields
+    // ===========================================================
 
-	private long mTimestamp;
+    private long mTimestamp;
 
-	// ===========================================================
-	// Constructors
-	// ===========================================================
+    // ===========================================================
+    // Constructors
+    // ===========================================================
 
-	@Deprecated
-	public ConnectionPongServerMessage() {
+    @Deprecated
+    public ConnectionPongServerMessage()
+    {
 
-	}
+    }
 
-	public ConnectionPongServerMessage(final long pTimestamp) {
-		this.mTimestamp = pTimestamp;
-	}
+    public ConnectionPongServerMessage(final long pTimestamp)
+    {
+	this.mTimestamp = pTimestamp;
+    }
 
-	// ===========================================================
-	// Getter & Setter
-	// ===========================================================
-	
-	public long getTimestamp() {
-		return this.mTimestamp;
-	}
-	
-	public void setTimestamp(long pTimestamp) {
-		this.mTimestamp = pTimestamp;
-	}
+    // ===========================================================
+    // Getter & Setter
+    // ===========================================================
 
-	// ===========================================================
-	// Methods for/from SuperClass/Interfaces
-	// ===========================================================
+    public long getTimestamp()
+    {
+	return this.mTimestamp;
+    }
 
-	@Override
-	public short getFlag() {
-		return FLAG_MESSAGE_SERVER_CONNECTION_PONG;
-	}
+    public void setTimestamp(long pTimestamp)
+    {
+	this.mTimestamp = pTimestamp;
+    }
 
-	@Override
-	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		this.mTimestamp = pDataInputStream.readLong();
-	}
+    // ===========================================================
+    // Methods for/from SuperClass/Interfaces
+    // ===========================================================
 
-	@Override
-	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		pDataOutputStream.writeLong(this.mTimestamp);
-	}
+    @Override
+    public short getFlag()
+    {
+	return FLAG_MESSAGE_SERVER_CONNECTION_PONG;
+    }
 
-	// ===========================================================
-	// Methods
-	// ===========================================================
+    @Override
+    protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+	    throws IOException
+    {
+	this.mTimestamp = pDataInputStream.readLong();
+    }
 
-	// ===========================================================
-	// Inner and Anonymous Classes
-	// ===========================================================
+    @Override
+    protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+	    throws IOException
+    {
+	pDataOutputStream.writeLong(this.mTimestamp);
+    }
+
+    // ===========================================================
+    // Methods
+    // ===========================================================
+
+    // ===========================================================
+    // Inner and Anonymous Classes
+    // ===========================================================
 }

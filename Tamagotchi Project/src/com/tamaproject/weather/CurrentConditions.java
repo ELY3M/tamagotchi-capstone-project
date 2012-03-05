@@ -2,8 +2,9 @@ package com.tamaproject.weather;
 
 /**
  * Holds the current weather information gotten from Google
+ * 
  * @author Jonathan
- *
+ * 
  */
 public class CurrentConditions
 {
@@ -13,10 +14,10 @@ public class CurrentConditions
     private String humidity;
     private String icon;
     private String windCondition;
-    
+
     public CurrentConditions()
     {
-	
+
     }
 
     public CurrentConditions(String condition, int tempF, int tempC)

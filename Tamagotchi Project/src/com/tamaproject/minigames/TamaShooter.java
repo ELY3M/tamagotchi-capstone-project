@@ -146,9 +146,9 @@ public class TamaShooter extends BaseAndEngineGame implements IAccelerometerList
 		try
 		{
 		    probeMyBody();
-		    for(Sprite p : projectileList)
+		    for (Sprite p : projectileList)
 		    {
-			
+
 		    }
 		} catch (Exception e)
 		{
@@ -162,7 +162,7 @@ public class TamaShooter extends BaseAndEngineGame implements IAccelerometerList
 
 	return this.mScene;
     }
-    
+
     ArrayList<Sprite> projectileList = new ArrayList<Sprite>();
 
     public void addTarget(float pX, float pY)
@@ -246,7 +246,7 @@ public class TamaShooter extends BaseAndEngineGame implements IAccelerometerList
 	this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(projectile, body, true, true));
 	projectile.setUserData(body);
 	this.mScene.attachChild(projectile);
-	
+
 	this.projectileList.add(projectile);
 
 	final Vector2 velocity = Vector2Pool.obtain(pX, pY);

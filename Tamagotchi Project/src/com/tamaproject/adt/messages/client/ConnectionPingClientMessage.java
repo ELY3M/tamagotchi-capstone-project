@@ -7,68 +7,76 @@ import java.io.IOException;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
 
 /**
- * (c) 2010 Nicolas Gramlich 
- * (c) 2011 Zynga Inc.
+ * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
  * 
  * @author Nicolas Gramlich
  * @since 12:23:37 - 21.05.2011
  */
-public class ConnectionPingClientMessage extends ClientMessage implements ClientMessageFlags {
-	// ===========================================================
-	// Constants
-	// ===========================================================
+public class ConnectionPingClientMessage extends ClientMessage implements ClientMessageFlags
+{
+    // ===========================================================
+    // Constants
+    // ===========================================================
 
-	// ===========================================================
-	// Fields
-	// ===========================================================
+    // ===========================================================
+    // Fields
+    // ===========================================================
 
-	private long mTimestamp;
+    private long mTimestamp;
 
-	// ===========================================================
-	// Constructors
-	// ===========================================================
+    // ===========================================================
+    // Constructors
+    // ===========================================================
 
-	@Deprecated
-	public ConnectionPingClientMessage() {
+    @Deprecated
+    public ConnectionPingClientMessage()
+    {
 
-	}
+    }
 
-	// ===========================================================
-	// Getter & Setter
-	// ===========================================================
-	
-	public long getTimestamp() {
-		return this.mTimestamp;
-	}
+    // ===========================================================
+    // Getter & Setter
+    // ===========================================================
 
-	public void setTimestamp(final long pTimestamp) {
-		this.mTimestamp = pTimestamp;
-	}
+    public long getTimestamp()
+    {
+	return this.mTimestamp;
+    }
 
-	// ===========================================================
-	// Methods for/from SuperClass/Interfaces
-	// ===========================================================
+    public void setTimestamp(final long pTimestamp)
+    {
+	this.mTimestamp = pTimestamp;
+    }
 
-	@Override
-	public short getFlag() {
-		return FLAG_MESSAGE_CLIENT_CONNECTION_PING;
-	}
+    // ===========================================================
+    // Methods for/from SuperClass/Interfaces
+    // ===========================================================
 
-	@Override
-	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		this.mTimestamp = pDataInputStream.readLong();
-	}
+    @Override
+    public short getFlag()
+    {
+	return FLAG_MESSAGE_CLIENT_CONNECTION_PING;
+    }
 
-	@Override
-	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		pDataOutputStream.writeLong(this.mTimestamp);
-	}
+    @Override
+    protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+	    throws IOException
+    {
+	this.mTimestamp = pDataInputStream.readLong();
+    }
 
-	// ===========================================================
-	// Methods
-	// ===========================================================
+    @Override
+    protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+	    throws IOException
+    {
+	pDataOutputStream.writeLong(this.mTimestamp);
+    }
 
-	// ===========================================================
-	// Inner and Anonymous Classes
-	// ===========================================================
+    // ===========================================================
+    // Methods
+    // ===========================================================
+
+    // ===========================================================
+    // Inner and Anonymous Classes
+    // ===========================================================
 }

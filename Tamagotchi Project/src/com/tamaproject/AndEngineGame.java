@@ -338,6 +338,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    builder2.setMessage("Are you sure you want to apply this item?");
 	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 	    {
+		@Override
 		public void onClick(DialogInterface dialog, int which)
 		{
 		    runOnUpdateThread(new Runnable()
@@ -356,6 +357,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
 	    {
+		@Override
 		public void onClick(DialogInterface dialog, int which)
 		{
 		    runOnUpdateThread(new Runnable()
@@ -381,6 +383,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    builder2.setMessage("Are you sure you want to quit the game?");
 	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 	    {
+		@Override
 		public void onClick(DialogInterface dialog, int which)
 		{
 		    finish();
@@ -390,6 +393,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
 	    {
+		@Override
 		public void onClick(DialogInterface dialog, int which)
 		{
 		    return;
@@ -812,7 +816,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	TextView tv = new TextView(this);
 	Button but = new Button(this);
 	ImageView iv = new ImageView(this);
-	LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+	LayoutParams params = new LayoutParams(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
 
 	layout.setOrientation(LinearLayout.HORIZONTAL);
 	params.setMargins(10, 10, 10, 10);
@@ -821,6 +825,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	but.setText("Close");
 	but.setOnClickListener(new OnClickListener()
 	{
+	    @Override
 	    public void onClick(View v)
 	    {
 		popUp.dismiss();
@@ -843,6 +848,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
      */
     public class MyLocationListener implements LocationListener
     {
+	@Override
 	public void onLocationChanged(Location loc)
 	{
 	    double lat = loc.getLatitude();
@@ -884,16 +890,19 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	    }
 	}
 
+	@Override
 	public void onProviderDisabled(String provider)
 	{
 	    Toast.makeText(getApplicationContext(), "Gps Disabled", Toast.LENGTH_SHORT).show();
 	}
 
+	@Override
 	public void onProviderEnabled(String provider)
 	{
 	    Toast.makeText(getApplicationContext(), "Gps Enabled", Toast.LENGTH_SHORT).show();
 	}
 
+	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras)
 	{
 
@@ -1107,11 +1116,11 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		    loadWeather(Weather.RAIN);
 		}
 	    }
-	    else if(matches.contains("remove poop"))
+	    else if (matches.contains("remove poop"))
 	    {
-		for(Entity e : inPlayObjects)
+		for (Entity e : inPlayObjects)
 		{
-		    ipoToRemove.add((Sprite)e);
+		    ipoToRemove.add((Sprite) e);
 		}
 	    }
 	    super.onActivityResult(requestCode, resultCode, data);
@@ -1248,7 +1257,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	try
 	{
 	    Item previousItem = tama.getEquippedItem();
-	    
+
 	    if (previousItem == null)
 		return true;
 

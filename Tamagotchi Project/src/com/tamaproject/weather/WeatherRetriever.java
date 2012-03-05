@@ -4,8 +4,9 @@ import com.tamaproject.util.GoogleWeatherParser;
 
 /**
  * Gets the current conditions from Google given a latitude and longitude
+ * 
  * @author Jonathan
- *
+ * 
  */
 public class WeatherRetriever
 {
@@ -17,10 +18,10 @@ public class WeatherRetriever
 	longitude *= 1000000;
 	int lat = (int) latitude;
 	int lon = (int) longitude;
-	
+
 	String s = XML_SOURCE + lat + "," + lon;
 	System.out.println(s);
-	
+
 	CurrentConditions cc = GoogleWeatherParser.getCurrentConditions(s);
 	return cc;
     }

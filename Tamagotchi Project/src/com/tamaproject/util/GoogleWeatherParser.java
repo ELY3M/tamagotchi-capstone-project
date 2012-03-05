@@ -15,8 +15,9 @@ import com.tamaproject.weather.CurrentConditions;
 
 /**
  * This class parses the XML that is retrieved from the Google Weather API into a CurrentConditions object
+ * 
  * @author Jonathan
- *
+ * 
  */
 public class GoogleWeatherParser
 {

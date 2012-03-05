@@ -7,68 +7,76 @@ import java.io.IOException;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
 
 /**
- * (c) 2010 Nicolas Gramlich 
- * (c) 2011 Zynga Inc.
+ * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
  * 
  * @author Nicolas Gramlich
  * @since 12:00:31 - 21.05.2011
  */
-public class ConnectionEstablishClientMessage extends ClientMessage implements ClientMessageFlags {
-	// ===========================================================
-	// Constants
-	// ===========================================================
+public class ConnectionEstablishClientMessage extends ClientMessage implements ClientMessageFlags
+{
+    // ===========================================================
+    // Constants
+    // ===========================================================
 
-	// ===========================================================
-	// Fields
-	// ===========================================================
+    // ===========================================================
+    // Fields
+    // ===========================================================
 
-	private short mProtocolVersion;
+    private short mProtocolVersion;
 
-	// ===========================================================
-	// Constructors
-	// ===========================================================
+    // ===========================================================
+    // Constructors
+    // ===========================================================
 
-	@Deprecated
-	public ConnectionEstablishClientMessage() {
+    @Deprecated
+    public ConnectionEstablishClientMessage()
+    {
 
-	}
+    }
 
-	public ConnectionEstablishClientMessage(final short pProtocolVersion) {
-		this.mProtocolVersion = pProtocolVersion;
-	}
+    public ConnectionEstablishClientMessage(final short pProtocolVersion)
+    {
+	this.mProtocolVersion = pProtocolVersion;
+    }
 
-	// ===========================================================
-	// Getter & Setter
-	// ===========================================================
+    // ===========================================================
+    // Getter & Setter
+    // ===========================================================
 
-	public short getProtocolVersion() {
-		return this.mProtocolVersion;
-	}
+    public short getProtocolVersion()
+    {
+	return this.mProtocolVersion;
+    }
 
-	// ===========================================================
-	// Methods for/from SuperClass/Interfaces
-	// ===========================================================
+    // ===========================================================
+    // Methods for/from SuperClass/Interfaces
+    // ===========================================================
 
-	@Override
-	public short getFlag() {
-		return ClientMessageFlags.FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH;
-	}
+    @Override
+    public short getFlag()
+    {
+	return ClientMessageFlags.FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH;
+    }
 
-	@Override
-	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		this.mProtocolVersion = pDataInputStream.readShort();
-	}
+    @Override
+    protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+	    throws IOException
+    {
+	this.mProtocolVersion = pDataInputStream.readShort();
+    }
 
-	@Override
-	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		pDataOutputStream.writeShort(this.mProtocolVersion);
-	}
+    @Override
+    protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+	    throws IOException
+    {
+	pDataOutputStream.writeShort(this.mProtocolVersion);
+    }
 
-	// ===========================================================
-	// Methods
-	// ===========================================================
+    // ===========================================================
+    // Methods
+    // ===========================================================
 
-	// ===========================================================
-	// Inner and Anonymous Classes
-	// ===========================================================
+    // ===========================================================
+    // Inner and Anonymous Classes
+    // ===========================================================
 }

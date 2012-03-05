@@ -7,72 +7,82 @@ import java.io.IOException;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
 /**
- * (c) 2010 Nicolas Gramlich 
- * (c) 2011 Zynga Inc.
+ * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
  * 
  * @author Nicolas Gramlich
  * @since 12:23:15 - 21.05.2011
  */
-public class ConnectionRejectedProtocolMissmatchServerMessage extends ServerMessage implements ServerMessageFlags {
-	// ===========================================================
-	// Constants
-	// ===========================================================
+public class ConnectionRejectedProtocolMissmatchServerMessage extends ServerMessage implements
+	ServerMessageFlags
+{
+    // ===========================================================
+    // Constants
+    // ===========================================================
 
-	// ===========================================================
-	// Fields
-	// ===========================================================
+    // ===========================================================
+    // Fields
+    // ===========================================================
 
-	private short mProtocolVersion;
+    private short mProtocolVersion;
 
-	// ===========================================================
-	// Constructors
-	// ===========================================================
+    // ===========================================================
+    // Constructors
+    // ===========================================================
 
-	@Deprecated
-	public ConnectionRejectedProtocolMissmatchServerMessage() {
+    @Deprecated
+    public ConnectionRejectedProtocolMissmatchServerMessage()
+    {
 
-	}
+    }
 
-	public ConnectionRejectedProtocolMissmatchServerMessage(final short pProtocolVersion) {
-		this.mProtocolVersion = pProtocolVersion;
-	}
+    public ConnectionRejectedProtocolMissmatchServerMessage(final short pProtocolVersion)
+    {
+	this.mProtocolVersion = pProtocolVersion;
+    }
 
-	// ===========================================================
-	// Getter & Setter
-	// ===========================================================
+    // ===========================================================
+    // Getter & Setter
+    // ===========================================================
 
-	public short getProtocolVersion() {
-		return this.mProtocolVersion;
-	}
+    public short getProtocolVersion()
+    {
+	return this.mProtocolVersion;
+    }
 
-	public void setProtocolVersion(final short pProtocolVersion) {
-		this.mProtocolVersion = pProtocolVersion;
-	}
+    public void setProtocolVersion(final short pProtocolVersion)
+    {
+	this.mProtocolVersion = pProtocolVersion;
+    }
 
-	// ===========================================================
-	// Methods for/from SuperClass/Interfaces
-	// ===========================================================
+    // ===========================================================
+    // Methods for/from SuperClass/Interfaces
+    // ===========================================================
 
-	@Override
-	public short getFlag() {
-		return FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_PROTOCOL_MISSMATCH;
-	}
+    @Override
+    public short getFlag()
+    {
+	return FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_PROTOCOL_MISSMATCH;
+    }
 
-	@Override
-	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		this.mProtocolVersion = pDataInputStream.readShort();
-	}
+    @Override
+    protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+	    throws IOException
+    {
+	this.mProtocolVersion = pDataInputStream.readShort();
+    }
 
-	@Override
-	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		pDataOutputStream.writeShort(this.mProtocolVersion);
-	}
+    @Override
+    protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+	    throws IOException
+    {
+	pDataOutputStream.writeShort(this.mProtocolVersion);
+    }
 
-	// ===========================================================
-	// Methods
-	// ===========================================================
+    // ===========================================================
+    // Methods
+    // ===========================================================
 
-	// ===========================================================
-	// Inner and Anonymous Classes
-	// ===========================================================
+    // ===========================================================
+    // Inner and Anonymous Classes
+    // ===========================================================
 }
