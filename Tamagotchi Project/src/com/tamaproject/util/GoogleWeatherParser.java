@@ -1,7 +1,6 @@
 package com.tamaproject.util;
 
 import java.io.IOException;
-import java.util.Hashtable;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -12,7 +11,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.tamaproject.weather.*;
+import com.tamaproject.weather.CurrentConditions;
 
 /**
  * This class parses the XML that is retrieved from the Google Weather API into a CurrentConditions object

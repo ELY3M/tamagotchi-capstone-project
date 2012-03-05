@@ -40,11 +40,6 @@ import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextur
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.util.Debug;
 
-import com.tamaproject.BaseAndEngineGame;
-import com.tamaproject.adt.messages.client.ClientMessageFlags;
-import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
-import com.tamaproject.adt.messages.server.ServerMessageFlags;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -53,6 +48,11 @@ import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.tamaproject.BaseAndEngineGame;
+import com.tamaproject.adt.messages.client.ClientMessageFlags;
+import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
+import com.tamaproject.adt.messages.server.ServerMessageFlags;
 
 public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags, ServerMessageFlags
 {

@@ -1,6 +1,5 @@
 package com.tamaproject.weather;
 
-import com.tamaproject.*;
 import com.tamaproject.util.GoogleWeatherParser;
 
 /**
