@@ -46,12 +46,11 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.tamaproject.BaseAndEngineGame;
-import com.tamaproject.GameActivity;
 
 public class TamaShooter extends BaseAndEngineGame implements IAccelerometerListener,
 	IOnSceneTouchListener, IOnAreaTouchListener
 {
-    private static final String TAG = GameActivity.class.getSimpleName();
+    private static final String TAG = TamaShooter.class.getSimpleName();
     // ===========================================================
     // Constants
     // ===========================================================

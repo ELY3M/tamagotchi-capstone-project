@@ -11,7 +11,6 @@ import java.util.List;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.badlogic.gdx.math.Vector2;
-import com.tamaproject.GameActivity.MyLocationListener;
 import com.tamaproject.andengine.entity.*;
 import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
