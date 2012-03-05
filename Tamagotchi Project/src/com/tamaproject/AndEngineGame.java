@@ -827,7 +827,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	layout.setOrientation(LinearLayout.HORIZONTAL);
 	params.setMargins(10, 10, 10, 10);
-	tv.setText(i.getDescription() + "\n");
+	tv.setText(i.getInfo() + "\n");
 	// iv.setImageBitmap(i.getTextureRegion().getTexture().g);
 	but.setText("Close");
 	but.setOnClickListener(new OnClickListener()
@@ -1118,6 +1118,13 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 		    loadWeather(Weather.RAIN);
 		}
 	    }
+	    else if(matches.contains("remove poop"))
+	    {
+		for(Entity e : inPlayObjects)
+		{
+		    ipoToRemove.add((Sprite)e);
+		}
+	    }
 	    super.onActivityResult(requestCode, resultCode, data);
 	    this.mEngine.start();
 	}
@@ -1205,17 +1212,24 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
     }
 
     /**
-     * Equips item to tamagotchi
-     * @param item Item to be equipped
+     * Equips item to tamagotchi.
+     * 
+     * @param item
+     *            Item to be equipped
+     * @return true if successfully equipped, false otherwise
      */
-    private void equipItem(Item item)
+    private boolean equipItem(Item item)
     {
-	unequipItem();
-	
+	if (!unequipItem())
+	{
+	    Toast.makeText(getApplicationContext(), "Could not unequip item!", Toast.LENGTH_SHORT).show();
+	    return false;
+	}
+
 	try
 	{
-	    item.detachSelf();  // detach item from any other entities
-	    mScene.unregisterTouchArea(item);  // try to unregister to touch area
+	    item.detachSelf(); // detach item from any other entities
+	    mScene.unregisterTouchArea(item); // try to unregister to touch area
 	} catch (Exception e)
 	{
 	    // item was not previously registered with touch
@@ -1223,7 +1237,7 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 
 	try
 	{
-	    bp.removeItem(item);  // try to remove from backpack
+	    bp.removeItem(item); // try to remove from backpack
 	} catch (Exception e)
 	{
 	    // item was not taken from backpack
@@ -1232,25 +1246,37 @@ public class AndEngineGame extends BaseAndEngineGame implements IOnSceneTouchLis
 	tama.setEquippedItem(item);
 	item.setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
 	tama.getSprite().attachChild(item);
+	return true;
     }
 
     /**
-     * Unequips item from tamagotchi and puts it into backpack
+     * Unequips item from tamagotchi.
+     * 
+     * @return true if unequipped, false otherwise
      */
-    private void unequipItem()
+    private boolean unequipItem()
     {
 	try
 	{
 	    Item previousItem = tama.getEquippedItem();
+	    
+	    if (previousItem == null)
+		return true;
+
+	    if (!bp.addItem(previousItem))
+	    {
+		Toast.makeText(getApplicationContext(), "Backpack is full!", Toast.LENGTH_SHORT).show();
+		return false;
+	    }
 	    tama.getSprite().detachChild(previousItem);
-	    bp.addItem(previousItem);
 	    backpackLayer.attachChild(previousItem);
 	    mScene.registerTouchArea(previousItem);
 	    tama.setEquippedItem(null);
 	} catch (Exception e)
 	{
-
+	    return false;
 	}
+	return true;
     }
 
     // ===========================================================

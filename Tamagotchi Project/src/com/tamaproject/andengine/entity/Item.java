@@ -16,7 +16,7 @@ public class Item extends Sprite
 	super(x, y, textureRegion);
 	setDefault();
     }
-    
+
     public Item(float x, float y, TextureRegion textureRegion, String name, String description,
 	    int health, int hunger, int sickness, int xp)
     {
@@ -34,7 +34,7 @@ public class Item extends Sprite
     {
 	super(x, y, textureRegion);
 	this.name = name;
-	this.description = "Item name: " + name + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp;
+	this.description = "No description.";
 	this.health = health;
 	this.hunger = hunger;
 	this.sickness = sickness;
@@ -121,4 +121,21 @@ public class Item extends Sprite
 	this.type = type;
     }
 
+    public String getStringType()
+    {
+	switch (type)
+	{
+	case Item.EQUIP:
+	    return "Equipment";
+	case Item.NORMAL:
+	    return "Normal";
+	default:
+	    return "Normal";
+	}
+    }
+
+    public String getInfo()
+    {
+	return "Item name: " + name + "\nType: " + getStringType() + "\nDescription: " + description + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp;
+    }
 }

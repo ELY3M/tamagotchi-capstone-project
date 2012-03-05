@@ -405,14 +405,7 @@ public class Tamagotchi
 
     public String getStats()
     {
-	String s = "Age: "+getAge()+
-		"\nHealth: "+currentHealth+"/"+maxHealth+
-		"\nSickness: "+currentSickness+"/"+maxSickness+
-		"\nHunger: "+currentHunger+"/"+maxHunger+
-		"\nExperience: "+currentXP+"/"+maxXP+
-		"\nBattle Level: "+battleLevel+
-		"\nBirthday: "+getFormattedBirthday()+
-		"\nEquipped Item: "+getEquippedItemName();		
+	String s = "Age: " + getAge() + "\nHealth: " + currentHealth + "/" + maxHealth + "\nSickness: " + currentSickness + "/" + maxSickness + "\nHunger: " + currentHunger + "/" + maxHunger + "\nExperience: " + currentXP + "/" + maxXP + "\nBattle Level: " + battleLevel + "\nBirthday: " + getFormattedBirthday() + "\n\nEquipped Item: \n" + equippedItem.getInfo();
 	return s;
     }
 }
