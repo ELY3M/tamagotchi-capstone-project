@@ -1331,7 +1331,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	if (status == Tamagotchi.LEVEL_UP)
 	{
-	    final CircleOutlineParticleEmitter particleEmitter = new CircleOutlineParticleEmitter(tama.getSprite().getX() + tama.getSprite().getWidth() / 2, tama.getSprite().getY() + tama.getSprite().getHeight() / 2, 60);
+	    final CircleOutlineParticleEmitter particleEmitter = new CircleOutlineParticleEmitter(tama.getSprite().getWidth() / 2, tama.getSprite().getHeight() / 2, 60);
 	    final ParticleSystem particleSystem = new ParticleSystem(particleEmitter, 25, 25, 360, listTR.get("particle_point.png"));
 	    particleSystem.addParticleInitializer(new AlphaInitializer(0));
 	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
