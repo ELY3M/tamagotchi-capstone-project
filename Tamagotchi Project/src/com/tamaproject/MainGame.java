@@ -67,7 +67,6 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Looper;
 import android.speech.RecognizerIntent;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -282,7 +281,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
 
-		    tama.checkStats();
+		    if(tama.checkStats()==Tamagotchi.DEAD)
+		    {
+			// TODO: Some action
+		    }
 
 		} catch (Exception e)
 		{
@@ -407,7 +409,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public void onLoadComplete()
     {
-	
+
     }
 
     /**
@@ -541,9 +543,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	int days = (int) (totalPlayTime / (1000 * 60 * 60 * 24));
 
 	Toast.makeText(this, "Total Playtime: " + days + " days, " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds", Toast.LENGTH_SHORT).show();
-	
+
 	tama.addToAge(totalPlayTime);
-	
+
 	stopGPS();
 	finish();
     }
@@ -1260,32 +1262,38 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private boolean equipItem(Item item)
     {
-	if (!unequipItem())
-	{
-	    Toast.makeText(getApplicationContext(), "Could not unequip item!", Toast.LENGTH_SHORT).show();
-	    return false;
-	}
+	itemToApply = item;
+	runOnUpdateThread(new Runnable(){
+	    public void run()
+	    {
+		if (!unequipItem())
+		{
+		    Debug.d("Could not unequip item!");
+		}
+		try
+		{
+		    itemToApply.detachSelf(); // detach item from any other entities
+		    mScene.unregisterTouchArea(itemToApply); // try to unregister to touch area
+		} catch (Exception e)
+		{
+		    // item was not previously registered with touch
+		}
 
-	try
-	{
-	    item.detachSelf(); // detach item from any other entities
-	    mScene.unregisterTouchArea(item); // try to unregister to touch area
-	} catch (Exception e)
-	{
-	    // item was not previously registered with touch
-	}
+		try
+		{
+		    bp.removeItem(itemToApply); // try to remove from backpack
+		} catch (Exception e)
+		{
+		    // item was not taken from backpack
+		}
 
-	try
-	{
-	    bp.removeItem(item); // try to remove from backpack
-	} catch (Exception e)
-	{
-	    // item was not taken from backpack
-	}
-
-	tama.setEquippedItem(item);
-	item.setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
-	tama.getSprite().attachChild(item);
+		tama.setEquippedItem(itemToApply);
+		itemToApply.setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
+		tama.getSprite().attachChild(itemToApply);
+		itemToApply = null;
+	    }
+	
+	});
 	return true;
     }
 
@@ -1335,7 +1343,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    particleSystem.addParticleModifier(new AlphaModifier(0, 1, 0, 1));
 	    particleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
 	    particleSystem.addParticleModifier(new ExpireModifier(2, 2));
-	    mScene.attachChild(particleSystem);
+	    tama.getSprite().attachChild(particleSystem);
 	    mScene.registerUpdateHandler(new TimerHandler(2f, new ITimerCallback()
 	    {
 		@Override

@@ -183,7 +183,7 @@ public class Tamagotchi
 	{
 	    return true;
 	}
-	else if (currentHunger > maxHunger || currentSickness > maxSickness || currentHealth < 0)
+	else if (currentHealth <= 0)
 	{
 	    status = Tamagotchi.DEAD;
 	    return true;
