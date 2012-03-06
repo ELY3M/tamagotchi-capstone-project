@@ -67,6 +67,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Looper;
 import android.speech.RecognizerIntent;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -116,7 +117,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // ===========================================================
 
     private Camera mCamera;
-    private BitmapTextureAtlas mBitmapTextureAtlas;
     private RepeatingSpriteBackground mGrassBackground;
     private Scene mScene;
     private Backpack bp;
@@ -279,6 +279,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
 
+		    tama.checkStats();
+
 		} catch (Exception e)
 		{
 		    Debug.d("onUpdate EXCEPTION:" + e);
@@ -306,13 +308,19 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Timer to run GPS to check weather every hour
 	 */
-	startGPS();
-	this.mScene.registerUpdateHandler(new TimerHandler(60 * 60, true, new ITimerCallback()
-	{
+	this.mScene.registerUpdateHandler(new TimerHandler(0, true, new ITimerCallback()
+	{	    
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		startGPS();
+		runOnUiThread(new Runnable(){
+		    @Override
+		    public void run()
+		    {
+			startGPS();			
+		    }		    
+		});
+		pTimerHandler.setTimerSeconds(60 * 60);
 	    }
 	}));
 
@@ -338,6 +346,49 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    {
 			tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
 		    }
+		}
+	    }
+	}));
+
+	/**
+	 * Handling health regeneration
+	 */
+	final float battleLevelRatio = 1 - (float) tama.getBattleLevel() / Tamagotchi.MAX_BATTLE_LEVEL;
+	final float initialTime = battleLevelRatio * 60;
+	this.mScene.registerUpdateHandler(new TimerHandler(initialTime, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		if (tama.getCurrentSickness() < 1 && tama.getCurrentHunger() < tama.getMaxHunger())
+		{
+		    if (tama.getCurrentHealth() < tama.getMaxHealth())
+		    {
+			final float battleLevelRatio = 1 - (float) tama.getBattleLevel() / Tamagotchi.MAX_BATTLE_LEVEL;
+			final float hungerRatio = 1 - tama.getCurrentHunger() / tama.getMaxHunger();
+			tama.setCurrentHealth(tama.getCurrentHealth() + hungerRatio * 0.05f * tama.getMaxHealth());
+			pTimerHandler.setTimerSeconds(battleLevelRatio * 60);
+		    }
+
+		}
+	    }
+	}));
+
+	/**
+	 * Handling hunger
+	 */
+	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		if (tama.getCurrentHunger() >= tama.getMaxHunger() && tama.getCurrentHealth() > 0)
+		{
+		    tama.setCurrentHealth(tama.getCurrentHealth() - 0.05f * tama.getMaxHealth());
+		}
+		else
+		{
+		    tama.setCurrentHunger(tama.getCurrentHunger() + 0.05f * tama.getMaxHunger());
 		}
 	    }
 	}));
@@ -811,6 +862,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	final Item newItem = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Level item", 7, 0, 0, 10000);
 	this.bp.addItem(newItem);
+
+	final Item cureAll = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Cure All", 0, -10000, -10000, 0);
+	this.bp.addItem(cureAll);
     }
 
     /**

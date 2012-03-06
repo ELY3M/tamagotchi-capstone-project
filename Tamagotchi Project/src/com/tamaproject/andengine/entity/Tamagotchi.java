@@ -8,11 +8,11 @@ import org.anddev.andengine.entity.sprite.Sprite;
 
 public class Tamagotchi
 {
+    public static final int MAX_BATTLE_LEVEL = 100;
     private float currentHealth, maxHealth;
     private float currentHunger, maxHunger;
     private float currentXP, maxXP;
     private float currentSickness, maxSickness;
-    private int poop;
     private int battleLevel;
     private int status;
     private long birthday;
@@ -31,7 +31,7 @@ public class Tamagotchi
     }
 
     public Tamagotchi(float currentHealth, float maxHealth, float currentHunger, float maxHunger,
-	    float currentXP, float maxXP, float currentSickness, float maxSickness, int poop,
+	    float currentXP, float maxXP, float currentSickness, float maxSickness,
 	    int battleLevel, int status, long birthday, Item equippedItem)
     {
 	this.currentHealth = currentHealth;
@@ -42,7 +42,6 @@ public class Tamagotchi
 	this.maxXP = maxXP;
 	this.currentSickness = currentSickness;
 	this.maxSickness = maxSickness;
-	this.poop = poop;
 	this.battleLevel = battleLevel;
 	this.status = status;
 	this.birthday = birthday;
@@ -63,15 +62,14 @@ public class Tamagotchi
 	this.maxXP = 50;
 	this.currentSickness = 10;
 	this.maxSickness = 50;
-	this.poop = 6;
 	this.battleLevel = 5;
 	this.status = Tamagotchi.ALIVE;
 	this.birthday = 1325376000000l;
     }
 
     public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
-	    int currentXP, int maxXP, int currentSickness, int maxSickness, int poop,
-	    int battleLevel, int status)
+	    int currentXP, int maxXP, int currentSickness, int maxSickness, int battleLevel,
+	    int status)
     {
 	this.currentHealth = currentHealth;
 	this.maxHealth = maxHealth;
@@ -81,7 +79,6 @@ public class Tamagotchi
 	this.maxXP = maxXP;
 	this.currentSickness = currentSickness;
 	this.maxSickness = maxSickness;
-	this.poop = poop;
 	this.battleLevel = battleLevel;
 	this.status = status;
     }
@@ -130,21 +127,33 @@ public class Tamagotchi
      * 
      * @return Tamagotchi.DEAD, LEVEL_UP, or ALIVE
      */
-    private int checkStats()
+    public int checkStats()
     {
 	if (this.currentHealth > this.maxHealth)
 	{
 	    this.currentHealth = this.maxHealth;
+	}
+	else if (this.currentHealth < 0)
+	{
+	    this.currentHealth = 0;
 	}
 
 	if (this.currentHunger < 0)
 	{
 	    this.currentHunger = 0;
 	}
+	else if (this.currentHunger > this.maxHunger)
+	{
+	    this.currentHunger = this.maxHunger;
+	}
 
 	if (this.currentSickness < 0)
 	{
 	    this.currentSickness = 0;
+	}
+	else if (this.currentSickness > this.maxSickness)
+	{
+	    this.currentSickness = this.maxSickness;
 	}
 
 	// check if tama is dead
@@ -217,11 +226,6 @@ public class Tamagotchi
 	return age;
     }
 
-    public int getPoop()
-    {
-	return poop;
-    }
-
     public int getBattleLevel()
     {
 	return battleLevel;
@@ -240,61 +244,6 @@ public class Tamagotchi
     public String getFormattedBirthday()
     {
 	return formatter.format(calendar.getTime());
-    }
-
-    public void setCurrentHealth(int currentHealth)
-    {
-	this.currentHealth = currentHealth;
-    }
-
-    public void setMaxHealth(int maxHealth)
-    {
-	this.maxHealth = maxHealth;
-    }
-
-    public void setCurrentHunger(int currentHunger)
-    {
-	this.currentHunger = currentHunger;
-    }
-
-    public void setMaxHunger(int maxHunger)
-    {
-	this.maxHunger = maxHunger;
-    }
-
-    public void setCurrentXP(int currentXP)
-    {
-	this.currentXP = currentXP;
-    }
-
-    public void setMaxXP(int maxXP)
-    {
-	this.maxXP = maxXP;
-    }
-
-    public void setCurrentSickness(int currentSickness)
-    {
-	this.currentSickness = currentSickness;
-    }
-
-    public void setMaxSickness(int maxSickness)
-    {
-	this.maxSickness = maxSickness;
-    }
-
-    public void setPoop(int poop)
-    {
-	this.poop = poop;
-    }
-
-    public void setBattleLevel(int battleLevel)
-    {
-	this.battleLevel = battleLevel;
-    }
-
-    public void setStatus(int status)
-    {
-	this.status = status;
     }
 
     public void setBirthday(long birthday)
@@ -414,5 +363,15 @@ public class Tamagotchi
     {
 	String s = "Age: " + getAge() + "\nHealth: " + currentHealth + "/" + maxHealth + "\nSickness: " + currentSickness + "/" + maxSickness + "\nHunger: " + currentHunger + "/" + maxHunger + "\nExperience: " + currentXP + "/" + maxXP + "\nBattle Level: " + battleLevel + "\nBirthday: " + getFormattedBirthday() + "\n\nEquipped Item: \n" + equippedItem.getInfo();
 	return s;
+    }
+
+    public void setBattleLevel(int battleLevel)
+    {
+	this.battleLevel = battleLevel;
+    }
+
+    public void setStatus(int status)
+    {
+	this.status = status;
     }
 }
