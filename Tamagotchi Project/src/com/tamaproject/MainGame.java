@@ -95,18 +95,18 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // Constants
     // ===========================================================
 
-    private final int cameraWidth = 480, cameraHeight = 800;
+    private static final int cameraWidth = 480, cameraHeight = 800;
     private static final int CONFIRM_APPLYITEM = 0;
     private static final int CONFIRM_QUITGAME = 1;
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
     private static final boolean FULLSCREEN = true;
 
     // Length of health bars, etc.
-    private final float barLength = 150;
-    private final float barHeight = 25;
-    private final float leftSpacing = 50;
-    private final float vSpacing = 15;
-    private float iconSpacing = 30;
+    private static final int barLength = 150;
+    private static final int barHeight = 25;
+    private static final int leftSpacing = 50;
+    private static final int vSpacing = 15;
+    private static final int iconSpacing = 30;
 
     private final int numIcons = 6; // number of icons in the bottom bar
     private final int iconSpacer = cameraWidth / (numIcons + 1);
@@ -135,7 +135,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
-    private float pTopBound, pBottomBound; // top and bottom bounds of play area
+    private int pTopBound, pBottomBound; // top and bottom bounds of play area
     private Sprite trashCan;
     private PopupWindow popUp;
     private LinearLayout layout;
@@ -583,7 +583,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private void loadInterface()
     {
 
-	float mid = (cameraHeight - pBottomBound) / 2;
+	final float mid = (cameraHeight - pBottomBound) / 2;
 
 	/**
 	 * Load backpack background
