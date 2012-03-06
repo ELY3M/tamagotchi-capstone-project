@@ -170,6 +170,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private ChangeableText stats;
 
+    private long startPlayTime;
+    private long totalPlayTime = 0;
+
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -309,16 +312,17 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	 * Timer to run GPS to check weather every hour
 	 */
 	this.mScene.registerUpdateHandler(new TimerHandler(0, true, new ITimerCallback()
-	{	    
+	{
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		runOnUiThread(new Runnable(){
+		runOnUiThread(new Runnable()
+		{
 		    @Override
 		    public void run()
 		    {
-			startGPS();			
-		    }		    
+			startGPS();
+		    }
 		});
 		pTimerHandler.setTimerSeconds(60 * 60);
 	    }
@@ -403,7 +407,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public void onLoadComplete()
     {
-
+	
     }
 
     /**
@@ -515,6 +519,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	super.onPause();
 	this.mEngine.stop();
+	totalPlayTime += System.currentTimeMillis() - startPlayTime;
     }
 
     @Override
@@ -522,12 +527,23 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	super.onResume();
 	this.mEngine.start();
+	startPlayTime = System.currentTimeMillis();
     }
 
     @Override
     public void onDestroy()
     {
 	super.onDestroy();
+
+	int seconds = (int) (totalPlayTime / 1000) % 60;
+	int minutes = (int) ((totalPlayTime / (1000 * 60)) % 60);
+	int hours = (int) ((totalPlayTime / (1000 * 60 * 60)) % 24);
+	int days = (int) (totalPlayTime / (1000 * 60 * 60 * 24));
+
+	Toast.makeText(this, "Total Playtime: " + days + " days, " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds", Toast.LENGTH_SHORT).show();
+	
+	tama.addToAge(totalPlayTime);
+	
 	stopGPS();
 	finish();
     }

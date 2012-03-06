@@ -16,6 +16,7 @@ public class Tamagotchi
     private int battleLevel;
     private int status;
     private long birthday;
+    private long age;
     private Item equippedItem;
 
     private Sprite sprite;
@@ -32,7 +33,7 @@ public class Tamagotchi
 
     public Tamagotchi(float currentHealth, float maxHealth, float currentHunger, float maxHunger,
 	    float currentXP, float maxXP, float currentSickness, float maxSickness,
-	    int battleLevel, int status, long birthday, Item equippedItem)
+	    int battleLevel, int status, long birthday, Item equippedItem, long age)
     {
 	this.currentHealth = currentHealth;
 	this.maxHealth = maxHealth;
@@ -47,6 +48,7 @@ public class Tamagotchi
 	this.birthday = birthday;
 	this.equippedItem = equippedItem;
 	this.calendar.setTimeInMillis(birthday);
+	this.age = age;
     }
 
     /**
@@ -65,6 +67,7 @@ public class Tamagotchi
 	this.battleLevel = 5;
 	this.status = Tamagotchi.ALIVE;
 	this.birthday = 1325376000000l;
+	this.age = 0;
     }
 
     public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
@@ -220,10 +223,14 @@ public class Tamagotchi
      * 
      * @return The tama's age in days.
      */
-    public int getAge()
+    public long getAge()
     {
-	int age = (int) ((System.currentTimeMillis() - birthday) / (24L * 60 * 60 * 1000));
-	return age;
+	return age / (1000 * 60 * 60 * 24);
+    }
+
+    public void addToAge(long time)
+    {
+	age += time;
     }
 
     public int getBattleLevel()

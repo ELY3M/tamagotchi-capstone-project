@@ -137,16 +137,16 @@ public class Item extends Sprite
 
     public String getInfo()
     {
-	return "Item name: " + name + "\nType: " + getStringType() + "\nDescription: " + description + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp;
+	return "Item name: " + name + "\nType: " + getStringType() + "\nDescription: " + description + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp + "\nProtection: " + Protection.getString(protection);
     }
 
     public int getProtection()
     {
-        return protection;
+	return protection;
     }
 
     public void setProtection(int protection)
     {
-        this.protection = protection;
+	this.protection = protection;
     }
 }
