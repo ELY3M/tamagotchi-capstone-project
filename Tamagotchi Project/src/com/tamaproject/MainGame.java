@@ -82,6 +82,7 @@ import android.widget.Toast;
 
 import com.tamaproject.andengine.entity.Backpack;
 import com.tamaproject.andengine.entity.Item;
+import com.tamaproject.andengine.entity.Protection;
 import com.tamaproject.andengine.entity.Tamagotchi;
 import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
@@ -312,6 +313,32 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
 		startGPS();
+	    }
+	}));
+
+	/**
+	 * Checks to see if Tamagotchi is prepared for weather every 5 minutes, if it isn't, increase sickness
+	 */
+	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		if (tama.getEquippedItem() != null)
+		{
+		    // if equipped item doesn't protect tama from current weather and current weather is not clear
+		    if (tama.getEquippedItem().getProtection() != weather && weather != Weather.NONE)
+		    {
+			tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
+		    }
+		}
+		else
+		{
+		    if (weather != Weather.NONE)
+		    {
+			tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
+		    }
+		}
 	    }
 	}));
 
@@ -777,9 +804,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    }
 	}
 
-	Item item = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Equip item", 7, 0, 0, 0);
-	item.setType(Item.EQUIP);
-	this.bp.addItem(item);
+	final Item umbrella = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Umbrella", 0, 0, 0, 0);
+	umbrella.setType(Item.EQUIP);
+	umbrella.setProtection(Protection.RAIN);
+	this.bp.addItem(umbrella);
 
 	final Item newItem = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Level item", 7, 0, 0, 10000);
 	this.bp.addItem(newItem);
@@ -793,9 +821,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void applyItem(Item item)
     {
-	int tamaStatus = this.tama.applyItem(item);	
+	int tamaStatus = this.tama.applyItem(item);
 	showEffect(tamaStatus);
-	
+
 	this.bp.removeItem(item);
 	this.mainLayer.detachChild(item);
 	this.mScene.unregisterTouchArea(item);
@@ -851,72 +879,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	popUp.showAtLocation(layout, Gravity.NO_GRAVITY, 10, cameraHeight / 2);
 	popUp.update(cameraWidth - 20, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound) - 10));
 	popUp.setFocusable(true);
-    }
-
-    /**
-     * GPS Location Listener
-     */
-    public class MyLocationListener implements LocationListener
-    {
-	@Override
-	public void onLocationChanged(Location loc)
-	{
-	    double lat = loc.getLatitude();
-	    double lon = loc.getLongitude();
-	    String Text = "My current location is: " + "Latitude = " + loc.getLatitude() + ", Longitude = " + loc.getLongitude();
-	    Debug.d(Text);
-	    cc = WeatherRetriever.getCurrentConditions(lat, lon);
-	    if (cc != null)
-	    {
-		Debug.d(cc.toString());
-		/**
-		 * For debugging, display current weather
-		 */
-		final Text weatherText = new Text(0, pBottomBound - 60, mFont, cc.getCondition(), HorizontalAlign.LEFT);
-		mainLayer.attachChild(weatherText);
-
-		// Parse the result and see if there is rain or snow
-		String[] temp = cc.getCondition().split(" ");
-		Debug.d(temp.toString());
-		int weatherType = Weather.NONE;
-		for (String s : temp)
-		{
-		    if (s.equalsIgnoreCase("rain"))
-		    {
-			weatherType = Weather.RAIN;
-			break;
-		    }
-		    else if (s.equalsIgnoreCase("snow"))
-		    {
-			weatherType = Weather.SNOW;
-			break;
-		    }
-		}
-		loadWeather(weatherType);
-
-		// Stop GPS listener to save battery
-		lastWeatherRetrieve = System.currentTimeMillis();
-		stopGPS();
-	    }
-	}
-
-	@Override
-	public void onProviderDisabled(String provider)
-	{
-	    Toast.makeText(getApplicationContext(), "Gps Disabled", Toast.LENGTH_SHORT).show();
-	}
-
-	@Override
-	public void onProviderEnabled(String provider)
-	{
-	    Toast.makeText(getApplicationContext(), "Gps Enabled", Toast.LENGTH_SHORT).show();
-	}
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras)
-	{
-
-	}
     }
 
     /**
@@ -1286,7 +1248,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	}
 	return true;
     }
-    
+
     private void showEffect(int status)
     {
 	if (status == Tamagotchi.LEVEL_UP)
@@ -1331,9 +1293,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // Inner and Anonymous Classes
     // ===========================================================
 
+    /**
+     * Same as Item class but overrides the onAreaTouched() method to work with game
+     * 
+     * @author Jonathan
+     * 
+     */
     private class GameItem extends Item
     {
-
 	public GameItem(float x, float y, TextureRegion textureRegion)
 	{
 	    super(x, y, textureRegion);
@@ -1453,4 +1420,71 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    return false;
 	}
     }
+
+    /**
+     * GPS Location Listener
+     */
+    public class MyLocationListener implements LocationListener
+    {
+	@Override
+	public void onLocationChanged(Location loc)
+	{
+	    double lat = loc.getLatitude();
+	    double lon = loc.getLongitude();
+	    String Text = "My current location is: " + "Latitude = " + loc.getLatitude() + ", Longitude = " + loc.getLongitude();
+	    Debug.d(Text);
+	    cc = WeatherRetriever.getCurrentConditions(lat, lon);
+	    if (cc != null)
+	    {
+		Debug.d(cc.toString());
+		/**
+		 * For debugging, display current weather
+		 */
+		final Text weatherText = new Text(0, pBottomBound - 60, mFont, cc.getCondition(), HorizontalAlign.LEFT);
+		mainLayer.attachChild(weatherText);
+
+		// Parse the result and see if there is rain or snow
+		String[] temp = cc.getCondition().split(" ");
+		Debug.d(temp.toString());
+		int weatherType = Weather.NONE;
+		for (String s : temp)
+		{
+		    if (s.equalsIgnoreCase("rain"))
+		    {
+			weatherType = Weather.RAIN;
+			break;
+		    }
+		    else if (s.equalsIgnoreCase("snow"))
+		    {
+			weatherType = Weather.SNOW;
+			break;
+		    }
+		}
+		loadWeather(weatherType);
+
+		// Stop GPS listener to save battery
+		lastWeatherRetrieve = System.currentTimeMillis();
+		stopGPS();
+	    }
+	}
+
+	@Override
+	public void onProviderDisabled(String provider)
+	{
+	    Toast.makeText(getApplicationContext(), "Gps Disabled", Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void onProviderEnabled(String provider)
+	{
+	    Toast.makeText(getApplicationContext(), "Gps Enabled", Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras)
+	{
+
+	}
+    }
+
 }

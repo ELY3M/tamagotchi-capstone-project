@@ -10,6 +10,7 @@ public class Item extends Sprite
     private String description;
     private int health, hunger, sickness, xp;
     private int type = NORMAL;
+    private int protection = Protection.NONE;
 
     public Item(float x, float y, TextureRegion textureRegion)
     {
@@ -137,5 +138,15 @@ public class Item extends Sprite
     public String getInfo()
     {
 	return "Item name: " + name + "\nType: " + getStringType() + "\nDescription: " + description + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp;
+    }
+
+    public int getProtection()
+    {
+        return protection;
+    }
+
+    public void setProtection(int protection)
+    {
+        this.protection = protection;
     }
 }
