@@ -44,6 +44,7 @@ import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
 import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.font.Font;
+import org.anddev.andengine.opengl.font.FontFactory;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -194,7 +195,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 	loadTextures(this, this.mEngine);
 	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-	this.mFont = new Font(this.mFontTexture, Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 24, true, Color.WHITE);
+	this.mFont = FontFactory.createFromAsset(mFontTexture, this, "ITCKRIST.TTF", 24, true, Color.WHITE);
 	this.mEngine.getTextureManager().loadTexture(this.mFontTexture);
 	this.mEngine.getFontManager().loadFont(this.mFont);
 
@@ -657,7 +658,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	final Text statsLabel = new Text(15, 15, mFont, "Tamagotchi Stats", HorizontalAlign.LEFT);
 	statsBackground.attachChild(statsLabel);
 
-	this.stats = new ChangeableText(25, statsLabel.getY() + 100, mFont, tama.getStats(), HorizontalAlign.LEFT, 512);
+	this.stats = new ChangeableText(25, statsLabel.getY() + 50, mFont, tama.getStats(), HorizontalAlign.LEFT, 512);
 	stats.setScale(0.95f);
 	statsBackground.attachChild(stats);
 
