@@ -98,6 +98,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private static final int cameraWidth = 480, cameraHeight = 800;
     private static final int CONFIRM_APPLYITEM = 0;
     private static final int CONFIRM_QUITGAME = 1;
+    private static final int CONFIRM_REMOVEITEM = 2;
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
     private static final boolean FULLSCREEN = true;
 
@@ -132,6 +133,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Item takeOut; // item to take out of backpack
     private Item putBack; // item to put back into packpack
     private Item itemToApply; // item to apply to Tama
+    private Item itemToRemove;
+    private BaseSprite spriteToRemove;
 
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
@@ -281,7 +284,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
 
-		    if(tama.checkStats()==Tamagotchi.DEAD)
+		    if (tama.checkStats() == Tamagotchi.DEAD)
 		    {
 			// TODO: Some action
 		    }
@@ -485,6 +488,55 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		@Override
 		public void onClick(DialogInterface dialog, int which)
 		{
+		    return;
+		}
+	    });
+
+	    return builder2.create();
+
+	case MainGame.CONFIRM_REMOVEITEM:
+	    builder2.setTitle("Remove Item");
+	    builder2.setIcon(android.R.drawable.btn_star);
+	    builder2.setMessage("Are you sure you want to remove this item?");
+	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
+	    {
+		@Override
+		public void onClick(DialogInterface dialog, int which)
+		{
+		    runOnUpdateThread(new Runnable()
+		    {
+			@Override
+			public void run()
+			{
+			    if (itemToRemove != null)
+			    {
+				itemToRemove.detachSelf();
+				bp.removeItem(itemToRemove);
+				itemToRemove = null;
+				bp.resetPositions(cameraWidth, cameraHeight);
+			    }
+			}
+		    });
+		    return;
+		}
+	    });
+
+	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
+	    {
+		@Override
+		public void onClick(DialogInterface dialog, int which)
+		{
+		    runOnUpdateThread(new Runnable()
+		    {
+			@Override
+			public void run()
+			{
+			    Debug.d("Putting back item");
+			    mainLayer.detachChild(itemToRemove);
+			    backpackLayer.attachChild(itemToRemove);
+			    itemToRemove = null;
+			}
+		    }); // End runOnUpdateThread
 		    return;
 		}
 	    });
@@ -923,8 +975,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	popUp = new PopupWindow(this);
 	layout = new LinearLayout(this);
-	TextView tv = new TextView(this);
-	Button but = new Button(this);
+	final TextView tv = new TextView(this);
+	final Button but = new Button(this);
 	ImageView iv = new ImageView(this);
 	LayoutParams params = new LayoutParams(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
 
@@ -1263,7 +1315,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private boolean equipItem(Item item)
     {
 	itemToApply = item;
-	runOnUpdateThread(new Runnable(){
+	runOnUpdateThread(new Runnable()
+	{
 	    public void run()
 	    {
 		if (!unequipItem())
@@ -1292,7 +1345,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		tama.getSprite().attachChild(itemToApply);
 		itemToApply = null;
 	    }
-	
+
 	});
 	return true;
     }
@@ -1433,6 +1486,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			    closeBackpack();
 			}
 			this.setPosition(pSceneTouchEvent.getX() - this.getWidth() / 2, pSceneTouchEvent.getY() - this.getHeight() / 2);
+
 			moved = true;
 			return true;
 		    }
@@ -1466,6 +1520,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 				{
 				    equipItem(this);
 				}
+			    }
+			    else if (this.collidesWith(trashCan))
+			    {
+				itemToRemove = this;
+				showDialog(MainGame.CONFIRM_REMOVEITEM);
 			    }
 			    else
 			    {
