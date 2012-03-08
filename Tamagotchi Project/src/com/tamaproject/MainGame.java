@@ -169,6 +169,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private Rectangle itemDescriptionRect;
     private ChangeableText itemDesctiptionText;
+    private Rectangle notificationRect;
+    private ChangeableText notificationText;
 
     private boolean tamaDeadParticles = false;
 
@@ -308,7 +310,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Timer to generate poop
 	 */
-	this.mScene.registerUpdateHandler(new TimerHandler(10, true, new ITimerCallback()
+	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
 	{
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
@@ -836,6 +838,20 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	 */
 	this.itemDesctiptionText = new ChangeableText(10, 10, mSmallFont, "", 512);
 	this.itemDescriptionRect.attachChild(this.itemDesctiptionText);
+	
+	/**
+	 * Load notification box
+	 */
+	this.notificationRect = new Rectangle(0, pTopBound, cameraWidth, 50);
+	this.notificationRect.setColor(0, 0, 0);
+	this.notificationRect.setVisible(false);
+	this.midLayer.attachChild(notificationRect);
+	
+	/**
+	 * Add text to notification box
+	 */
+	this.notificationText = new ChangeableText(10, 10, mSmallFont, "", 512);
+	this.notificationRect.attachChild(notificationText);
 
 	/**
 	 * Add close button
@@ -852,6 +868,22 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	this.itemDescriptionRect.attachChild(closeButton);
 	this.mScene.registerTouchArea(closeButton);
+	
+	/**
+	 * Add close button for notification
+	 */
+	final Sprite notifyCloseButton = new Sprite(this.notificationRect.getWidth() - listTR.get("close.png").getWidth(), 0, listTR.get("close.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		notificationRect.setVisible(false);
+		return true;
+	    }
+	};
+	this.notificationRect.attachChild(notifyCloseButton);
+	this.mScene.registerTouchArea(notifyCloseButton);
     }
 
     /**
@@ -1159,7 +1191,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	    particleSystem.addParticleModifier(new ExpireModifier(11.5f));
 	    this.weatherLayer.attachChild(particleSystem);
-	}
+	}	
 	else
 	{
 	    weather = Weather.NONE;
@@ -1433,6 +1465,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 	    }));
+	    showNotification("Tamagotchi has leveled up!");
 	}
 	else if (status == Tamagotchi.DEAD)
 	{
@@ -1449,7 +1482,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    particleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
 	    particleSystem.addParticleModifier(new ExpireModifier(11.5f));
 	    mainLayer.attachChild(particleSystem);
-	    
+
 	    final CircleOutlineParticleEmitter tamaParticleEmitter = new CircleOutlineParticleEmitter(tama.getSprite().getWidth() / 2, tama.getSprite().getHeight() / 2, 60);
 	    final ParticleSystem tamaParticleSystem = new ParticleSystem(tamaParticleEmitter, 5, 5, 100, listTR.get("particle_point.png"));
 	    tamaParticleSystem.addParticleInitializer(new AlphaInitializer(0));
@@ -1463,8 +1496,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    tamaParticleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
 	    tamaParticleSystem.addParticleModifier(new ExpireModifier(5f));
 	    tama.getSprite().attachChild(tamaParticleSystem);
-	    
-	    
+
 	    tamaDeadParticles = true;
 
 	    mScene.registerUpdateHandler(new TimerHandler(10f, new ITimerCallback()
@@ -1490,7 +1522,16 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 	    }));
+	    
+	    showNotification("Tamagotchi has passed away!");
 	}
+    }
+    
+    private void showNotification(String text)
+    {
+	this.notificationText.setText(TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
+	this.notificationRect.setHeight(this.notificationText.getHeight());
+	this.notificationRect.setVisible(true);
     }
 
     // ===========================================================
@@ -1652,22 +1693,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		mainLayer.attachChild(weatherText);
 
 		// Parse the result and see if there is rain or snow
-		String[] temp = cc.getCondition().split(" ");
-		Debug.d(temp.toString());
 		int weatherType = Weather.NONE;
-		for (String s : temp)
-		{
-		    if (s.equalsIgnoreCase("rain"))
-		    {
-			weatherType = Weather.RAIN;
-			break;
-		    }
-		    else if (s.equalsIgnoreCase("snow"))
-		    {
-			weatherType = Weather.SNOW;
-			break;
-		    }
-		}
+		String condition = cc.getCondition().toLowerCase();
+
+		if (condition.contains("rain"))
+		    weatherType = Weather.RAIN;
+		else if (condition.contains("snow"))
+		    weatherType = Weather.SNOW;
+		
 		loadWeather(weatherType);
 
 		// Stop GPS listener to save battery
