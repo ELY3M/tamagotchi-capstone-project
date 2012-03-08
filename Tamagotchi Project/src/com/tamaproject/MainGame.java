@@ -119,6 +119,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Entity weatherLayer = new Entity();
     private Entity statsLayer = new Entity();
     private Entity topLayer = new Entity();
+    private Entity midLayer = new Entity();
     private List<Entity> subLayers = new ArrayList<Entity>(); // layers that are opened by icons in the bottom bar
     private List<Entity> mainLayers = new ArrayList<Entity>(); // layers that belong to the main gameplay
     private HashMap<Entity, Rectangle> selectBoxes = new HashMap<Entity, Rectangle>(); // mapping of layers to icon select boxes
@@ -168,6 +169,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private Rectangle itemDescriptionRect;
     private ChangeableText itemDesctiptionText;
+
+    private boolean tamaDeadParticles = false;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -230,6 +233,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	this.mScene.attachChild(mainLayer);
 	this.mScene.attachChild(weatherLayer);
+	this.mScene.attachChild(midLayer);
 	this.mScene.attachChild(backpackLayer);
 	this.mScene.attachChild(statsLayer);
 	this.mScene.attachChild(topLayer);
@@ -278,7 +282,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    }
 
 		    if (statsLayer.isVisible())
-			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth-50));
+			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth - 50));
 
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
@@ -286,6 +290,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    if (tama.checkStats() == Tamagotchi.DEAD)
 		    {
 			// TODO: Some action
+			if (!tamaDeadParticles)
+			    showEffect(Tamagotchi.DEAD);
 			Debug.d("Tamagotchi is dead!");
 		    }
 
@@ -307,9 +313,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		final float xPos = MathUtils.random(30.0f, (cameraWidth - 30.0f));
-		final float yPos = MathUtils.random(pTopBound, (pBottomBound - pTopBound));
-		addPoop(xPos, yPos);
+		if (tama.getStatus() != Tamagotchi.DEAD)
+		{
+		    final float xPos = MathUtils.random(30.0f, (cameraWidth - 30.0f));
+		    final float yPos = MathUtils.random(pTopBound, (pBottomBound - pTopBound));
+		    addPoop(xPos, yPos);
+		}
 	    }
 	}));
 
@@ -665,14 +674,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	 */
 	bottomRect = new Rectangle(0, pBottomBound, cameraWidth, cameraHeight);
 	bottomRect.setColor(70 / 255f, 132 / 255f, 163 / 255f);
-	this.mScene.attachChild(bottomRect);
+	this.midLayer.attachChild(bottomRect);
 
 	/**
 	 * Draw top rectangle bar
 	 */
 	topRect = new Rectangle(0, 0, cameraWidth, pTopBound);
 	topRect.setColor(70 / 255f, 132 / 255f, 163 / 255f);
-	this.mScene.attachChild(topRect);
+	this.midLayer.attachChild(topRect);
 
 	/**
 	 * Load the open backpack icon
@@ -736,7 +745,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    if (!statsLayer.isVisible())
 		    {
-			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth-50));
+			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth - 50));
 			openLayer(statsLayer);
 		    }
 		    else
@@ -1424,7 +1433,63 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 	    }));
+	}
+	else if (status == Tamagotchi.DEAD)
+	{
+	    final RectangleParticleEmitter particleEmitter = new RectangleParticleEmitter(cameraWidth / 2, pBottomBound, cameraWidth, 1);
+	    final ParticleSystem particleSystem = new ParticleSystem(particleEmitter, 1, 10, 100, listTR.get("particle_point.png"));
+	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
 
+	    particleSystem.addParticleInitializer(new VelocityInitializer(-10, 10, -60, -90));
+	    particleSystem.addParticleInitializer(new AccelerationInitializer(5, -15));
+	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
+	    particleSystem.addParticleModifier(new ScaleModifier(1.0f, 2.0f, 0, 5));
+	    particleSystem.addParticleModifier(new ColorModifier(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 2f));
+	    particleSystem.addParticleModifier(new AlphaModifier(0, 1, 0, 1));
+	    particleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
+	    particleSystem.addParticleModifier(new ExpireModifier(11.5f));
+	    mainLayer.attachChild(particleSystem);
+	    
+	    final CircleOutlineParticleEmitter tamaParticleEmitter = new CircleOutlineParticleEmitter(tama.getSprite().getWidth() / 2, tama.getSprite().getHeight() / 2, 60);
+	    final ParticleSystem tamaParticleSystem = new ParticleSystem(tamaParticleEmitter, 5, 5, 100, listTR.get("particle_point.png"));
+	    tamaParticleSystem.addParticleInitializer(new AlphaInitializer(0));
+	    tamaParticleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
+	    tamaParticleSystem.addParticleInitializer(new VelocityInitializer(-2, 2, -20, -10));
+	    tamaParticleSystem.addParticleInitializer(new RotationInitializer(0.0f, 360.0f));
+
+	    tamaParticleSystem.addParticleModifier(new ScaleModifier(1.0f, 2.0f, 0, 5));
+	    tamaParticleSystem.addParticleModifier(new ColorModifier(1.0f, 0.0f, 1.0f, 0.5f, 0.0f, 0.0f, 0.0f, 2f));
+	    tamaParticleSystem.addParticleModifier(new AlphaModifier(0, 1, 0, 1));
+	    tamaParticleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
+	    tamaParticleSystem.addParticleModifier(new ExpireModifier(5f));
+	    tama.getSprite().attachChild(tamaParticleSystem);
+	    
+	    
+	    tamaDeadParticles = true;
+
+	    mScene.registerUpdateHandler(new TimerHandler(10f, new ITimerCallback()
+	    {
+		@Override
+		public void onTimePassed(final TimerHandler pTimerHandler)
+		{
+		    tamaParticleSystem.setParticlesSpawnEnabled(false);
+		    particleSystem.setParticlesSpawnEnabled(false);
+		    tama.getSprite().setVisible(false);
+		    mScene.unregisterUpdateHandler(pTimerHandler);
+		}
+
+	    }));
+	    mScene.registerUpdateHandler(new TimerHandler(15f, new ITimerCallback()
+	    {
+		@Override
+		public void onTimePassed(final TimerHandler pTimerHandler)
+		{
+		    tamaParticleSystem.detachSelf();
+		    particleSystem.detachSelf();
+		    tama.getSprite().detachSelf();
+		    mScene.unregisterUpdateHandler(pTimerHandler);
+		}
+	    }));
 	}
     }
 
