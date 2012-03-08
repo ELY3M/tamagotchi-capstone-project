@@ -370,7 +370,7 @@ public class Tamagotchi
     {
 	String s = "Age: " + getAge() + "\nHealth: " + currentHealth + "/" + maxHealth + "\nSickness: " + currentSickness + "/" + maxSickness + "\nHunger: " + currentHunger + "/" + maxHunger + "\nExperience: " + currentXP + "/" + maxXP + "\nBattle Level: " + battleLevel + "\nBirthday: " + getFormattedBirthday();
 	if (equippedItem != null)
-	    s += "\n\nEquipped Item: \n" + equippedItem.getInfo();
+	    s += "\n \nEquipped Item: \n" + equippedItem.getInfo();
 	return s;
     }
 

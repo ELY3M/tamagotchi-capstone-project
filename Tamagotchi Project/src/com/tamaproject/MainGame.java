@@ -68,22 +68,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
-import android.widget.PopupWindow;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tamaproject.andengine.entity.Backpack;
 import com.tamaproject.andengine.entity.Item;
 import com.tamaproject.andengine.entity.Protection;
 import com.tamaproject.andengine.entity.Tamagotchi;
+import com.tamaproject.util.TextUtil;
 import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
 import com.tamaproject.weather.WeatherRetriever;
@@ -135,7 +127,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Item putBack; // item to put back into packpack
     private Item itemToApply; // item to apply to Tama
     private Item itemToRemove;
-    private BaseSprite spriteToRemove;
 
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
@@ -144,8 +135,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private PhysicsWorld mPhysicsWorld;
     private ParticleSystem particleSystem;
     private int weather = Weather.NONE;
-    private BitmapTextureAtlas mFontTexture;
+    private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
     private Font mFont;
+    private Font mSmallFont;
 
     // Status bars that need to be updated
     private Rectangle currHealthBar, currSicknessBar, currHungerBar;
@@ -173,7 +165,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private long startPlayTime;
     private long totalPlayTime = 0;
-    
+
     private Rectangle itemDescriptionRect;
     private ChangeableText itemDesctiptionText;
 
@@ -196,9 +188,13 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 	loadTextures(this, this.mEngine);
 	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mSmallFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	this.mFont = FontFactory.createFromAsset(mFontTexture, this, "ITCKRIST.TTF", 24, true, Color.WHITE);
+	this.mSmallFont = FontFactory.createFromAsset(mSmallFontTexture, this, "ITCKRIST.TTF", 18, true, Color.WHITE);
 	this.mEngine.getTextureManager().loadTexture(this.mFontTexture);
+	this.mEngine.getTextureManager().loadTexture(this.mSmallFontTexture);
 	this.mEngine.getFontManager().loadFont(this.mFont);
+	this.mEngine.getFontManager().loadFont(this.mSmallFont);
 
 	// Debug.d(listTR.toString());
     }
@@ -282,7 +278,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    }
 
 		    if (statsLayer.isVisible())
-			stats.setText(tama.getStats());
+			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth-50));
 
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
@@ -290,6 +286,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    if (tama.checkStats() == Tamagotchi.DEAD)
 		    {
 			// TODO: Some action
+			Debug.d("Tamagotchi is dead!");
 		    }
 
 		} catch (Exception e)
@@ -660,8 +657,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	final Text statsLabel = new Text(15, 15, mFont, "Tamagotchi Stats", HorizontalAlign.LEFT);
 	statsBackground.attachChild(statsLabel);
 
-	this.stats = new ChangeableText(25, statsLabel.getY() + 50, mFont, tama.getStats(), HorizontalAlign.LEFT, 512);
-	stats.setScale(0.95f);
+	this.stats = new ChangeableText(25, statsLabel.getY() + 50, mSmallFont, tama.getStats(), HorizontalAlign.LEFT, 512);
 	statsBackground.attachChild(stats);
 
 	/**
@@ -740,7 +736,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    if (!statsLayer.isVisible())
 		    {
-			stats.setText(tama.getStats());
+			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth-50));
 			openLayer(statsLayer);
 		    }
 		    else
@@ -817,26 +813,25 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	temp = listTR.get("food.png");
 	final Sprite hungerIcon = new Sprite(hungerBar.getX() - iconSpacing, hungerBar.getY(), temp);
 	topRect.attachChild(hungerIcon);
-	
+
 	/**
 	 * Load item description box
 	 */
-	this.itemDescriptionRect = new Rectangle(10, cameraHeight/2, cameraWidth-20, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound) - 10));
+	this.itemDescriptionRect = new Rectangle(10, cameraHeight / 2, cameraWidth - 20, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound) - 10));
 	this.itemDescriptionRect.setColor(0, 0, 0);
 	this.itemDescriptionRect.setVisible(false);
 	this.topLayer.attachChild(itemDescriptionRect);
-	
+
 	/**
 	 * Add text to item description box
 	 */
-	this.itemDesctiptionText = new ChangeableText(5, 5, mFont, "", 512);
-	this.itemDesctiptionText.setScale(0.75f);
+	this.itemDesctiptionText = new ChangeableText(10, 10, mSmallFont, "", 512);
 	this.itemDescriptionRect.attachChild(this.itemDesctiptionText);
-	
+
 	/**
 	 * Add close button
 	 */
-	final Sprite closeButton = new Sprite(this.itemDescriptionRect.getWidth()-listTR.get("close.png").getWidth(),0,listTR.get("close.png"))
+	final Sprite closeButton = new Sprite(this.itemDescriptionRect.getWidth() - listTR.get("close.png").getWidth(), 0, listTR.get("close.png"))
 	{
 	    @Override
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
@@ -947,15 +942,13 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadItems()
     {
-	float xSpacing = this.cameraWidth / 6;
-	float ySpacing = this.cameraHeight / 7;
-	for (int i = 0; i < 27; i++)
+	for (int i = 0; i < 26; i++)
 	{
 	    Item item = new GameItem(0, 0, this.listTR.get("treasure.png"), "Health item", 7, 0, 0, 0);
 	    this.bp.addItem(item);
 	}
 
-	final Item umbrella = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Umbrella", 0, 0, 0, 0);
+	final Item umbrella = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Umbrella", "This item protects the Tamagotchi from the rain. blah blah blah more text lol", 0, 0, 0, 0);
 	umbrella.setType(Item.EQUIP);
 	umbrella.setProtection(Protection.RAIN);
 	this.bp.addItem(umbrella);
@@ -965,7 +958,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	final Item cureAll = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Cure All", 0, -10000, -10000, 0);
 	this.bp.addItem(cureAll);
-	
+
+	final Item killTama = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Kill Tama", "This item kills the Tamagotchi.", -10000, 0, 0, 0);
+	this.bp.addItem(killTama);
+
 	bp.resetPositions(cameraWidth, cameraHeight);
     }
 
@@ -1004,11 +1000,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      *            - the item that was selected
      */
     private void showItemDescription(Item i)
-    {	
-	this.itemDesctiptionText.setText(i.getInfo());
+    {
+	String normalizedText = TextUtil.getNormalizedText(mSmallFont, i.getInfo(), this.itemDescriptionRect.getWidth() - 20);
+	this.itemDesctiptionText.setText(normalizedText);
 	this.itemDescriptionRect.setVisible(true);
     }
-    
+
     private void hideItemDescription()
     {
 	this.itemDescriptionRect.setVisible(false);
@@ -1329,6 +1326,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		if (!unequipItem())
 		{
 		    Debug.d("Could not unequip item!");
+		    mainLayer.detachChild(itemToApply);
+		    backpackLayer.attachChild(itemToApply);
+		    itemToApply = null;
+		    return;
 		}
 		try
 		{
@@ -1552,7 +1553,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    }
 		    else
 		    {
-			// show item description			
+			// show item description
 			showItemDescription(this);
 		    }
 		}
