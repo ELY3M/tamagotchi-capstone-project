@@ -61,7 +61,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -127,6 +126,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Entity backpackLayer = new Entity();
     private Entity weatherLayer = new Entity();
     private Entity statsLayer = new Entity();
+    private Entity topLayer = new Entity();
     private List<Entity> subLayers = new ArrayList<Entity>(); // layers that are opened by icons in the bottom bar
     private List<Entity> mainLayers = new ArrayList<Entity>(); // layers that belong to the main gameplay
     private HashMap<Entity, Rectangle> selectBoxes = new HashMap<Entity, Rectangle>(); // mapping of layers to icon select boxes
@@ -141,8 +141,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Tamagotchi tama; // Tamagotchi
     private int pTopBound, pBottomBound; // top and bottom bounds of play area
     private Sprite trashCan;
-    private PopupWindow popUp;
-    private LinearLayout layout;
     private PhysicsWorld mPhysicsWorld;
     private ParticleSystem particleSystem;
     private int weather = Weather.NONE;
@@ -175,6 +173,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private long startPlayTime;
     private long totalPlayTime = 0;
+    
+    private Rectangle itemDescriptionRect;
+    private ChangeableText itemDesctiptionText;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -199,7 +200,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.getTextureManager().loadTexture(this.mFontTexture);
 	this.mEngine.getFontManager().loadFont(this.mFont);
 
-	Debug.d(listTR.toString());
+	// Debug.d(listTR.toString());
     }
 
     @Override
@@ -235,6 +236,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mScene.attachChild(weatherLayer);
 	this.mScene.attachChild(backpackLayer);
 	this.mScene.attachChild(statsLayer);
+	this.mScene.attachChild(topLayer);
 
 	this.mainLayer.setVisible(true);
 	this.backpackLayer.setVisible(false);
@@ -815,7 +817,37 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	temp = listTR.get("food.png");
 	final Sprite hungerIcon = new Sprite(hungerBar.getX() - iconSpacing, hungerBar.getY(), temp);
 	topRect.attachChild(hungerIcon);
-
+	
+	/**
+	 * Load item description box
+	 */
+	this.itemDescriptionRect = new Rectangle(10, cameraHeight/2, cameraWidth-20, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound) - 10));
+	this.itemDescriptionRect.setColor(0, 0, 0);
+	this.itemDescriptionRect.setVisible(false);
+	this.topLayer.attachChild(itemDescriptionRect);
+	
+	/**
+	 * Add text to item description box
+	 */
+	this.itemDesctiptionText = new ChangeableText(5, 5, mFont, "", 512);
+	this.itemDesctiptionText.setScale(0.75f);
+	this.itemDescriptionRect.attachChild(this.itemDesctiptionText);
+	
+	/**
+	 * Add close button
+	 */
+	final Sprite closeButton = new Sprite(this.itemDescriptionRect.getWidth()-listTR.get("close.png").getWidth(),0,listTR.get("close.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		hideItemDescription();
+		return true;
+	    }
+	};
+	this.itemDescriptionRect.attachChild(closeButton);
+	this.mScene.registerTouchArea(closeButton);
     }
 
     /**
@@ -917,13 +949,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	float xSpacing = this.cameraWidth / 6;
 	float ySpacing = this.cameraHeight / 7;
-	for (int i = 1; i <= 3; i++)
+	for (int i = 0; i < 27; i++)
 	{
-	    for (int j = 1; j <= 5; j++)
-	    {
-		Item item = new GameItem((xSpacing * j) - this.listTR.get("treasure.png").getWidth() / 2, (ySpacing * i) - this.listTR.get("treasure.png").getHeight() / 2, this.listTR.get("treasure.png"), "Health item", 7, 0, 0, 0);
-		this.bp.addItem(item);
-	    }
+	    Item item = new GameItem(0, 0, this.listTR.get("treasure.png"), "Health item", 7, 0, 0, 0);
+	    this.bp.addItem(item);
 	}
 
 	final Item umbrella = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Umbrella", 0, 0, 0, 0);
@@ -936,6 +965,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	final Item cureAll = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Cure All", 0, -10000, -10000, 0);
 	this.bp.addItem(cureAll);
+	
+	bp.resetPositions(cameraWidth, cameraHeight);
     }
 
     /**
@@ -973,37 +1004,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      *            - the item that was selected
      */
     private void showItemDescription(Item i)
+    {	
+	this.itemDesctiptionText.setText(i.getInfo());
+	this.itemDescriptionRect.setVisible(true);
+    }
+    
+    private void hideItemDescription()
     {
-	popUp = new PopupWindow(this);
-	layout = new LinearLayout(this);
-	final TextView tv = new TextView(this);
-	final Button but = new Button(this);
-	ImageView iv = new ImageView(this);
-	LayoutParams params = new LayoutParams(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-
-	layout.setOrientation(LinearLayout.HORIZONTAL);
-	params.setMargins(10, 10, 10, 10);
-	tv.setText(i.getInfo() + "\n");
-	// iv.setImageBitmap(i.getTextureRegion().getTexture().g);
-	but.setText("Close");
-	but.setOnClickListener(new OnClickListener()
-	{
-	    @Override
-	    public void onClick(View v)
-	    {
-		popUp.dismiss();
-	    }
-
-	});
-
-	layout.addView(iv, params);
-	layout.addView(tv, params);
-	layout.addView(but, params);
-	popUp.setContentView(layout);
-
-	popUp.showAtLocation(layout, Gravity.NO_GRAVITY, 10, cameraHeight / 2);
-	popUp.update(cameraWidth - 20, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound) - 10));
-	popUp.setFocusable(true);
+	this.itemDescriptionRect.setVisible(false);
     }
 
     /**
@@ -1252,8 +1260,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		e.setVisible(false);
 	    }
 
-	    if (popUp != null)
-		popUp.dismiss();
+	    hideItemDescription();
 
 	    return true;
 	} catch (Exception e)
@@ -1285,8 +1292,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    e.setVisible(true);
 	}
 
-	if (popUp != null)
-	    popUp.dismiss();
+	hideItemDescription();
     }
 
     /**
@@ -1546,9 +1552,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    }
 		    else
 		    {
-			// show item description
-			if (popUp != null)
-			    popUp.dismiss();
+			// show item description			
 			showItemDescription(this);
 		    }
 		}
