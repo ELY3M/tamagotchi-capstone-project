@@ -5,12 +5,6 @@ import org.anddev.andengine.ui.activity.BaseGameActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-/**
- * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
- * 
- * @author Nicolas Gramlich
- * @since 22:10:28 - 11.04.2010
- */
 public abstract class BaseAndEngineGame extends BaseGameActivity
 {
     // ===========================================================

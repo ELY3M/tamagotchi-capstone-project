@@ -209,6 +209,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	this.mEngine.registerUpdateHandler(new FPSLogger());
 
+	// Enable vibration
+	this.enableVibrator();
+
 	this.mScene = new Scene();
 	this.mScene.setBackground(this.mGrassBackground);
 
@@ -291,7 +294,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		    if (tama.checkStats() == Tamagotchi.DEAD)
 		    {
-			// TODO: Some action
 			if (!tamaDeadParticles)
 			    showEffect(Tamagotchi.DEAD);
 			Debug.d("Tamagotchi is dead!");
@@ -306,23 +308,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		}
 	    }
 	});
-
-	/**
-	 * Timer to generate poop
-	 */
-	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
-	{
-	    @Override
-	    public void onTimePassed(final TimerHandler pTimerHandler)
-	    {
-		if (tama.getStatus() != Tamagotchi.DEAD)
-		{
-		    final float xPos = MathUtils.random(30.0f, (cameraWidth - 30.0f));
-		    final float yPos = MathUtils.random(pTopBound, (pBottomBound - pTopBound));
-		    addPoop(xPos, yPos);
-		}
-	    }
-	}));
 
 	/**
 	 * Timer to run GPS to check weather every hour
@@ -344,74 +329,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    }
 	}));
 
-	/**
-	 * Checks to see if Tamagotchi is prepared for weather every 5 minutes, if it isn't, increase sickness
-	 */
-	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
-	{
-	    @Override
-	    public void onTimePassed(final TimerHandler pTimerHandler)
-	    {
-		if (tama.getEquippedItem() != null)
-		{
-		    // if equipped item doesn't protect tama from current weather and current weather is not clear
-		    if (tama.getEquippedItem().getProtection() != weather && weather != Weather.NONE)
-		    {
-			tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
-		    }
-		}
-		else
-		{
-		    if (weather != Weather.NONE)
-		    {
-			tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
-		    }
-		}
-	    }
-	}));
-
-	/**
-	 * Handling health regeneration
-	 */
-	final float battleLevelRatio = 1 - (float) tama.getBattleLevel() / Tamagotchi.MAX_BATTLE_LEVEL;
-	final float initialTime = battleLevelRatio * 60;
-	this.mScene.registerUpdateHandler(new TimerHandler(initialTime, true, new ITimerCallback()
-	{
-	    @Override
-	    public void onTimePassed(final TimerHandler pTimerHandler)
-	    {
-		if (tama.getCurrentSickness() < 1 && tama.getCurrentHunger() < tama.getMaxHunger())
-		{
-		    if (tama.getCurrentHealth() < tama.getMaxHealth())
-		    {
-			final float battleLevelRatio = 1 - (float) tama.getBattleLevel() / Tamagotchi.MAX_BATTLE_LEVEL;
-			final float hungerRatio = 1 - tama.getCurrentHunger() / tama.getMaxHunger();
-			tama.setCurrentHealth(tama.getCurrentHealth() + hungerRatio * 0.05f * tama.getMaxHealth());
-			pTimerHandler.setTimerSeconds(battleLevelRatio * 60);
-		    }
-
-		}
-	    }
-	}));
-
-	/**
-	 * Handling hunger
-	 */
-	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
-	{
-	    @Override
-	    public void onTimePassed(final TimerHandler pTimerHandler)
-	    {
-		if (tama.getCurrentHunger() >= tama.getMaxHunger() && tama.getCurrentHealth() > 0)
-		{
-		    tama.setCurrentHealth(tama.getCurrentHealth() - 0.05f * tama.getMaxHealth());
-		}
-		else
-		{
-		    tama.setCurrentHunger(tama.getCurrentHunger() + 0.05f * tama.getMaxHunger());
-		}
-	    }
-	}));
+	this.loadTamaTimers();
 
 	this.mScene.setOnAreaTouchTraversalFrontToBack();
 
@@ -724,6 +642,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		if (pSceneTouchEvent.isActionDown())
 		{
+		    closeSubLayers();
 		    startVoiceRecognitionActivity();
 		    return true;
 		}
@@ -838,7 +757,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	 */
 	this.itemDesctiptionText = new ChangeableText(10, 10, mSmallFont, "", 512);
 	this.itemDescriptionRect.attachChild(this.itemDesctiptionText);
-	
+
 	/**
 	 * Load notification box
 	 */
@@ -846,7 +765,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.notificationRect.setColor(0, 0, 0);
 	this.notificationRect.setVisible(false);
 	this.midLayer.attachChild(notificationRect);
-	
+
 	/**
 	 * Add text to notification box
 	 */
@@ -868,7 +787,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	this.itemDescriptionRect.attachChild(closeButton);
 	this.mScene.registerTouchArea(closeButton);
-	
+
 	/**
 	 * Add close button for notification
 	 */
@@ -1044,6 +963,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	String normalizedText = TextUtil.getNormalizedText(mSmallFont, i.getInfo(), this.itemDescriptionRect.getWidth() - 20);
 	this.itemDesctiptionText.setText(normalizedText);
+	this.itemDescriptionRect.setHeight(this.itemDesctiptionText.getHeight());
+	this.itemDescriptionRect.setPosition(this.itemDescriptionRect.getX(), pBottomBound - this.itemDescriptionRect.getHeight() - 10);
 	this.itemDescriptionRect.setVisible(true);
     }
 
@@ -1191,7 +1112,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	    particleSystem.addParticleModifier(new ExpireModifier(11.5f));
 	    this.weatherLayer.attachChild(particleSystem);
-	}	
+	}
 	else
 	{
 	    weather = Weather.NONE;
@@ -1522,16 +1443,118 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 	    }));
-	    
+
 	    showNotification("Tamagotchi has passed away!");
 	}
     }
-    
+
     private void showNotification(String text)
     {
+	this.mEngine.vibrate(500l);
 	this.notificationText.setText(TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
 	this.notificationRect.setHeight(this.notificationText.getHeight());
 	this.notificationRect.setVisible(true);
+    }
+
+    private void loadTamaTimers()
+    {
+	/**
+	 * Timer to generate poop
+	 */
+	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		if (tama.getStatus() != Tamagotchi.DEAD)
+		{
+		    final float xPos = MathUtils.random(30.0f, (cameraWidth - 30.0f));
+		    final float yPos = MathUtils.random(pTopBound, (pBottomBound - pTopBound));
+		    addPoop(xPos, yPos);
+		}
+	    }
+	}));
+
+	/**
+	 * Checks to see if Tamagotchi is prepared for weather every 5 minutes, if it isn't, increase sickness
+	 */
+	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		if (tama.getStatus() != Tamagotchi.DEAD)
+		{
+		    if (tama.getEquippedItem() != null)
+		    {
+			// if equipped item doesn't protect tama from current weather and current weather is not clear
+			if (tama.getEquippedItem().getProtection() != weather && weather != Weather.NONE)
+			{
+			    tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
+			}
+		    }
+		    else
+		    {
+			if (weather != Weather.NONE)
+			{
+			    tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
+			}
+		    }
+		}
+	    }
+	}));
+
+	/**
+	 * Handling health regeneration
+	 */
+	final float battleLevelRatio = 1 - (float) tama.getBattleLevel() / Tamagotchi.MAX_BATTLE_LEVEL;
+	final float initialTime = battleLevelRatio * 60;
+	this.mScene.registerUpdateHandler(new TimerHandler(initialTime, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		if (tama.getStatus() != Tamagotchi.DEAD)
+		{
+		    if (tama.getCurrentSickness() < 1 && tama.getCurrentHunger() < tama.getMaxHunger())
+		    {
+			if (tama.getCurrentHealth() < tama.getMaxHealth())
+			{
+			    final float battleLevelRatio = 1 - (float) tama.getBattleLevel() / Tamagotchi.MAX_BATTLE_LEVEL;
+			    final float hungerRatio = 1 - tama.getCurrentHunger() / tama.getMaxHunger();
+			    tama.setCurrentHealth(tama.getCurrentHealth() + hungerRatio * 0.05f * tama.getMaxHealth());
+			    pTimerHandler.setTimerSeconds(battleLevelRatio * 60);
+			}
+
+		    }
+		}
+	    }
+	}));
+
+	/**
+	 * Handling hunger
+	 */
+	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		if (tama.getStatus() != Tamagotchi.DEAD)
+		{
+		    if (tama.getCurrentHunger() >= tama.getMaxHunger() && tama.getCurrentHealth() > 0)
+		    {
+			tama.setCurrentHealth(tama.getCurrentHealth() - 0.05f * tama.getMaxHealth());
+		    }
+		    else
+		    {
+			tama.setCurrentHunger(tama.getCurrentHunger() + 0.05f * tama.getMaxHunger());
+		    }
+		}
+	    }
+	}));
+	
+
+	Debug.d("Tama timers loaded.");
     }
 
     // ===========================================================
@@ -1700,7 +1723,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    weatherType = Weather.RAIN;
 		else if (condition.contains("snow"))
 		    weatherType = Weather.SNOW;
-		
+
 		loadWeather(weatherType);
 
 		// Stop GPS listener to save battery
