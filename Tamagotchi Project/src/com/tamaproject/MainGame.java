@@ -175,6 +175,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private boolean tamaDeadParticles = false;
 
     private Rectangle unequipItemButton;
+    private ChangeableText backpackLabel;
+    private Rectangle backpackBackground;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -230,9 +232,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	eItem.setType(Item.EQUIP);
 	equipItem(eItem);
 
-	// Load interface
-	this.loadInterface();
-
 	this.mainLayers.add(mainLayer);
 	this.mainLayers.add(weatherLayer);
 	this.subLayers.add(backpackLayer);
@@ -251,17 +250,21 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	this.bp = new Backpack();
 	this.loadItems();
-	for (Item item : bp.getItems())
-	{
-	    this.backpackLayer.attachChild(item);
-	    this.mScene.registerTouchArea(item);
-	}
 
 	this.mScene.registerTouchArea(tama.getSprite());
 
 	// Add trash can
 	this.trashCan = new Sprite(cameraWidth - listTR.get("trash.png").getWidth(), pBottomBound - listTR.get("trash.png").getHeight(), listTR.get("trash.png"));
 	this.mainLayer.attachChild(trashCan);
+
+	// Load interface
+	this.loadInterface();
+
+	for (Item item : bp.getItems())
+	{
+	    this.backpackBackground.attachChild(item);
+	    this.mScene.registerTouchArea(item);
+	}
 
 	this.mScene.setTouchAreaBindingEnabled(true);
 	this.mScene.setOnSceneTouchListener(this);
@@ -302,6 +305,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    }
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
+		    else if (backpackLayer.isVisible())
+			backpackLabel.setText("Backpack (" + bp.numItems() + "/" + bp.maxSize() + ")");
 
 		    if (tama.checkStats() == Tamagotchi.DEAD)
 		    {
@@ -399,8 +404,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			public void run()
 			{
 			    Debug.d("Putting back item");
-			    mainLayer.detachChild(itemToApply);
-			    backpackLayer.attachChild(itemToApply);
+			    itemToApply.detachSelf();
+			    backpackBackground.attachChild(itemToApply);
 			    itemToApply = null;
 			}
 		    }); // End runOnUpdateThread
@@ -436,9 +441,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    return builder2.create();
 
 	case MainGame.CONFIRM_REMOVEITEM:
-	    builder2.setTitle("Remove Item");
+	    builder2.setTitle("Throw Away Item");
 	    builder2.setIcon(android.R.drawable.btn_star);
-	    builder2.setMessage("Are you sure you want to remove this item?");
+	    builder2.setMessage("Are you sure you want to throw away this item?");
 	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 	    {
 		@Override
@@ -453,6 +458,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			    {
 				itemToRemove.detachSelf();
 				bp.removeItem(itemToRemove);
+				showNotification(itemToRemove.getName() + " has been removed.");
 				itemToRemove = null;
 				bp.resetPositions(cameraWidth, cameraHeight);
 			    }
@@ -581,11 +587,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Load backpack background
 	 */
-	final Rectangle backpackBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
+	backpackBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
 	backpackBackground.setColor(87 / 255f, 57 / 255f, 20 / 255f);
 	backpackLayer.attachChild(backpackBackground);
 
-	final Text backpackLabel = new Text(15, 15, mFont, "Backpack", HorizontalAlign.LEFT);
+	backpackLabel = new ChangeableText(15, 15, mFont, "Backpack (" + bp.numItems() + "/" + bp.maxSize() + ")", HorizontalAlign.LEFT, 30);
 	backpackBackground.attachChild(backpackLabel);
 
 	/**
@@ -617,7 +623,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    if (pSceneTouchEvent.isActionDown())
 			this.setColor(0, 0.659f, 0.698f);
-		    else if(pSceneTouchEvent.isActionUp())
+		    else if (pSceneTouchEvent.isActionUp())
 		    {
 			this.setColor(1, 0.412f, 0.0196f);
 			unequipItem();
@@ -1256,12 +1262,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	try
 	{
 	    layer.setVisible(true);
+	    layer.setChildrenVisible(true);
 	    selectBoxes.get(layer).setVisible(true);
 	    for (Entity e : subLayers)
 	    {
 		if (!e.equals(layer))
 		{
 		    e.setVisible(false);
+		    e.setChildrenVisible(false);
 		    selectBoxes.get(e).setVisible(false);
 		}
 	    }
@@ -1269,6 +1277,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    for (Entity e : mainLayers)
 	    {
 		e.setVisible(false);
+		e.setChildrenVisible(false);
 	    }
 
 	    hideItemDescription();
@@ -1289,6 +1298,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	for (Entity e : subLayers)
 	{
 	    e.setVisible(false);
+	    e.setChildrenVisible(false);
 	    try
 	    {
 		selectBoxes.get(e).setVisible(false);
@@ -1301,6 +1311,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	for (Entity e : mainLayers)
 	{
 	    e.setVisible(true);
+	    e.setChildrenVisible(true);
 	}
 
 	hideItemDescription();
@@ -1365,6 +1376,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		tama.setEquippedItem(itemToApply);
 		itemToApply.setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
 		tama.getSprite().attachChild(itemToApply);
+		showNotification(itemToApply.getName() + " has been equipped!");
 		itemToApply = null;
 	    }
 
@@ -1392,7 +1404,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		return false;
 	    }
 	    tama.getSprite().detachChild(previousItem);
-	    backpackLayer.attachChild(previousItem);
+	    backpackBackground.attachChild(previousItem);
 	    mScene.registerTouchArea(previousItem);
 	    showNotification(previousItem.getName() + " has been unequipped!");
 	    tama.setEquippedItem(null);
@@ -1659,7 +1671,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    Debug.d("Item action move");
 		    if (touched)
 		    {
-			if (this.getParent().equals(backpackLayer))
+			if (this.getParent().equals(backpackBackground))
 			{
 			    takeOut = this;
 			    runOnUpdateThread(new Runnable()
@@ -1668,7 +1680,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 				public void run()
 				{
 				    Debug.d("Taking out item");
-				    backpackLayer.detachChild(takeOut);
+				    takeOut.detachSelf();
 				    mainLayer.attachChild(takeOut);
 				    takeOut = null;
 				}
@@ -1693,11 +1705,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    if (moved)
 		    {
 			moved = false;
-			if (this.getParent().equals(backpackLayer))
-			{
-			    this.setInitialPosition();
-			}
-			else if (this.getParent().equals(mainLayer))
+			if (this.getParent().equals(mainLayer))
 			{
 			    if (this.collidesWith(tama.getSprite()))
 			    {
@@ -1725,8 +1733,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 				    public void run()
 				    {
 					Debug.d("Putting back item");
-					mainLayer.detachChild(putBack);
-					backpackLayer.attachChild(putBack);
+					putBack.detachSelf();
+					backpackBackground.attachChild(putBack);
 					putBack = null;
 				    }
 				}); // End runOnUpdateThread
