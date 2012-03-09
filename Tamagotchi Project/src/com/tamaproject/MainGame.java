@@ -88,6 +88,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // ===========================================================
 
     private static final int cameraWidth = 480, cameraHeight = 800;
+    private static final int pTopBound = 115, pBottomBound = cameraHeight - 70; // top and bottom bounds of play area
+
     private static final int CONFIRM_APPLYITEM = 0;
     private static final int CONFIRM_QUITGAME = 1;
     private static final int CONFIRM_REMOVEITEM = 2;
@@ -131,14 +133,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
-    private int pTopBound, pBottomBound; // top and bottom bounds of play area
     private Sprite trashCan;
     private PhysicsWorld mPhysicsWorld;
     private ParticleSystem particleSystem;
     private int weather = Weather.NONE;
     private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
-    private Font mFont;
-    private Font mSmallFont;
+    private Font mFont, mSmallFont;
 
     // Status bars that need to be updated
     private Rectangle currHealthBar, currSicknessBar, currHungerBar;
@@ -178,6 +178,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private ChangeableText backpackLabel;
     private Rectangle backpackBackground;
 
+    private boolean vibrateOn = false;
+
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -185,8 +187,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public Engine onLoadEngine()
     {
-	this.pTopBound = 100;
-	this.pBottomBound = cameraHeight - 60;
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
 	return new Engine(new EngineOptions(FULLSCREEN, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
     }
@@ -297,6 +297,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			if (tama.getEquippedItem() != null)
 			{
 			    unequipItemButton.setPosition(stats.getX(), stats.getY() + stats.getHeight() + 25);
+			    unequipItemButton.setVisible(true);
 			}
 			else
 			{
@@ -480,7 +481,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			{
 			    Debug.d("Putting back item");
 			    mainLayer.detachChild(itemToRemove);
-			    backpackLayer.attachChild(itemToRemove);
+			    backpackBackground.attachChild(itemToRemove);
 			    itemToRemove = null;
 			}
 		    }); // End runOnUpdateThread
@@ -619,7 +620,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		if (this.getParent().isVisible())
+		if (statsLayer.isVisible() && this.isVisible())
 		{
 		    if (pSceneTouchEvent.isActionDown())
 			this.setColor(0, 0.659f, 0.698f);
@@ -731,17 +732,20 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Load status bars
 	 */
-	final Rectangle healthBar = new Rectangle(leftSpacing, vSpacing, barLength, barHeight);
+	final Text titleText = new Text(leftSpacing - 15, vSpacing, mFont, "Tamagotchi");
+	topRect.attachChild(titleText);
+
+	final Rectangle healthBar = new Rectangle(leftSpacing, titleText.getY() + titleText.getHeight() + vSpacing, barLength, barHeight);
 	healthBar.setColor(1, 1, 1);
 	topRect.attachChild(healthBar);
-
-	final Rectangle sicknessBar = new Rectangle(leftSpacing, healthBar.getY() + barHeight + vSpacing, barLength, barHeight);
-	sicknessBar.setColor(1, 1, 1);
-	topRect.attachChild(sicknessBar);
 
 	final Rectangle hungerBar = new Rectangle(healthBar.getX() + barLength + leftSpacing, vSpacing, barLength, barHeight);
 	hungerBar.setColor(1, 1, 1);
 	topRect.attachChild(hungerBar);
+
+	final Rectangle sicknessBar = new Rectangle(hungerBar.getX(), healthBar.getY(), barLength, barHeight);
+	sicknessBar.setColor(1, 1, 1);
+	topRect.attachChild(sicknessBar);
 
 	/**
 	 * Load health bar
@@ -1352,7 +1356,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    Debug.d("Could not unequip item!");
 		    mainLayer.detachChild(itemToApply);
-		    backpackLayer.attachChild(itemToApply);
+		    backpackBackground.attachChild(itemToApply);
 		    itemToApply = null;
 		    return;
 		}
@@ -1515,7 +1519,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private void showNotification(String text)
     {
-	this.mEngine.vibrate(500l);
+	if (vibrateOn)
+	    this.mEngine.vibrate(500l);
 	this.notificationText.setText(this.notificationText.getText() + TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
 	this.notificationRect.setHeight(this.notificationText.getHeight());
 	this.notificationRect.setVisible(true);
@@ -1658,7 +1663,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	{
-	    if (this.getParent().isVisible())
+	    if (this.getParent().getParent().isVisible())
 	    {
 		if (pSceneTouchEvent.isActionDown())
 		{
