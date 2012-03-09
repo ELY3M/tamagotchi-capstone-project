@@ -727,6 +727,26 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	bottomRect.attachChild(statsIcon);
 	this.mScene.registerTouchArea(statsIcon);
+	
+	/**
+	 * Load minigame icon
+	 */
+	final Sprite minigameIcon = new Sprite(iconSpacer * 4 - this.listTR.get("statsicon.png").getWidth() / 2, mid - this.listTR.get("toad-icon.png").getHeight() / 2, this.listTR.get("toad-icon.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    showNotification("Minigames are still in development!");
+		    return true;
+		}
+		return false;
+	    }
+	};
+	bottomRect.attachChild(minigameIcon);
+	this.mScene.registerTouchArea(minigameIcon);
 
 	TextureRegion temp;
 	/**
@@ -739,7 +759,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	healthBar.setColor(1, 1, 1);
 	topRect.attachChild(healthBar);
 
-	final Rectangle hungerBar = new Rectangle(healthBar.getX() + barLength + leftSpacing, vSpacing, barLength, barHeight);
+	final Rectangle hungerBar = new Rectangle(cameraWidth - barLength - leftSpacing, vSpacing, barLength, barHeight);
 	hungerBar.setColor(1, 1, 1);
 	topRect.attachChild(hungerBar);
 
