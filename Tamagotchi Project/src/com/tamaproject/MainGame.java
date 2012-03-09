@@ -174,6 +174,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private boolean tamaDeadParticles = false;
 
+    private Rectangle unequipItemButton;
+
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -287,8 +289,17 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    }
 
 		    if (statsLayer.isVisible())
-			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth - 50));
-
+		    {
+			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), stats.getWidth()));
+			if (tama.getEquippedItem() != null)
+			{
+			    unequipItemButton.setPosition(stats.getX(), stats.getY() + stats.getHeight() + 25);
+			}
+			else
+			{
+			    unequipItemButton.setVisible(false);
+			}
+		    }
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
 
@@ -588,7 +599,39 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	statsBackground.attachChild(statsLabel);
 
 	this.stats = new ChangeableText(25, statsLabel.getY() + 50, mSmallFont, tama.getStats(), HorizontalAlign.LEFT, 512);
+	this.stats.setWidth(cameraWidth - 150);
 	statsBackground.attachChild(stats);
+
+	final Sprite statsSprite = new Sprite(0, 0, tama.getSprite().getTextureRegion());
+	statsSprite.setPosition(cameraWidth - statsSprite.getWidth() - 50, statsSprite.getHeight() + 25);
+	statsBackground.attachChild(statsSprite);
+
+	final Text unequipItemText = new Text(10, 5, mSmallFont, "Unequip Item");
+	unequipItemButton = new Rectangle(50, this.stats.getY() + this.stats.getHeight() + 50, unequipItemText.getWidth() + 20, unequipItemText.getHeight() + 10)
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (this.getParent().isVisible())
+		{
+		    if (pSceneTouchEvent.isActionDown())
+			this.setColor(0, 0.659f, 0.698f);
+		    else if(pSceneTouchEvent.isActionUp())
+		    {
+			this.setColor(1, 0.412f, 0.0196f);
+			unequipItem();
+		    }
+		    return true;
+		}
+		else
+		    return false;
+	    }
+	};
+	unequipItemButton.setColor(1, 0.412f, 0.0196f);
+	unequipItemButton.attachChild(unequipItemText);
+	mScene.registerTouchArea(unequipItemButton);
+	statsBackground.attachChild(unequipItemButton);
 
 	/**
 	 * Draw bottom rectangle bar
@@ -666,10 +709,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!statsLayer.isVisible())
-		    {
-			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), cameraWidth - 50));
 			openLayer(statsLayer);
-		    }
 		    else
 			closeSubLayers();
 
@@ -1354,6 +1394,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    tama.getSprite().detachChild(previousItem);
 	    backpackLayer.attachChild(previousItem);
 	    mScene.registerTouchArea(previousItem);
+	    showNotification(previousItem.getName() + " has been unequipped!");
 	    tama.setEquippedItem(null);
 	} catch (Exception e)
 	{
@@ -1466,6 +1507,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.notificationText.setText(this.notificationText.getText() + TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
 	this.notificationRect.setHeight(this.notificationText.getHeight());
 	this.notificationRect.setVisible(true);
+	closeSubLayers();
     }
 
     private void loadTamaTimers()
