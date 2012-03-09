@@ -296,7 +296,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    {
 			if (!tamaDeadParticles)
 			    showEffect(Tamagotchi.DEAD);
-			Debug.d("Tamagotchi is dead!");
+			// Debug.d("Tamagotchi is dead!");
 		    }
 
 		} catch (Exception e)
@@ -354,9 +354,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	switch (id)
 	{
 	case MainGame.CONFIRM_APPLYITEM:
-	    builder2.setTitle("Apply Item");
+	    builder2.setTitle("Give Item");
 	    builder2.setIcon(android.R.drawable.btn_star);
-	    builder2.setMessage("Are you sure you want to apply this item?");
+	    builder2.setMessage("Are you sure you want to give this item to your Tamagotchi?");
 	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 	    {
 		@Override
@@ -369,6 +369,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			{
 			    Debug.d("Applying item");
 			    applyItem(itemToApply);
+			    showNotification(itemToApply.getName() + " has been given to your Tamagotchi!");
 			    itemToApply = null;
 			}
 		    }); // End runOnUpdateThread
@@ -781,8 +782,13 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		hideItemDescription();
-		return true;
+		if (this.getParent().isVisible())
+		{
+		    hideItemDescription();
+		    return true;
+		}
+		else
+		    return false;
 	    }
 	};
 	this.itemDescriptionRect.attachChild(closeButton);
@@ -797,8 +803,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		notificationRect.setVisible(false);
-		return true;
+		if (this.getParent().isVisible())
+		{
+		    notificationRect.setVisible(false);
+		    notificationText.setText("");
+		    return true;
+		}
+		else
+		    return false;
 	    }
 	};
 	this.notificationRect.attachChild(notifyCloseButton);
@@ -1336,7 +1348,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	    if (!bp.addItem(previousItem))
 	    {
-		Toast.makeText(getApplicationContext(), "Backpack is full!", Toast.LENGTH_SHORT).show();
+		showNotification("Backpack is full!");
 		return false;
 	    }
 	    tama.getSprite().detachChild(previousItem);
@@ -1451,7 +1463,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private void showNotification(String text)
     {
 	this.mEngine.vibrate(500l);
-	this.notificationText.setText(TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
+	this.notificationText.setText(this.notificationText.getText() + TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
 	this.notificationRect.setHeight(this.notificationText.getHeight());
 	this.notificationRect.setVisible(true);
     }
@@ -1552,7 +1564,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		}
 	    }
 	}));
-	
 
 	Debug.d("Tama timers loaded.");
     }
