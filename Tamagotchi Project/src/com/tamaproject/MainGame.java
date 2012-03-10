@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -95,6 +98,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private static final int CONFIRM_REMOVEITEM = 2;
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
     private static final boolean FULLSCREEN = true;
+    private static final int MAX_NOTIFICATIONS = 5; // max notifications to display
 
     // Length of health bars, etc.
     private static final int barLength = 150;
@@ -103,8 +107,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private static final int vSpacing = 15;
     private static final int iconSpacing = 30;
 
-    private final int numIcons = 6; // number of icons in the bottom bar
-    private final int iconSpacer = cameraWidth / (numIcons + 1);
+    private static final int numIcons = 6; // number of icons in the bottom bar
+    private static final int iconSpacer = cameraWidth / (numIcons + 1);
 
     // ===========================================================
     // Fields
@@ -122,6 +126,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Entity statsLayer = new Entity();
     private Entity topLayer = new Entity();
     private Entity midLayer = new Entity();
+    private Entity bottomLayer = new Entity();
     private List<Entity> subLayers = new ArrayList<Entity>(); // layers that are opened by icons in the bottom bar
     private List<Entity> mainLayers = new ArrayList<Entity>(); // layers that belong to the main gameplay
     private HashMap<Entity, Rectangle> selectBoxes = new HashMap<Entity, Rectangle>(); // mapping of layers to icon select boxes
@@ -180,6 +185,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private boolean vibrateOn = false;
 
+    private List<String> notificationList = new LinkedList<String>();
+
+    private Rectangle nightOverlayRect;
+
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -237,6 +246,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.subLayers.add(backpackLayer);
 	this.subLayers.add(statsLayer);
 
+	this.mScene.attachChild(bottomLayer);
 	this.mScene.attachChild(mainLayer);
 	this.mScene.attachChild(weatherLayer);
 	this.mScene.attachChild(midLayer);
@@ -346,6 +356,35 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    }
 	}));
 
+	/**
+	 * Timer to check if it is nighttime every hour
+	 */
+	this.mScene.registerUpdateHandler(new TimerHandler(0, true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		GregorianCalendar todaysDate = new GregorianCalendar();
+		int hour = todaysDate.get(Calendar.HOUR_OF_DAY);
+		if (hour < 17)
+		{
+		    if (nightOverlayRect != null)
+			nightOverlayRect.detachSelf();
+		}
+		else
+		{
+		    if (nightOverlayRect == null)
+		    {
+			nightOverlayRect = new Rectangle(0, 0, cameraWidth, cameraHeight);
+			nightOverlayRect.setColor(0, 0, 0, 0.35f);
+		    }
+		    if (!nightOverlayRect.hasParent())
+			bottomLayer.attachChild(nightOverlayRect);
+		}
+		pTimerHandler.setTimerSeconds(60 * 60);
+	    }
+	}));
+
 	this.loadTamaTimers();
 
 	this.mScene.setOnAreaTouchTraversalFrontToBack();
@@ -373,7 +412,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	case MainGame.CONFIRM_APPLYITEM:
 	    builder2.setTitle("Give Item");
 	    builder2.setIcon(android.R.drawable.btn_star);
-	    builder2.setMessage("Are you sure you want to give this item to your Tamagotchi?");
+	    builder2.setMessage("Are you sure you want to give " + itemToApply.getName() + " to your Tamagotchi?");
 	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 	    {
 		@Override
@@ -444,7 +483,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	case MainGame.CONFIRM_REMOVEITEM:
 	    builder2.setTitle("Throw Away Item");
 	    builder2.setIcon(android.R.drawable.btn_star);
-	    builder2.setMessage("Are you sure you want to throw away this item?");
+	    builder2.setMessage("Are you sure you want to throw away " + itemToRemove.getName() + "?");
 	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 	    {
 		@Override
@@ -727,7 +766,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	bottomRect.attachChild(statsIcon);
 	this.mScene.registerTouchArea(statsIcon);
-	
+
 	/**
 	 * Load minigame icon
 	 */
@@ -877,6 +916,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    notificationRect.setVisible(false);
 		    notificationText.setText("");
+		    notificationList = new LinkedList<String>();
 		    return true;
 		}
 		else
@@ -1189,8 +1229,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    this.particleSystem = new ParticleSystem(particleEmitter, 6, 10, 200, listTR.get("raindrop.png"));
 	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
 
-	    particleSystem.addParticleInitializer(new VelocityInitializer(-10, 10, 60, 90));
-	    particleSystem.addParticleInitializer(new AccelerationInitializer(5, 15));
+	    particleSystem.addParticleInitializer(new VelocityInitializer(0, 0, 60, 90));
+	    particleSystem.addParticleInitializer(new AccelerationInitializer(0, 15));
 
 	    particleSystem.addParticleModifier(new ExpireModifier(11.5f));
 	    this.weatherLayer.attachChild(particleSystem);
@@ -1539,9 +1579,22 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private void showNotification(String text)
     {
+	notificationList.add(TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
+
+	while (notificationList.size() > MAX_NOTIFICATIONS)
+	    notificationList.remove(0);
+
+	StringBuilder n = new StringBuilder();
+
+	for (String s : notificationList)
+	{
+	    n.append(s);
+	}
+
 	if (vibrateOn)
 	    this.mEngine.vibrate(500l);
-	this.notificationText.setText(this.notificationText.getText() + TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
+
+	this.notificationText.setText(n.toString());
 	this.notificationRect.setHeight(this.notificationText.getHeight());
 	this.notificationRect.setVisible(true);
 	closeSubLayers();
@@ -1798,7 +1851,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		/**
 		 * For debugging, display current weather
 		 */
-		final Text weatherText = new Text(0, pBottomBound - 60, mFont, cc.getCondition(), HorizontalAlign.LEFT);
+		final Text weatherText = new Text(0, pBottomBound - 60, mFont, cc.getCondition() + ", " + cc.getTempF() + "F", HorizontalAlign.LEFT);
 		mainLayer.attachChild(weatherText);
 
 		// Parse the result and see if there is rain or snow
