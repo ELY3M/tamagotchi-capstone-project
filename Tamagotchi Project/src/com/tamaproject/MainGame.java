@@ -322,7 +322,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    if (tama.checkStats() == Tamagotchi.DEAD)
 		    {
 			if (!tamaDeadParticles)
+			{
 			    showEffect(Tamagotchi.DEAD);
+			}
 			// Debug.d("Tamagotchi is dead!");
 		    }
 
@@ -357,7 +359,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	}));
 
 	/**
-	 * Timer to check if it is nighttime every hour
+	 * Timer to check if it is night time every hour
 	 */
 	this.mScene.registerUpdateHandler(new TimerHandler(0, true, new ITimerCallback()
 	{
@@ -366,7 +368,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		GregorianCalendar todaysDate = new GregorianCalendar();
 		int hour = todaysDate.get(Calendar.HOUR_OF_DAY);
-		if (hour < 17)
+		if (hour < 17 && hour > 6)
 		{
 		    if (nightOverlayRect != null)
 			nightOverlayRect.detachSelf();
@@ -1556,7 +1558,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    tamaParticleSystem.setParticlesSpawnEnabled(false);
 		    particleSystem.setParticlesSpawnEnabled(false);
-		    tama.getSprite().setVisible(false);
+		    final Sprite eggSprite = new Sprite(tama.getSprite().getX(), tama.getSprite().getY(), listTR.get("wing-egg.png"));
+		    mainLayer.attachChild(eggSprite);
+		    mainLayer.swapChildren(eggSprite, tama.getSprite());
+		    tama.getSprite().detachSelf();
+		    tama.setSprite(eggSprite);
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 
@@ -1568,7 +1574,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    tamaParticleSystem.detachSelf();
 		    particleSystem.detachSelf();
-		    tama.getSprite().detachSelf();
+		    // tama.getSprite().detachSelf();
+		    showSplashScreen();
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 	    }));
@@ -1698,6 +1705,20 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	}));
 
 	Debug.d("Tama timers loaded.");
+    }
+    
+    private Scene mSplashScene;
+
+    private void showSplashScreen()
+    {
+	this.mSplashScene = new Scene();
+	final BitmapTextureAtlas mSplashTextureAtlas = new BitmapTextureAtlas(512, 1024, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("");
+	final TextureRegion mSplashTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mSplashTextureAtlas, this, "splash.png", 0, 0);
+	final Sprite splashSprite = new Sprite(0, 0, mSplashTextureRegion);
+	this.mEngine.getTextureManager().loadTexture(mSplashTextureAtlas);
+	this.mSplashScene.attachChild(splashSprite);
+	this.mScene.setChildScene(mSplashScene);
     }
 
     // ===========================================================
