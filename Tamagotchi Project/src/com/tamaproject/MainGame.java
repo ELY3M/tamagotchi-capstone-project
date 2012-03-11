@@ -705,6 +705,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
+		if(!this.getParent().getParent().isVisible())
+		    return false;
+		
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!backpackLayer.isVisible())
@@ -713,10 +716,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			closeBackpack();
 		    return true;
 		}
-		else if (pSceneTouchEvent.isActionUp())
-		{
-		    this.setScale(1);
-		}
+		
 		return false;
 	    }
 	};
@@ -732,6 +732,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
+		if(!this.getParent().getParent().isVisible())
+		    return false;
+		
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    closeSubLayers();
@@ -754,6 +757,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
+		if(!this.getParent().getParent().isVisible())
+		    return false;
+		
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!statsLayer.isVisible())
@@ -778,6 +784,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
+		if(!this.getParent().getParent().isVisible())
+		    return false;
+		
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    showNotification("Minigames are still in development!");
@@ -1057,11 +1066,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void applyItem(Item item)
     {
-	int tamaStatus = this.tama.applyItem(item);
-	showEffect(tamaStatus);
-
+	showEffect(this.tama.applyItem(item));
 	this.bp.removeItem(item);
-	this.mainLayer.detachChild(item);
+	item.detachSelf();
 	this.mScene.unregisterTouchArea(item);
     }
 
@@ -1521,6 +1528,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	}
 	else if (status == Tamagotchi.DEAD)
 	{
+	    topLayer.setVisible(false);
+	    midLayer.setVisible(false);
+	    
 	    final RectangleParticleEmitter particleEmitter = new RectangleParticleEmitter(cameraWidth / 2, pBottomBound, cameraWidth, 1);
 	    final ParticleSystem particleSystem = new ParticleSystem(particleEmitter, 1, 10, 100, listTR.get("particle_point.png"));
 	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
@@ -1780,7 +1790,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 				{
 				    Debug.d("Taking out item");
 				    takeOut.detachSelf();
-				    mainLayer.attachChild(takeOut);
+				    topLayer.attachChild(takeOut);
 				    takeOut = null;
 				}
 			    });
@@ -1804,7 +1814,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    if (moved)
 		    {
 			moved = false;
-			if (this.getParent().equals(mainLayer))
+			if (this.getParent().equals(topLayer))
 			{
 			    if (this.collidesWith(tama.getSprite()))
 			    {
