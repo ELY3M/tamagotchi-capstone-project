@@ -816,6 +816,52 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	bottomRect.attachChild(minigameIcon);
 	this.mScene.registerTouchArea(minigameIcon);
+	
+	/**
+	 * Load multiplayer icon
+	 */
+	final Sprite multiplayerIcon = new Sprite(iconSpacer * 5 - this.listTR.get("controller.png").getWidth() / 2, mid - this.listTR.get("controller.png").getHeight() / 2, this.listTR.get("controller.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (!this.getParent().getParent().isVisible())
+		    return false;
+
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    showNotification("Multiplayer is still in development!");
+		    return true;
+		}
+		return false;
+	    }
+	};
+	bottomRect.attachChild(multiplayerIcon);
+	this.mScene.registerTouchArea(multiplayerIcon);
+	
+	/**
+	 * Load item store icon
+	 */
+	final Sprite storeIcon = new Sprite(iconSpacer * 6 - this.listTR.get("shop.png").getWidth() / 2, mid - this.listTR.get("shop.png").getHeight() / 2, this.listTR.get("shop.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (!this.getParent().getParent().isVisible())
+		    return false;
+
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    showNotification("Item store is still in development!");
+		    return true;
+		}
+		return false;
+	    }
+	};
+	bottomRect.attachChild(storeIcon);
+	this.mScene.registerTouchArea(storeIcon);
 
 	TextureRegion temp;
 	/**
@@ -839,7 +885,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Load health bar
 	 */
-	float ratio = tama.getCurrentHealth() / tama.getMaxHealth();
+	float ratio = (float) tama.getCurrentHealth() / tama.getMaxHealth();
 	// Debug.d("Tama health ratio: " + ratio);
 	this.currHealthBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currHealthBar.setColor(1, 0, 0);
@@ -855,7 +901,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Load sickness bar
 	 */
-	ratio = tama.getCurrentSickness() / tama.getMaxSickness();
+	ratio = (float) tama.getCurrentSickness() / tama.getMaxSickness();
 	// Debug.d("Tama sick ratio: " + ratio);
 	this.currSicknessBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currSicknessBar.setColor(1, 0, 0);
@@ -871,7 +917,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Load hunger bar
 	 */
-	ratio = tama.getCurrentHunger() / tama.getMaxHunger();
+	ratio = (float) tama.getCurrentHunger() / tama.getMaxHunger();
 	// Debug.d("Tama hunger ratio: " + ratio);
 	this.currHungerBar = new Rectangle(2, 2, ratio * (barLength - 4), barHeight - 4);
 	currHungerBar.setColor(1, 0, 0);
@@ -889,6 +935,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	 */
 	this.itemDescriptionRect = new Rectangle(10, cameraHeight / 2, cameraWidth - 20, Math.round(cameraHeight / 2 - (cameraHeight - pBottomBound) - 10));
 	this.itemDescriptionRect.setColor(0, 0, 0);
+	this.itemDescriptionRect.setAlpha(.8f);
 	this.itemDescriptionRect.setVisible(false);
 	this.topLayer.attachChild(itemDescriptionRect);
 
@@ -903,6 +950,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	 */
 	this.notificationRect = new Rectangle(0, pTopBound, cameraWidth, 50);
 	this.notificationRect.setColor(0, 0, 0);
+	this.notificationRect.setAlpha(.8f);
 	this.notificationRect.setVisible(false);
 	this.midLayer.attachChild(notificationRect);
 
@@ -962,15 +1010,15 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void updateStatusBars()
     {
-	float ratio = tama.getCurrentHealth() / tama.getMaxHealth();
+	float ratio = (float) tama.getCurrentHealth() / tama.getMaxHealth();
 	// Debug.d("Tama health ratio: " + ratio);
 	this.currHealthBar.setSize(ratio * (barLength - 4), barHeight - 4);
 
-	ratio = tama.getCurrentSickness() / tama.getMaxSickness();
+	ratio = (float) tama.getCurrentSickness() / tama.getMaxSickness();
 	// Debug.d("Tama sick ratio: " + ratio);
 	this.currSicknessBar.setSize(ratio * (barLength - 4), barHeight - 4);
 
-	ratio = tama.getCurrentHunger() / tama.getMaxHunger();
+	ratio = (float) tama.getCurrentHunger() / tama.getMaxHunger();
 	// Debug.d("Tama hunger ratio: " + ratio);
 	this.currHungerBar.setSize(ratio * (barLength - 4), barHeight - 4);
     }
@@ -1670,14 +1718,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			// if equipped item doesn't protect tama from current weather and current weather is not clear
 			if (tama.getEquippedItem().getProtection() != weather && weather != Weather.NONE)
 			{
-			    tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
+			    tama.setCurrentSickness(Math.round(tama.getCurrentSickness() + tama.getMaxSickness() * .05f));
 			}
 		    }
 		    else
 		    {
 			if (weather != Weather.NONE)
 			{
-			    tama.setCurrentSickness(tama.getCurrentSickness() + tama.getMaxSickness() * .05f);
+			    tama.setCurrentSickness(Math.round(tama.getCurrentSickness() + tama.getMaxSickness() * .05f));
 			}
 		    }
 		}
@@ -1702,7 +1750,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			{
 			    final float battleLevelRatio = 1 - (float) tama.getBattleLevel() / Tamagotchi.MAX_BATTLE_LEVEL;
 			    final float hungerRatio = 1 - tama.getCurrentHunger() / tama.getMaxHunger();
-			    tama.setCurrentHealth(tama.getCurrentHealth() + hungerRatio * 0.05f * tama.getMaxHealth());
+			    tama.setCurrentHealth(Math.round(tama.getCurrentHealth() + hungerRatio * .05f * tama.getMaxHealth()));
 			    pTimerHandler.setTimerSeconds(battleLevelRatio * 60);
 			}
 
@@ -1723,11 +1771,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    if (tama.getCurrentHunger() >= tama.getMaxHunger() && tama.getCurrentHealth() > 0)
 		    {
-			tama.setCurrentHealth(tama.getCurrentHealth() - 0.05f * tama.getMaxHealth());
+			tama.setCurrentHealth(Math.round(tama.getCurrentHealth() - 0.05f * tama.getMaxHealth()));
 		    }
 		    else
 		    {
-			tama.setCurrentHunger(tama.getCurrentHunger() + 0.05f * tama.getMaxHunger());
+			tama.setCurrentHunger(Math.round(tama.getCurrentHunger() + 0.05f * tama.getMaxHunger()));
 		    }
 		}
 	    }
