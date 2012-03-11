@@ -204,7 +204,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     public void onLoadResources()
     {
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
-	loadTextures(this, this.mEngine);
+	this.loadTextures(this, this.mEngine);
 	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	this.mSmallFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	this.mFont = FontFactory.createFromAsset(mFontTexture, this, "ITCKRIST.TTF", 24, true, Color.WHITE);
@@ -359,7 +359,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	}));
 
 	/**
-	 * Timer to check if it is night time every hour
+	 * Timer to check if it is night time every hour, and if it is, create a dark overlay
 	 */
 	this.mScene.registerUpdateHandler(new TimerHandler(0, true, new ITimerCallback()
 	{
@@ -521,7 +521,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			public void run()
 			{
 			    Debug.d("Putting back item");
-			    mainLayer.detachChild(itemToRemove);
+			    itemToRemove.detachSelf();
 			    backpackBackground.attachChild(itemToRemove);
 			    itemToRemove = null;
 			}
@@ -535,6 +535,25 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	}
 
 	return null;
+    }
+
+    /**
+     * Used to update the alert dialogs with the correct item names
+     */
+    @Override
+    protected void onPrepareDialog(final int id, final Dialog dialog)
+    {
+	switch (id)
+	{
+	case MainGame.CONFIRM_APPLYITEM:
+	    ((AlertDialog) dialog).setMessage("Are you sure you want to give " + itemToApply.getName() + " to your Tamagotchi?");
+	    return;
+	case MainGame.CONFIRM_REMOVEITEM:
+	    ((AlertDialog) dialog).setMessage("Are you sure you want to throw away " + itemToRemove.getName() + "?");
+	    return;
+	default:
+	    return;
+	}
     }
 
     /**
@@ -705,9 +724,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		if(!this.getParent().getParent().isVisible())
+		if (!this.getParent().getParent().isVisible())
 		    return false;
-		
+
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!backpackLayer.isVisible())
@@ -716,7 +735,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			closeBackpack();
 		    return true;
 		}
-		
+
 		return false;
 	    }
 	};
@@ -732,9 +751,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		if(!this.getParent().getParent().isVisible())
+		if (!this.getParent().getParent().isVisible())
 		    return false;
-		
+
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    closeSubLayers();
@@ -757,9 +776,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		if(!this.getParent().getParent().isVisible())
+		if (!this.getParent().getParent().isVisible())
 		    return false;
-		
+
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!statsLayer.isVisible())
@@ -784,9 +803,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 	    {
-		if(!this.getParent().getParent().isVisible())
+		if (!this.getParent().getParent().isVisible())
 		    return false;
-		
+
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    showNotification("Minigames are still in development!");
@@ -1530,7 +1549,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	{
 	    topLayer.setVisible(false);
 	    midLayer.setVisible(false);
-	    
+
 	    final RectangleParticleEmitter particleEmitter = new RectangleParticleEmitter(cameraWidth / 2, pBottomBound, cameraWidth, 1);
 	    final ParticleSystem particleSystem = new ParticleSystem(particleEmitter, 1, 10, 100, listTR.get("particle_point.png"));
 	    particleSystem.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
@@ -1716,7 +1735,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	Debug.d("Tama timers loaded.");
     }
-    
+
     private Scene mSplashScene;
 
     private void showSplashScreen()
