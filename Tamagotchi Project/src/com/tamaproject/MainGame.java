@@ -22,6 +22,8 @@ import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
+import org.anddev.andengine.entity.modifier.LoopEntityModifier;
+import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
 import org.anddev.andengine.entity.particle.ParticleSystem;
 import org.anddev.andengine.entity.particle.emitter.CircleOutlineParticleEmitter;
 import org.anddev.andengine.entity.particle.emitter.RectangleParticleEmitter;
@@ -1104,22 +1106,22 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	for (int i = 0; i < 26; i++)
 	{
-	    Item item = new GameItem(0, 0, this.listTR.get("treasure.png"), "Health item", 7, 0, 0, 0);
+	    Item item = new GameItem(0, 0, this.listTR.get("apple.png"), "Apple", 7, 0, 0, 0);
 	    this.bp.addItem(item);
 	}
 
-	final Item umbrella = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Umbrella", "This item protects the Tamagotchi from the rain. blah blah blah more text lol", 0, 0, 0, 0);
+	final Item umbrella = new GameItem(0, 0, this.listTR.get("umbrella.png"), "Umbrella", "This item protects the Tamagotchi from the rain. blah blah blah more text lol", 0, 0, 0, 0);
 	umbrella.setType(Item.EQUIP);
 	umbrella.setProtection(Protection.RAIN);
 	this.bp.addItem(umbrella);
 
-	final Item newItem = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Level item", 7, 0, 0, 10000);
+	final Item newItem = new GameItem(0, 0, this.listTR.get("star.png"), "Level item", 7, 0, 0, 10000);
 	this.bp.addItem(newItem);
 
-	final Item cureAll = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Cure All", 0, -10000, -10000, 0);
+	final Item cureAll = new GameItem(0, 0, this.listTR.get("bandaid.png"), "Cure All", 0, -10000, -10000, 0);
 	this.bp.addItem(cureAll);
 
-	final Item killTama = new GameItem(0, 0, this.listTR.get("ic_launcher.png"), "Kill Tama", "This item kills the Tamagotchi.", -10000, 0, 0, 0);
+	final Item killTama = new GameItem(0, 0, this.listTR.get("skull.png"), "Kill Tama", "This item kills the Tamagotchi.", -10000, 0, 0, 0);
 	this.bp.addItem(killTama);
 
 	bp.resetPositions(cameraWidth, cameraHeight);
@@ -1625,6 +1627,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    tamaParticleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
 	    tamaParticleSystem.addParticleModifier(new ExpireModifier(5f));
 	    tama.getSprite().attachChild(tamaParticleSystem);
+	    
+	    tama.getSprite().setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+	    tama.getSprite().registerEntityModifier(new org.anddev.andengine.entity.modifier.AlphaModifier(10, 1, 0));
 
 	    tamaDeadParticles = true;
 
@@ -1636,15 +1641,17 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    tamaParticleSystem.setParticlesSpawnEnabled(false);
 		    particleSystem.setParticlesSpawnEnabled(false);
 		    final Sprite eggSprite = new Sprite(tama.getSprite().getX(), tama.getSprite().getY(), listTR.get("wing-egg.png"));
+		    eggSprite.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+		    eggSprite.registerEntityModifier(new org.anddev.andengine.entity.modifier.AlphaModifier(5, 0, 1));
 		    mainLayer.attachChild(eggSprite);
-		    mainLayer.swapChildren(eggSprite, tama.getSprite());
+		    mainLayer.swapChildren(eggSprite, tama.getSprite());		    
 		    tama.getSprite().detachSelf();
 		    tama.setSprite(eggSprite);
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 
 	    }));
-	    mScene.registerUpdateHandler(new TimerHandler(15f, new ITimerCallback()
+	    mScene.registerUpdateHandler(new TimerHandler(20f, new ITimerCallback()
 	    {
 		@Override
 		public void onTimePassed(final TimerHandler pTimerHandler)
