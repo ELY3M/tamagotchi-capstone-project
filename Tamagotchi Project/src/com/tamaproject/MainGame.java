@@ -297,7 +297,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    {
 			for (BaseSprite s : ipoToRemove)
 			{
-			    mainLayer.detachChild(s);
+			    s.detachSelf();
 			    mScene.unregisterTouchArea(s);
 			    inPlayObjects.remove(s);
 			}
@@ -818,7 +818,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	bottomRect.attachChild(minigameIcon);
 	this.mScene.registerTouchArea(minigameIcon);
-	
+
 	/**
 	 * Load multiplayer icon
 	 */
@@ -841,7 +841,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	bottomRect.attachChild(multiplayerIcon);
 	this.mScene.registerTouchArea(multiplayerIcon);
-	
+
 	/**
 	 * Load item store icon
 	 */
@@ -1282,7 +1282,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	if (particleSystem != null)
 	{
-	    this.weatherLayer.detachChild(particleSystem);
+	    particleSystem.detachSelf();
 	    this.particleSystem = null;
 	}
 
@@ -1545,7 +1545,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		showNotification("Backpack is full!");
 		return false;
 	    }
-	    tama.getSprite().detachChild(previousItem);
+	    previousItem.detachSelf();
 	    backpackBackground.attachChild(previousItem);
 	    mScene.registerTouchArea(previousItem);
 	    showNotification(previousItem.getName() + " has been unequipped!");
@@ -1589,7 +1589,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		@Override
 		public void onTimePassed(final TimerHandler pTimerHandler)
 		{
-		    mScene.detachChild(particleSystem);
+		    particleSystem.detachSelf();
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 	    }));
@@ -1627,7 +1627,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    tamaParticleSystem.addParticleModifier(new AlphaModifier(1, 0, 5, 6));
 	    tamaParticleSystem.addParticleModifier(new ExpireModifier(5f));
 	    tama.getSprite().attachChild(tamaParticleSystem);
-	    
+
 	    tama.getSprite().setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 	    tama.getSprite().registerEntityModifier(new org.anddev.andengine.entity.modifier.AlphaModifier(10, 1, 0));
 
@@ -1644,7 +1644,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    eggSprite.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		    eggSprite.registerEntityModifier(new org.anddev.andengine.entity.modifier.AlphaModifier(5, 0, 1));
 		    mainLayer.attachChild(eggSprite);
-		    mainLayer.swapChildren(eggSprite, tama.getSprite());		    
+		    mainLayer.swapChildren(eggSprite, tama.getSprite());
 		    tama.getSprite().detachSelf();
 		    tama.setSprite(eggSprite);
 		    mScene.unregisterUpdateHandler(pTimerHandler);
