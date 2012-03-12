@@ -1493,7 +1493,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		if (!unequipItem())
 		{
 		    Debug.d("Could not unequip item!");
-		    mainLayer.detachChild(itemToApply);
+		    itemToApply.detachSelf();
 		    backpackBackground.attachChild(itemToApply);
 		    itemToApply = null;
 		    return;
