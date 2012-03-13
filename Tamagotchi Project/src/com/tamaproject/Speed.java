@@ -13,24 +13,28 @@ import org.anddev.andengine.entity.modifier.PathModifier.Path;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
+import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextureAtlasSource;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
+import org.anddev.andengine.ui.activity.BaseGameActivity;
 import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.modifier.ease.EaseSineInOut;
 
 import android.widget.Toast;
 
-public class PathModifierExample extends BaseExample {
+public abstract class Speed extends BaseGameActivity {
+//public class PathModifierExample extends BaseExample {
 	// ===========================================================
 	// Constants
 	// ===========================================================
 
 	private static final int cameraWidth = 800;
 	private static final int cameraHeight = 480;
-
+	private static final int pTopBound = 115, pBottomBound = cameraHeight - 70; // top and bottom bounds of play area
+	
 	// ===========================================================
 	// Fields
 	// ===========================================================
@@ -75,16 +79,16 @@ public class PathModifierExample extends BaseExample {
 	public Scene onLoadScene() {
 //		this.mEngine.registerUpdateHandler(new FPSLogger());
 
-		final Scene scene = new Scene();
-		scene.setBackground(this.mGrassBackground);
+//		final Scene scene = new Scene();
+//		scene.setBackground(this.mGrassBackground);
 
 		/* Create the face and add it to the scene. */
-		final AnimatedSprite player = new AnimatedSprite(10, 10, 48, 64, this.mPlayerTextureRegion);
+		final AnimatedSprite tama = new AnimatedSprite(10, 10, 48, 64, this.mPlayerTextureRegion);
 
 		final Path path = new Path(5).to(10, 10).to(10, cameraHeight - 74).to(cameraWidth - 58, cameraHeight - 74).to(cameraWidth - 58, 10).to(10, 10);
 
 		/* Add the proper animation when a waypoint of the path is passed. */
-		player.registerEntityModifier(new LoopEntityModifier(new PathModifier(30, path, null, new IPathModifierListener() {
+		tama.registerEntityModifier(new LoopEntityModifier(new PathModifier(30, path, null, new IPathModifierListener() {
 			@Override
 			public void onPathStarted(final PathModifier pPathModifier, final IEntity pEntity) {
 				Debug.d("onPathStarted");
@@ -95,16 +99,16 @@ public class PathModifierExample extends BaseExample {
 				Debug.d("onPathWaypointStarted:  " + pWaypointIndex);
 				switch(pWaypointIndex) {
 					case 0:
-						player.animate(new long[]{200, 200, 200}, 6, 8, true);
+						tama.animate(new long[]{200, 200, 200}, 6, 8, true);
 						break;
 					case 1:
-						player.animate(new long[]{200, 200, 200}, 3, 5, true);
+						tama.animate(new long[]{200, 200, 200}, 3, 5, true);
 						break;
 					case 2:
-						player.animate(new long[]{200, 200, 200}, 0, 2, true);
+						tama.animate(new long[]{200, 200, 200}, 0, 2, true);
 						break;
 					case 3:
-						player.animate(new long[]{200, 200, 200}, 9, 11, true);
+						tama.animate(new long[]{200, 200, 200}, 9, 11, true);
 						break;
 				}
 			}
@@ -119,9 +123,9 @@ public class PathModifierExample extends BaseExample {
 				Debug.d("onPathFinished");
 			}
 		}, EaseSineInOut.getInstance())));
-		scene.attachChild(player);
+		mScene.attachChild(tama);
 
-		return scene;
+		return mScene;
 	}
 
 	@Override
@@ -137,3 +141,4 @@ public class PathModifierExample extends BaseExample {
 	// Inner and Anonymous Classes
 	// ===========================================================
 }
+
