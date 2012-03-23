@@ -22,6 +22,11 @@ import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
+import org.anddev.andengine.entity.IEntity;
+import org.anddev.andengine.entity.modifier.LoopEntityModifier;
+import org.anddev.andengine.entity.modifier.PathModifier;
+import org.anddev.andengine.entity.modifier.PathModifier.IPathModifierListener;
+import org.anddev.andengine.entity.modifier.PathModifier.Path;
 import org.anddev.andengine.entity.particle.ParticleSystem;
 import org.anddev.andengine.entity.particle.emitter.CircleOutlineParticleEmitter;
 import org.anddev.andengine.entity.particle.emitter.RectangleParticleEmitter;
@@ -39,6 +44,7 @@ import org.anddev.andengine.entity.scene.Scene.IOnAreaTouchListener;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.Scene.ITouchArea;
 import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
+import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.text.ChangeableText;
@@ -52,9 +58,11 @@ import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextureAtlasSource;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
+import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.HorizontalAlign;
 import org.anddev.andengine.util.MathUtils;
+import org.anddev.andengine.util.modifier.ease.EaseSineInOut;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -141,6 +149,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private ParticleSystem particleSystem;
     private int weather = Weather.NONE;
     private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
+    private BitmapTextureAtlas mTamaBitmapTextureAtlas;
+    private TiledTextureRegion mTamaTextureRegion;
     private Font mFont, mSmallFont;
 
     // Status bars that need to be updated
@@ -212,13 +222,17 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.getFontManager().loadFont(this.mFont);
 	this.mEngine.getFontManager().loadFont(this.mSmallFont);
 
+	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("animated_gfx/");
+	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
+	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animate_test.png", 0, 0, 3, 4);
+	this.mEngine.getTextureManager().loadTexture(this.mTamaBitmapTextureAtlas);
 	// Debug.d(listTR.toString());
     }
 
     @Override
     public Scene onLoadScene()
     {
-	this.mEngine.registerUpdateHandler(new FPSLogger());
+	// this.mEngine.registerUpdateHandler(new FPSLogger());
 
 	// Enable vibration
 	this.enableVibrator();
@@ -231,8 +245,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	// Load tamagotchi first
 	this.tama = new Tamagotchi();
-	this.tama.setSprite(new Sprite(centerX, centerY, this.listTR.get("tama.png")));
-	tama.getSprite().setScale(0.85f);
+	// this.tama.setSprite(new Sprite(centerX, centerY, this.listTR.get("tama.png")));
+	this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
+	((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 100, 100, 100 }, 0, 2, true);
+	this.tama.getSprite().setScale(1.00f);
 	this.mainLayer.attachChild(tama.getSprite());
 
 	this.thoughtBubble = new Sprite(tama.getSprite().getWidth(), -tama.getSprite().getHeight(), listTR.get("thought_bubble.png"));
@@ -616,6 +632,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     public boolean onAreaTouched(final TouchEvent pSceneTouchEvent, final ITouchArea pTouchArea,
 	    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
     {
+	Debug.d("onAreaTouched: " + pTouchAreaLocalX + ", " + pTouchAreaLocalY);
 	if (pSceneTouchEvent.isActionDown())
 	{
 
@@ -629,7 +646,73 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	if (pSceneTouchEvent.isActionDown())
 	{
+	    if (mainLayer.isVisible() && !tama.isDead())
+	    {
+		float x = pSceneTouchEvent.getX();
+		float y = pSceneTouchEvent.getY();
+		final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
+		double distance = Math.sqrt(Math.pow(tama.getSprite().getX() - x, 2) + Math.pow(tama.getSprite().getY() - y, 2));
+		float velocity = 100;
+		this.tama.getSprite().clearEntityModifiers();
+		this.tama.getSprite().registerEntityModifier(new PathModifier((float) distance / velocity, path, null, new IPathModifierListener()
+		{
+		    @Override
+		    public void onPathStarted(final PathModifier pPathModifier,
+			    final IEntity pEntity)
+		    {
+			Debug.d("onPathStarted");
+		    }
 
+		    @Override
+		    public void onPathWaypointStarted(final PathModifier pPathModifier,
+			    final IEntity pEntity, final int pWaypointIndex)
+		    {
+			Debug.d("onPathWaypointStarted:  " + pWaypointIndex);
+			float[] xCoords = pPathModifier.getPath().getCoordinatesX();
+			float[] yCoords = pPathModifier.getPath().getCoordinatesY();
+
+			float deltaX = xCoords[0] - xCoords[1];
+			float deltaY = yCoords[0] - yCoords[1];
+
+			if (deltaX > 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving left
+			{
+			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 3, 5, true);
+			}
+			else if (deltaX < 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving right
+			{
+			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 6, 8, true);
+			}
+			else if (deltaY > 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving up
+			{
+			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 9, 11, true);
+			}
+			else if (deltaY < 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving down
+			{
+			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 0, 2, true);
+			}
+			else
+			{
+			    ((AnimatedSprite) tama.getSprite()).stopAnimation();
+			}
+
+		    }
+
+		    @Override
+		    public void onPathWaypointFinished(final PathModifier pPathModifier,
+			    final IEntity pEntity, final int pWaypointIndex)
+		    {
+			Debug.d("onPathWaypointFinished: " + pWaypointIndex);
+		    }
+
+		    @Override
+		    public void onPathFinished(final PathModifier pPathModifier,
+			    final IEntity pEntity)
+		    {
+			Debug.d("onPathFinished");
+			((AnimatedSprite) tama.getSprite()).stopAnimation();
+		    }
+		}));
+	    }
 	}
 
 	return false;
@@ -671,7 +754,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.stats.setWidth(cameraWidth - 150);
 	statsBackground.attachChild(stats);
 
-	final Sprite statsSprite = new Sprite(0, 0, tama.getSprite().getTextureRegion());
+	final AnimatedSprite statsSprite = new AnimatedSprite(0, 0, ((AnimatedSprite) tama.getSprite()).getTextureRegion());
 	statsSprite.setPosition(cameraWidth - statsSprite.getWidth() - 50, statsSprite.getHeight() + 25);
 	statsBackground.attachChild(statsSprite);
 
@@ -1117,7 +1200,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	final Item killTama = new GameItem(0, 0, this.listTR.get("skull.png"), "Kill Tama", "This item kills the Tamagotchi.", -10000, 0, 0, 0);
 	this.bp.addItem(killTama);
-	
+
 	for (int i = 0; i < 26; i++)
 	{
 	    Item item = new GameItem(0, 0, this.listTR.get("apple.png"), "Apple", 7, 0, 0, 0);

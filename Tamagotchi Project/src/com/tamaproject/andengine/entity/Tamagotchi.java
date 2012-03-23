@@ -4,7 +4,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import org.anddev.andengine.entity.sprite.Sprite;
+import org.anddev.andengine.entity.sprite.BaseSprite;
 
 public class Tamagotchi
 {
@@ -19,7 +19,7 @@ public class Tamagotchi
     private long age;
     private Item equippedItem;
 
-    private Sprite sprite;
+    private BaseSprite sprite;
     private DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
     private Calendar calendar = Calendar.getInstance();
 
@@ -271,7 +271,7 @@ public class Tamagotchi
 	    return equippedItem.getName();
     }
 
-    public Sprite getSprite()
+    public BaseSprite getSprite()
     {
 	return sprite;
     }
@@ -281,7 +281,7 @@ public class Tamagotchi
 	this.equippedItem = equippedItem;
     }
 
-    public void setSprite(Sprite sprite)
+    public void setSprite(BaseSprite sprite)
     {
 	this.sprite = sprite;
     }
