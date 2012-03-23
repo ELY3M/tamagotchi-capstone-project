@@ -650,68 +650,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		float x = pSceneTouchEvent.getX();
 		float y = pSceneTouchEvent.getY();
-		final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
-		double distance = Math.sqrt(Math.pow(tama.getSprite().getX() - x, 2) + Math.pow(tama.getSprite().getY() - y, 2));
-		float velocity = 100;
-		this.tama.getSprite().clearEntityModifiers();
-		this.tama.getSprite().registerEntityModifier(new PathModifier((float) distance / velocity, path, null, new IPathModifierListener()
-		{
-		    @Override
-		    public void onPathStarted(final PathModifier pPathModifier,
-			    final IEntity pEntity)
-		    {
-			Debug.d("onPathStarted");
-		    }
 
-		    @Override
-		    public void onPathWaypointStarted(final PathModifier pPathModifier,
-			    final IEntity pEntity, final int pWaypointIndex)
-		    {
-			Debug.d("onPathWaypointStarted:  " + pWaypointIndex);
-			float[] xCoords = pPathModifier.getPath().getCoordinatesX();
-			float[] yCoords = pPathModifier.getPath().getCoordinatesY();
-
-			float deltaX = xCoords[0] - xCoords[1];
-			float deltaY = yCoords[0] - yCoords[1];
-
-			if (deltaX > 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving left
-			{
-			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 3, 5, true);
-			}
-			else if (deltaX < 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving right
-			{
-			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 6, 8, true);
-			}
-			else if (deltaY > 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving up
-			{
-			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 9, 11, true);
-			}
-			else if (deltaY < 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving down
-			{
-			    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 0, 2, true);
-			}
-			else
-			{
-			    ((AnimatedSprite) tama.getSprite()).stopAnimation();
-			}
-
-		    }
-
-		    @Override
-		    public void onPathWaypointFinished(final PathModifier pPathModifier,
-			    final IEntity pEntity, final int pWaypointIndex)
-		    {
-			Debug.d("onPathWaypointFinished: " + pWaypointIndex);
-		    }
-
-		    @Override
-		    public void onPathFinished(final PathModifier pPathModifier,
-			    final IEntity pEntity)
-		    {
-			Debug.d("onPathFinished");
-			((AnimatedSprite) tama.getSprite()).stopAnimation();
-		    }
-		}));
+		moveTama(x, y);
 	    }
 	}
 
@@ -721,6 +661,70 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // ===========================================================
     // Methods
     // ===========================================================
+
+    private void moveTama(final float x, final float y)
+    {
+	final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
+	double distance = Math.sqrt(Math.pow(tama.getSprite().getX() - x, 2) + Math.pow(tama.getSprite().getY() - y, 2));
+	float velocity = 100;
+	this.tama.getSprite().clearEntityModifiers();
+	this.tama.getSprite().registerEntityModifier(new PathModifier((float) distance / velocity, path, null, new IPathModifierListener()
+	{
+	    @Override
+	    public void onPathStarted(final PathModifier pPathModifier, final IEntity pEntity)
+	    {
+		Debug.d("onPathStarted");
+	    }
+
+	    @Override
+	    public void onPathWaypointStarted(final PathModifier pPathModifier,
+		    final IEntity pEntity, final int pWaypointIndex)
+	    {
+		Debug.d("onPathWaypointStarted:  " + pWaypointIndex);
+		float[] xCoords = pPathModifier.getPath().getCoordinatesX();
+		float[] yCoords = pPathModifier.getPath().getCoordinatesY();
+
+		float deltaX = xCoords[0] - xCoords[1];
+		float deltaY = yCoords[0] - yCoords[1];
+
+		if (deltaX > 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving left
+		{
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 3, 5, true);
+		}
+		else if (deltaX < 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving right
+		{
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 6, 8, true);
+		}
+		else if (deltaY > 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving up
+		{
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 9, 11, true);
+		}
+		else if (deltaY < 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving down
+		{
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 0, 2, true);
+		}
+		else
+		{
+		    ((AnimatedSprite) tama.getSprite()).stopAnimation();
+		}
+
+	    }
+
+	    @Override
+	    public void onPathWaypointFinished(final PathModifier pPathModifier,
+		    final IEntity pEntity, final int pWaypointIndex)
+	    {
+		Debug.d("onPathWaypointFinished: " + pWaypointIndex);
+	    }
+
+	    @Override
+	    public void onPathFinished(final PathModifier pPathModifier, final IEntity pEntity)
+	    {
+		Debug.d("onPathFinished");
+		((AnimatedSprite) tama.getSprite()).stopAnimation();
+	    }
+	}));
+    }
 
     /**
      * Loads everything related to the interface (icons, bars, menus)
