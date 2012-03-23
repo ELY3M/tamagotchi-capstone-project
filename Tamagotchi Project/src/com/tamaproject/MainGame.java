@@ -190,6 +190,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private List<String> notificationList = new LinkedList<String>();
 
     private Rectangle nightOverlayRect;
+    private Sprite thoughtBubble;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -238,6 +239,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.tama.setSprite(new Sprite(centerX, centerY, this.listTR.get("tama.png")));
 	tama.getSprite().setScale(0.85f);
 	this.mainLayer.attachChild(tama.getSprite());
+
+	this.thoughtBubble = new Sprite(tama.getSprite().getWidth(), -tama.getSprite().getHeight(), listTR.get("thought_bubble.png"));
+	this.tama.getSprite().attachChild(this.thoughtBubble);
+	this.thoughtBubble.setVisible(false);
 
 	final Item eItem = new GameItem(0, 0, this.listTR.get("treasure.png"));
 	eItem.setType(Item.EQUIP);
@@ -370,7 +375,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		GregorianCalendar todaysDate = new GregorianCalendar();
 		int hour = todaysDate.get(Calendar.HOUR_OF_DAY);
-		if (hour < 17 && hour > 6)
+		if (hour < 18 && hour > 6)
 		{
 		    if (nightOverlayRect != null)
 			nightOverlayRect.detachSelf();
@@ -1104,12 +1109,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadItems()
     {
-	for (int i = 0; i < 26; i++)
-	{
-	    Item item = new GameItem(0, 0, this.listTR.get("apple.png"), "Apple", 7, 0, 0, 0);
-	    this.bp.addItem(item);
-	}
-
 	final Item umbrella = new GameItem(0, 0, this.listTR.get("umbrella.png"), "Umbrella", "This item protects the Tamagotchi from the rain. blah blah blah more text lol", 0, 0, 0, 0);
 	umbrella.setType(Item.EQUIP);
 	umbrella.setProtection(Protection.RAIN);
@@ -1123,6 +1122,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	final Item killTama = new GameItem(0, 0, this.listTR.get("skull.png"), "Kill Tama", "This item kills the Tamagotchi.", -10000, 0, 0, 0);
 	this.bp.addItem(killTama);
+	
+	for (int i = 0; i < 26; i++)
+	{
+	    Item item = new GameItem(0, 0, this.listTR.get("apple.png"), "Apple", 7, 0, 0, 0);
+	    this.bp.addItem(item);
+	}
 
 	bp.resetPositions(cameraWidth, cameraHeight);
     }
@@ -1630,6 +1635,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	    tama.getSprite().setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 	    tama.getSprite().registerEntityModifier(new org.anddev.andengine.entity.modifier.AlphaModifier(10, 1, 0));
+	    if (tama.getEquippedItem() != null)
+		tama.getEquippedItem().setVisible(false);
 
 	    tamaDeadParticles = true;
 
@@ -1645,8 +1652,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    eggSprite.registerEntityModifier(new org.anddev.andengine.entity.modifier.AlphaModifier(5, 0, 1));
 		    mainLayer.attachChild(eggSprite);
 		    mainLayer.swapChildren(eggSprite, tama.getSprite());
-		    tama.getSprite().detachSelf();
-		    tama.setSprite(eggSprite);
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 
@@ -1658,6 +1663,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    tamaParticleSystem.detachSelf();
 		    particleSystem.detachSelf();
+		    tama.getSprite().detachSelf();
 		    // tama.getSprite().detachSelf();
 		    showSplashScreen();
 		    mScene.unregisterUpdateHandler(pTimerHandler);
