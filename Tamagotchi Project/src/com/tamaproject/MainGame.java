@@ -22,8 +22,6 @@ import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
-import org.anddev.andengine.entity.modifier.LoopEntityModifier;
-import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
 import org.anddev.andengine.entity.particle.ParticleSystem;
 import org.anddev.andengine.entity.particle.emitter.CircleOutlineParticleEmitter;
 import org.anddev.andengine.entity.particle.emitter.RectangleParticleEmitter;
@@ -46,7 +44,6 @@ import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.text.ChangeableText;
 import org.anddev.andengine.entity.text.Text;
 import org.anddev.andengine.entity.util.FPSLogger;
-import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
 import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.font.Font;
 import org.anddev.andengine.opengl.font.FontFactory;
@@ -141,7 +138,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
     private Sprite trashCan;
-    private PhysicsWorld mPhysicsWorld;
     private ParticleSystem particleSystem;
     private int weather = Weather.NONE;
     private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
@@ -164,7 +160,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // Weather and GPS fields
     private LocationManager mlocManager;
     private LocationListener mlocListener;
-    private long lastWeatherRetrieve = 0;
     private CurrentConditions cc;
 
     private Rectangle topRect, bottomRect; // top and bottom bars
@@ -1976,8 +1971,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		loadWeather(weatherType);
 
-		// Stop GPS listener to save battery
-		lastWeatherRetrieve = System.currentTimeMillis();
 		stopGPS();
 	    }
 	}
