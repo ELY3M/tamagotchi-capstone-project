@@ -208,8 +208,13 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public void onLoadResources()
     {
+	// Load grass background
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
+	
+	// Load all the textures in the gfx folder
 	this.loadTextures(this, this.mEngine);
+	
+	// Load fonts
 	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	this.mSmallFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	this.mFont = FontFactory.createFromAsset(mFontTexture, this, "ITCKRIST.TTF", 24, true, Color.WHITE);
@@ -219,11 +224,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.getFontManager().loadFont(this.mFont);
 	this.mEngine.getFontManager().loadFont(this.mSmallFont);
 
+	// Load animated textures
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("animated_gfx/");
 	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
 	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animate_test.png", 0, 0, 3, 4);
 	this.mEngine.getTextureManager().loadTexture(this.mTamaBitmapTextureAtlas);
-	// Debug.d(listTR.toString());
     }
 
     @Override
