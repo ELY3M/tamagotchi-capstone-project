@@ -12,6 +12,6 @@
 	<classpathentry kind="lib" path="libs/andengine/andenginephysicsbox2dextension.jar"/>
 	<classpathentry kind="lib" path="libs/andengine/andenginesvgtextureregionextension.jar"/>
 	<classpathentry kind="lib" path="libs/andengine/andenginetexturepackerextension.jar"/>
-	<classpathentry kind="lib" path="andengine2.jar"/>
+	<classpathentry kind="lib" path="libs/andengine/andengine2.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
