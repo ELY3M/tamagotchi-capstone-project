@@ -23,7 +23,6 @@ import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
 import org.anddev.andengine.entity.IEntity;
-import org.anddev.andengine.entity.modifier.LoopEntityModifier;
 import org.anddev.andengine.entity.modifier.PathModifier;
 import org.anddev.andengine.entity.modifier.PathModifier.IPathModifierListener;
 import org.anddev.andengine.entity.modifier.PathModifier.Path;
@@ -49,7 +48,6 @@ import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.text.ChangeableText;
 import org.anddev.andengine.entity.text.Text;
-import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.font.Font;
 import org.anddev.andengine.opengl.font.FontFactory;
@@ -62,7 +60,6 @@ import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.HorizontalAlign;
 import org.anddev.andengine.util.MathUtils;
-import org.anddev.andengine.util.modifier.ease.EaseSineInOut;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -245,9 +242,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	// Load tamagotchi first
 	this.tama = new Tamagotchi();
-	// this.tama.setSprite(new Sprite(centerX, centerY, this.listTR.get("tama.png")));
 	this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-	((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 100, 100, 100 }, 0, 2, true);
+	((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
 	this.tama.getSprite().setScale(1.00f);
 	this.mainLayer.attachChild(tama.getSprite());
 
@@ -264,6 +260,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.subLayers.add(backpackLayer);
 	this.subLayers.add(statsLayer);
 
+	// Attach layers in the correct order
 	this.mScene.attachChild(bottomLayer);
 	this.mScene.attachChild(mainLayer);
 	this.mScene.attachChild(weatherLayer);
@@ -281,7 +278,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	this.mScene.registerTouchArea(tama.getSprite());
 
-	// Add trash can
+	// Add trashcan to main layer
 	this.trashCan = new Sprite(cameraWidth - listTR.get("trash.png").getWidth(), pBottomBound - listTR.get("trash.png").getHeight(), listTR.get("trash.png"));
 	this.mainLayer.attachChild(trashCan);
 
@@ -309,6 +306,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		try
 		{
+		    /**
+		     * Remove queued in play objects
+		     */
 		    if (ipoToRemove.size() > 0)
 		    {
 			for (BaseSprite s : ipoToRemove)
@@ -318,7 +318,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			    inPlayObjects.remove(s);
 			}
 		    }
-
+		    
+		    /**
+		     * Update the stats page with current stats when stats page is opened
+		     */
 		    if (statsLayer.isVisible())
 		    {
 			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), stats.getWidth()));
@@ -332,11 +335,20 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			    unequipItemButton.setVisible(false);
 			}
 		    }
+		    /**
+		     * Update the status bars when main layer is visible
+		     */
 		    else if (mainLayer.isVisible())
 			updateStatusBars();
+		    /**
+		     * Update the backpack label when backpack is visible
+		     */
 		    else if (backpackLayer.isVisible())
 			backpackLabel.setText("Backpack (" + bp.numItems() + "/" + bp.maxSize() + ")");
 
+		    /**
+		     * Check if tamagotchi is dead
+		     */
 		    if (tama.checkStats() == Tamagotchi.DEAD)
 		    {
 			if (!tamaDeadParticles)
@@ -646,6 +658,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	if (pSceneTouchEvent.isActionDown())
 	{
+	    /**
+	     * Move tama to place on screen that was touched.
+	     */
 	    if (mainLayer.isVisible() && !tama.isDead())
 	    {
 		float x = pSceneTouchEvent.getX();
@@ -662,6 +677,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // Methods
     // ===========================================================
 
+    /**
+     * Moves the tama to the specified xy-coordinates.
+     * 
+     * @param x
+     *            x-coordinate of destination.
+     * @param y
+     *            y-coordinate of destination.
+     */
     private void moveTama(final float x, final float y)
     {
 	final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
@@ -1183,6 +1206,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	inPlayObjects.add(poop);
 
 	this.mainLayer.attachChild(poop);
+	this.mainLayer.swapChildren(poop, tama.getSprite());
 	this.mScene.registerTouchArea(poop);
     }
 
@@ -1644,6 +1668,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	return true;
     }
 
+    /**
+     * Shows the particle effect for the given status of the Tamagotchi.
+     * 
+     * @param status
+     *            Status of Tamagotchi. Defined by static variables in Tamagotchi class.
+     */
     private void showEffect(int status)
     {
 	if (status == Tamagotchi.LEVEL_UP)
@@ -1756,6 +1786,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	}
     }
 
+    /**
+     * Shows notification on the main screen using the given text.
+     * 
+     * @param text
+     *            Text to display in notification.
+     */
     private void showNotification(String text)
     {
 	notificationList.add(TextUtil.getNormalizedText(mSmallFont, text, this.notificationRect.getWidth()));
@@ -1779,20 +1815,25 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	closeSubLayers();
     }
 
+    /**
+     * Loads the timers that control the tama's stats.
+     */
     private void loadTamaTimers()
     {
 	/**
 	 * Timer to generate poop
 	 */
-	this.mScene.registerUpdateHandler(new TimerHandler(5 * 60, true, new ITimerCallback()
+	this.mScene.registerUpdateHandler(new TimerHandler(5, true, new ITimerCallback()
 	{
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
 		if (tama.getStatus() != Tamagotchi.DEAD)
 		{
-		    final float xPos = MathUtils.random(30.0f, (cameraWidth - 30.0f));
-		    final float yPos = MathUtils.random(pTopBound, (pBottomBound - pTopBound));
+		    final float x = tama.getSprite().getX();
+		    final float y = tama.getSprite().getY();
+		    final float xPos = MathUtils.random(x - 10, x + 10);
+		    final float yPos = MathUtils.random(y - 10, y + 10);
 		    addPoop(xPos, yPos);
 		}
 	    }
@@ -1881,6 +1922,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private Scene mSplashScene;
 
+    /**
+     * Displays a splash screen
+     */
     private void showSplashScreen()
     {
 	this.mSplashScene = new Scene();
