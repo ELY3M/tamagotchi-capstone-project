@@ -1,55 +1,51 @@
 <class-diagram version="1.0.7" icons="true" automaticImage="PNG" always-add-relationships="true" generalizations="true" 
   realizations="true" associations="true" dependencies="true" nesting-relationships="true">  
-  <class id="1" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.andengine.entity.Tamagotchi" 
-    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/andengine/entity/Tamagotchi.java" 
-    binary="false">    
-    <position height="1043" width="304" x="490" y="-150"/>    
+  <class id="1" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.entity.Item" project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/entity/Item.java" binary="false">    
+    <position height="-1" width="-1" x="194" y="-48"/>    
     <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true"/>      
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </class>  
-  <class id="2" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.andengine.entity.Item" 
-    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/andengine/entity/Item.java" 
-    binary="false">    
-    <position height="-1" width="-1" x="235" y="152"/>    
+  <class id="2" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.entity.Tamagotchi" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/entity/Tamagotchi.java" binary="false">    
+    <position height="-1" width="-1" x="597" y="178"/>    
     <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true"/>      
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </class>  
-  <class id="3" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.andengine.entity.Backpack" 
-    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/andengine/entity/Backpack.java" 
-    binary="false">    
-    <position height="-1" width="-1" x="232" y="662"/>    
+  <class id="3" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.entity.Backpack" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/entity/Backpack.java" binary="false">    
+    <position height="-1" width="-1" x="194" y="454"/>    
     <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true"/>      
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </class>  
-  <class id="4" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.andengine.entity.Protection" 
-    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/andengine/entity/Protection.java" 
-    binary="false">    
-    <position height="-1" width="-1" x="954" y="-56"/>    
-    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+  <class id="4" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.entity.Protection" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/entity/Protection.java" binary="false">    
+    <position height="146" width="169" x="821" y="-148"/>    
+    <display autosize="false" package="true" initial-value="false" signature="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true"/>      
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </class>  
   <association id="5">    
-    <end type="SOURCE" refId="3" navigable="false">      
-      <attribute id="6" name="items"/>      
-      <multiplicity id="7" minimum="0" maximum="2147483647"/>    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="6" name="equippedItem"/>      
+      <multiplicity id="7" minimum="0" maximum="1"/>    
     </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
+    <end type="TARGET" refId="1" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
   <association id="8">    
-    <end type="SOURCE" refId="1" navigable="false">      
-      <attribute id="9" name="equippedItem"/>      
-      <multiplicity id="10" minimum="0" maximum="1"/>    
+    <end type="SOURCE" refId="3" navigable="false">      
+      <attribute id="9" name="items"/>      
+      <multiplicity id="10" minimum="0" maximum="2147483647"/>    
     </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
+    <end type="TARGET" refId="1" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
   <classifier-display autosize="true" package="true" initial-value="false" signature="true" visibility="true">    
