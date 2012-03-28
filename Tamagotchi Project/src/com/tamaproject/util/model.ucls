@@ -1,0 +1,33 @@
+<class-diagram version="1.0.7" icons="true" automaticImage="PNG" always-add-relationships="false" generalizations="true" 
+  realizations="true" associations="true" dependencies="false" nesting-relationships="true">  
+  <class id="1" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.util.GoogleWeatherParser" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/util/GoogleWeatherParser.java" 
+    binary="false">    
+    <position height="147" width="249" x="323" y="258"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <class id="2" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.util.TextUtil" project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/util/TextUtil.java" binary="false">    
+    <position height="83" width="226" x="612" y="258"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <class id="3" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.util.Weather" project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/util/Weather.java" binary="false">    
+    <position height="131" width="92" x="878" y="258"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <classifier-display autosize="true" package="true" initial-value="false" signature="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true"/>    
+    <operations public="true" package="true" protected="true" private="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>
