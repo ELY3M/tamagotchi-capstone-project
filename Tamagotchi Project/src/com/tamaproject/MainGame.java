@@ -82,11 +82,11 @@ import android.speech.RecognizerIntent;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
-import com.tamaproject.andengine.entity.Backpack;
-import com.tamaproject.andengine.entity.Item;
-import com.tamaproject.andengine.entity.Protection;
-import com.tamaproject.andengine.entity.Tamagotchi;
 import com.tamaproject.database.DatabaseHelper;
+import com.tamaproject.entity.Backpack;
+import com.tamaproject.entity.Item;
+import com.tamaproject.entity.Protection;
+import com.tamaproject.entity.Tamagotchi;
 import com.tamaproject.util.TextUtil;
 import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;

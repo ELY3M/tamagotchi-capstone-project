@@ -1,7 +1,7 @@
 package com.tamaproject.database;
 
-import com.tamaproject.andengine.entity.Item;
-import com.tamaproject.andengine.entity.Tamagotchi;
+import com.tamaproject.entity.Item;
+import com.tamaproject.entity.Tamagotchi;
 
 import java.util.ArrayList;
 import java.util.HashMap;

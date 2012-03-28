@@ -1,4 +1,4 @@
-package com.tamaproject.andengine.entity;
+package com.tamaproject.entity;
 
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
