@@ -6,6 +6,7 @@ import java.util.Calendar;
 
 import org.anddev.andengine.entity.sprite.BaseSprite;
 
+
 public class Tamagotchi
 {
     public static final int MAX_BATTLE_LEVEL = 100;
@@ -17,6 +18,7 @@ public class Tamagotchi
     private int status;
     private long birthday;
     private long age;
+    private int id;
     private Item equippedItem;
 
     private BaseSprite sprite;
@@ -33,7 +35,7 @@ public class Tamagotchi
 
     public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
 	    int currentXP, int maxXP, int currentSickness, int maxSickness,
-	    int battleLevel, int status, long birthday, Item equippedItem, long age)
+	    int battleLevel, int status, long birthday, Item equippedItem, long age, int id)
     {
 	this.currentHealth = currentHealth;
 	this.maxHealth = maxHealth;
@@ -49,6 +51,7 @@ public class Tamagotchi
 	this.equippedItem = equippedItem;
 	this.calendar.setTimeInMillis(birthday);
 	this.age = age;
+	this.id = id;
     }
 
     /**
@@ -68,6 +71,7 @@ public class Tamagotchi
 	this.status = Tamagotchi.ALIVE;
 	this.birthday = 1325376000000l;
 	this.age = 0;
+	this.id = 1;
     }
 
     public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
@@ -256,6 +260,10 @@ public class Tamagotchi
     public void setBirthday(long birthday)
     {
 	this.birthday = birthday;
+    }
+    
+    public int getID() {
+    	return id;
     }
 
     public Item getEquippedItem()

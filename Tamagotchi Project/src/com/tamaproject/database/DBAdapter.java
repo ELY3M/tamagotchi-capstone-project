@@ -14,6 +14,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+
+/**
+ * 
+ * Save and loads the information about the Tamagotchi
+ * @author Vamshi
+ *
+ */
+
 public class DBAdapter {
 	
 	public static final String colID = "_id";
@@ -29,6 +37,7 @@ public class DBAdapter {
 	public static final String colBattleLevel = "battleLevel";
 	public static final String colStatus = "status";
 	public static final String colBirthday = "birthday";
+	public static final String colAge = "age";
 	private static final String TamaTable = "Tamagotchi";
 	
 	public static final String colIPOID = "_id";
@@ -58,7 +67,7 @@ public class DBAdapter {
 	private static final String createTamaTable = "create table "+TamaTable+" (_id integer primary key autoincrement, curHealth integer" +
 			"not null, maxHealth integer not null, curHunger integer not null, maxHunger integer not null, curXP integer not null, " +
 			"maxXP integer not null, curSickness integer not null, maxSickness integer not null, poop integer not null, battleLevel" +
-			"integer not null, status integer not null, birthday integer not null, filePath text);";
+			"integer not null, status integer not null, birthday integer not null, age integer not null, filePath text);";
 	
 	private static final String createIPOTable = "create table "+IPOTable+" (_id integer primary key autoincrement, xCoord float" +
 			"not null, yCoord float not null, itemName text not null);";
@@ -149,6 +158,7 @@ public class DBAdapter {
 			initialValues.put(colBattleLevel, t.getBattleLevel());
 			initialValues.put(colStatus, t.getStatus());
 			initialValues.put(colBirthday, t.getBirthday());
+			initialValues.put(colAge, t.getAge());
 			return db.insert(TamaTable, null, initialValues);
 		}
 		
@@ -156,7 +166,7 @@ public class DBAdapter {
 		 * Saves the Tamagotchi attributes into the database after the initial save
 		 * 
 		 * @param t
-		 * @return
+		 * @returns true if tamagotchi is saved successfully
 		 */
 		public boolean savaTama(Tamagotchi t) {
 			
@@ -174,7 +184,8 @@ public class DBAdapter {
 			args.put(colBattleLevel, t.getBattleLevel());
 			args.put(colStatus, t.getStatus());
 			args.put(colBirthday, t.getBirthday());
-			return db.update(TamaTable, args, colID+"="+id, null) > 0;
+			args.put(colAge, t.getAge());
+			return db.update(TamaTable, args, colID+"="+t.getID(), null) > 0;
 		}
 		
 		/**
@@ -223,7 +234,7 @@ public class DBAdapter {
 		public long insertItems(Item i) {
 			
 			ContentValues initialValues = new ContentValues();
-			initialValues.put(colCategory, null);
+			/*initialValues.put(colCategory, i.getCategory);*/  
 			initialValues.put(colItemName, i.getName());
 			initialValues.put(colHealth, i.getHealth());
 			initialValues.put(colHunger, i.getHunger());
@@ -249,10 +260,13 @@ public class DBAdapter {
 		}
 		
 		public long insertBackpack(ArrayList<Item> item) {
-			Iterator itr = new Iterator();
-			while(itr.hasNext()) {
-				item.
+			ContentValues initialValues = new ContentValues();
+			 
+			for(int i = 0; i < item.size(); i++) {
+				String name = item.get(i).getName();
 			}
+			return 0;
+			
 		}
 		
 		/**
@@ -260,7 +274,7 @@ public class DBAdapter {
 		 * 
 		 * @param id
 		 * @param quantity
-		 * @return
+		 * @return true if backpack is saved successfully
 		 */
 		public boolean saveBackpack(int id, int quantity) {
 			
@@ -276,15 +290,58 @@ public class DBAdapter {
 		 * @param id
 		 * @return
 		 */
-		public Cursor retreatTama(int id) {
+		public Tamagotchi retreatTama(int id) {
 			Cursor mCursor =  db.query(true, TamaTable, new String[] {colID,colCurHealth, colMaxHealth, 
 					colCurHunger, colMaxHunger, colCurXP, colMaxXP, colCurSickness, 
-					colMaxSickness, colPoop, colBattleLevel, colStatus, colBirthday}, colID+"="+id, null, null, null, null, null);
+					colMaxSickness, colBattleLevel, colStatus, colBirthday}, colID+"="+id, null, null, null, null, null);
 			if(mCursor != null) {
 				mCursor.moveToFirst();
 			}
-			return mCursor;
+			return this.loadTama(mCursor);
 			
+		}
+		
+		
+		/**
+		 * Loads the tamagotchi attributes with the last saved data once the game starts
+		 * 
+		 * @param cursor
+		 * @returns the tamagotchi object
+		 */
+		Tamagotchi loadTama(Cursor cursor) {
+			
+			int curHealthIndex = cursor.getColumnIndexOrThrow(colCurHealth);
+			int maxHealthIndex = cursor.getColumnIndexOrThrow(colMaxHealth);
+			int curHungerIndex = cursor.getColumnIndexOrThrow(colCurHunger);
+			int maxHungerIndex = cursor.getColumnIndexOrThrow(colMaxHunger);
+			int curXPIndex = cursor.getColumnIndexOrThrow(colCurXP);
+			int maxXPIndex = cursor.getColumnIndexOrThrow(colMaxXP);
+			int curSicknessIndex = cursor.getColumnIndexOrThrow(colCurSickness);
+			int maxSicknessIndex = cursor.getColumnIndexOrThrow(colMaxSickness);
+			int battleLevelIndex = cursor.getColumnIndexOrThrow(colBattleLevel);
+			int satusIndex = cursor.getColumnIndexOrThrow(colStatus);
+			int birthdayIndex = cursor.getColumnIndexOrThrow(colBirthday);
+			int ageIndex = cursor.getColumnIndexOrThrow(colAge);
+			int idIndex = cursor.getColumnIndexOrThrow(colID);
+				
+			int curHealth = cursor.getInt(curHealthIndex);
+			int maxHealth = cursor.getInt(maxHealthIndex);
+			int curHunger = cursor.getInt(curHungerIndex);
+			int maxHunger = cursor.getInt(maxHungerIndex);
+			int curXP = cursor.getInt(curXPIndex);
+			int maxXP = cursor.getInt(maxXPIndex);
+			int curSickness = cursor.getInt(curSicknessIndex);
+			int maxSickness = cursor.getInt(maxSicknessIndex);
+			int battleLevel = cursor.getInt(battleLevelIndex);
+			int status = cursor.getInt(satusIndex);
+			long birthday = cursor.getLong(birthdayIndex);
+				
+			long age = cursor.getLong(ageIndex);
+			int id = cursor.getInt(idIndex);
+			
+			/* Change the null parameter to the equipped item */
+			return new Tamagotchi(curHealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness, maxSickness, 
+					battleLevel, status, birthday, null, age, id);
 		}
 		
 		public Cursor retreatIPO() {

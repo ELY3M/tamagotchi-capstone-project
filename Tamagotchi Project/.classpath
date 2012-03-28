@@ -13,5 +13,6 @@
 	<classpathentry kind="lib" path="libs/andengine/andenginesvgtextureregionextension.jar"/>
 	<classpathentry kind="lib" path="libs/andengine/andenginetexturepackerextension.jar"/>
 	<classpathentry kind="lib" path="libs/andengine/andengine2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
