@@ -2,6 +2,12 @@ package com.tamaproject.andengine.entity;
 
 import java.util.ArrayList;
 
+/**
+ * The backpack stores the user's items and manages the positions at which the items are displayed in the game
+ * 
+ * @author Jonathan
+ * 
+ */
 public class Backpack
 {
     private ArrayList<Item> items;
@@ -92,6 +98,14 @@ public class Backpack
 	this.items = items;
     }
 
+    /**
+     * Puts all the items in a grid formation for when the user opens the backpack to view the items
+     * 
+     * @param width
+     *            Width of the screen.
+     * @param height
+     *            Height of the screen.
+     */
     public void resetPositions(float width, float height)
     {
 	float xSpacing = width / 6;

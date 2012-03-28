@@ -86,11 +86,18 @@ import com.tamaproject.andengine.entity.Backpack;
 import com.tamaproject.andengine.entity.Item;
 import com.tamaproject.andengine.entity.Protection;
 import com.tamaproject.andengine.entity.Tamagotchi;
+import com.tamaproject.database.DatabaseHelper;
 import com.tamaproject.util.TextUtil;
 import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
 import com.tamaproject.weather.WeatherRetriever;
 
+/**
+ * Main game that controls Tamagotchi behavior, item interaction, etc.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener,
 	IOnAreaTouchListener
 {
@@ -199,6 +206,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Sprite thoughtBubble;
 
     private boolean firstRun = true;
+
+    private DatabaseHelper dbHelper = new DatabaseHelper(this);
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -684,7 +693,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // ===========================================================
 
     /**
-     * Loads the tamagotchi at the given coordinates. If first run, an egg hatches, otherwise the existing tamagotchi is loaded.
+     * Loads the tamagotchi at the given coordinates. If first run, an egg hatches, otherwise the existing tamagotchi is loaded from the database.
      * 
      * @param centerX
      *            x-coordinate
@@ -693,13 +702,13 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadTama(final int centerX, final int centerY)
     {
-	this.tama = new Tamagotchi();
-	this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-	((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
-	this.tama.getSprite().setScale(1.00f);
-
 	if (firstRun)
 	{
+	    this.tama = new Tamagotchi();
+	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
+	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
+	    this.tama.getSprite().setScale(1.00f);
+
 	    topLayer.setVisible(false);
 	    midLayer.setVisible(false);
 	    final Sprite eggSprite = new Sprite(centerX, centerY, listTR.get("wing-egg.png"));

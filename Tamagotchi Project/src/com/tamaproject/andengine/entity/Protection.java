@@ -2,6 +2,12 @@ package com.tamaproject.andengine.entity;
 
 import com.tamaproject.util.Weather;
 
+/**
+ * This class contains static values that pertain to the different types of protection against weather.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class Protection
 {
     // All weather-related things are between 1-10

@@ -3,6 +3,12 @@ package com.tamaproject.andengine.entity;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 
+/**
+ * The item class represents an item that can be given to a Tamagotchi
+ * 
+ * @author Jonathan
+ * 
+ */
 public class Item extends Sprite
 {
     public static final int EQUIP = 1, NORMAL = 0;
