@@ -4,7 +4,10 @@ import com.tamaproject.andengine.entity.Item;
 import com.tamaproject.andengine.entity.Tamagotchi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -56,7 +59,7 @@ public class DBAdapter {
 	public static final String colDescription = "description";
 	private static final String ItemTable = "Items";
 	
-	public static final String colItemID2 = "_id";
+	public static final String colItemName2 = "itemName";
 	public static final String colQuantity = "quantity";
 	private static final String BackpackTable = "Backpack";
 	
@@ -251,37 +254,44 @@ public class DBAdapter {
 		 * @param quantity
 		 * @return
 		 */
-		public long insertBackpack(int id, int quantity) {
-			
-			ContentValues initialValues = new ContentValues();
-			initialValues.put(colItemID2, id);
-			initialValues.put(colQuantity, quantity);
-			return db.insert(BackpackTable, null, initialValues);
-		}
 		
-		public long insertBackpack(ArrayList<Item> item) {
-			ContentValues initialValues = new ContentValues();
-			 
+		public long insertBackpack(List<Item> item) {
+			Map<String, Integer> table = new HashMap<String, Integer>();
+			
 			for(int i = 0; i < item.size(); i++) {
 				String name = item.get(i).getName();
+				
+				if(table.get(name) == null) {
+					table.put(name, 1);
+				}
+				else {
+					Integer counter = (Integer) table.get(name);
+					table.put(name, counter + 1);
+				}
 			}
-			return 0;
-			
+			/* return db.update */
+			return parseTable(table);
 		}
 		
 		/**
-		 * Updates the backpack in the database after the initial save
-		 * 
-		 * @param id
-		 * @param quantity
-		 * @return true if backpack is saved successfully
+		 * Takes the hash table created by the above function and takes each key and value and stores it into the database
+		 * @param table
+		 * @return
 		 */
-		public boolean saveBackpack(int id, int quantity) {
-			
-			ContentValues args = new ContentValues();
-			args.put(colItemID2, id);
-			args.put(colQuantity, quantity);
-			return db.update(BackpackTable, args, colItemID2+"="+id, null) > 0;
+		public long parseTable(Map<String, Integer> table) {
+			Iterator it = table.entrySet().iterator();
+			long success = (Long) null;
+			ContentValues initialValues = new ContentValues();
+			while(it.hasNext()) {
+				Map.Entry pair = (Map.Entry) it.next();
+				initialValues.put(colItemName2, (String) pair.getKey());
+				initialValues.put(colQuantity, (Integer) pair.getValue());
+				success = db.insert(BackpackTable, null, initialValues);
+				if(success < 0) {
+					return success;
+				}
+			}
+			return success;
 		}
 		
 		/**
@@ -354,7 +364,7 @@ public class DBAdapter {
 		}
 		
 		public Cursor retreatBackpack() {
-			return db.query(BackpackTable, new String[] {colItemID2, colQuantity}, null, null, null, null, null);
+			return db.query(BackpackTable, new String[] {colItemName2, colQuantity}, null, null, null, null, null);
 		}
 	}
 }
