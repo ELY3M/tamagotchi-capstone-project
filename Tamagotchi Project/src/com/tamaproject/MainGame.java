@@ -23,9 +23,12 @@ import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
 import org.anddev.andengine.entity.IEntity;
+import org.anddev.andengine.entity.modifier.IEntityModifier.IEntityModifierListener;
+import org.anddev.andengine.entity.modifier.LoopEntityModifier;
 import org.anddev.andengine.entity.modifier.PathModifier;
 import org.anddev.andengine.entity.modifier.PathModifier.IPathModifierListener;
 import org.anddev.andengine.entity.modifier.PathModifier.Path;
+import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
 import org.anddev.andengine.entity.particle.ParticleSystem;
 import org.anddev.andengine.entity.particle.emitter.CircleOutlineParticleEmitter;
 import org.anddev.andengine.entity.particle.emitter.RectangleParticleEmitter;
@@ -60,6 +63,7 @@ import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.HorizontalAlign;
 import org.anddev.andengine.util.MathUtils;
+import org.anddev.andengine.util.modifier.IModifier;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -194,6 +198,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private Rectangle nightOverlayRect;
     private Sprite thoughtBubble;
 
+    private boolean firstRun = true;
+
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -210,10 +216,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	// Load grass background
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
-	
+
 	// Load all the textures in the gfx folder
 	this.loadTextures(this, this.mEngine);
-	
+
 	// Load fonts
 	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	this.mSmallFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
@@ -245,12 +251,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	final int centerX = (cameraWidth - this.listTR.get("tama.png").getWidth()) / 2;
 	final int centerY = (cameraHeight - this.listTR.get("tama.png").getHeight()) / 2;
 
-	// Load tamagotchi first
-	this.tama = new Tamagotchi();
-	this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-	((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
-	this.tama.getSprite().setScale(1.00f);
-	this.mainLayer.attachChild(tama.getSprite());
+	this.loadTama(centerX, centerY);
 
 	this.thoughtBubble = new Sprite(tama.getSprite().getWidth(), -tama.getSprite().getHeight(), listTR.get("thought_bubble.png"));
 	this.tama.getSprite().attachChild(this.thoughtBubble);
@@ -258,7 +259,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	final Item eItem = new GameItem(0, 0, this.listTR.get("treasure.png"));
 	eItem.setType(Item.EQUIP);
-	equipItem(eItem);
+	equipItem(eItem, false);
 
 	this.mainLayers.add(mainLayer);
 	this.mainLayers.add(weatherLayer);
@@ -323,7 +324,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			    inPlayObjects.remove(s);
 			}
 		    }
-		    
+
 		    /**
 		     * Update the stats page with current stats when stats page is opened
 		     */
@@ -683,6 +684,53 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // ===========================================================
 
     /**
+     * Loads the tamagotchi at the given coordinates. If first run, an egg hatches, otherwise the existing tamagotchi is loaded.
+     * 
+     * @param centerX
+     *            x-coordinate
+     * @param centerY
+     *            y-coordinate
+     */
+    private void loadTama(final int centerX, final int centerY)
+    {
+	this.tama = new Tamagotchi();
+	this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
+	((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
+	this.tama.getSprite().setScale(1.00f);
+
+	if (firstRun)
+	{
+	    topLayer.setVisible(false);
+	    midLayer.setVisible(false);
+	    final Sprite eggSprite = new Sprite(centerX, centerY, listTR.get("wing-egg.png"));
+	    IEntityModifierListener modListener = new IEntityModifierListener()
+	    {
+		@Override
+		public void onModifierStarted(IModifier<IEntity> arg0, IEntity arg1)
+		{
+
+		}
+
+		@Override
+		public void onModifierFinished(IModifier<IEntity> arg0, IEntity arg1)
+		{
+		    topLayer.setVisible(true);
+		    midLayer.setVisible(true);
+		    eggSprite.detachSelf();
+		    mainLayer.attachChild(tama.getSprite());
+		}
+	    };
+	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new org.anddev.andengine.entity.modifier.ScaleModifier(1, 1, 1.5f), new org.anddev.andengine.entity.modifier.ScaleModifier(1, 1.5f, 1)), 5, modListener);
+	    eggSprite.registerEntityModifier(loopEntityModifier);
+	    mainLayer.attachChild(eggSprite);
+	}
+	else
+	{
+	    this.mainLayer.attachChild(tama.getSprite());
+	}
+    }
+
+    /**
      * Moves the tama to the specified xy-coordinates.
      * 
      * @param x
@@ -692,6 +740,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void moveTama(final float x, final float y)
     {
+	if (!tama.getSprite().hasParent())
+	    return;
+
 	final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
 	double distance = Math.sqrt(Math.pow(tama.getSprite().getX() - x, 2) + Math.pow(tama.getSprite().getY() - y, 2));
 	float velocity = 100;
@@ -1599,7 +1650,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      *            Item to be equipped
      * @return true if successfully equipped, false otherwise
      */
-    private boolean equipItem(Item item)
+    private boolean equipItem(Item item, final boolean notify)
     {
 	itemToApply = item;
 	runOnUpdateThread(new Runnable()
@@ -1634,7 +1685,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		tama.setEquippedItem(itemToApply);
 		itemToApply.setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
 		tama.getSprite().attachChild(itemToApply);
-		showNotification(itemToApply.getName() + " has been equipped!");
+		if (notify)
+		    showNotification(itemToApply.getName() + " has been equipped!");
 		itemToApply = null;
 	    }
 
@@ -1833,7 +1885,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		if (tama.getStatus() != Tamagotchi.DEAD)
+		if (tama.getStatus() != Tamagotchi.DEAD && tama.getSprite().hasParent())
 		{
 		    final float x = tama.getSprite().getX();
 		    final float y = tama.getSprite().getY();
@@ -1852,7 +1904,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		if (tama.getStatus() != Tamagotchi.DEAD)
+		if (tama.getStatus() != Tamagotchi.DEAD && tama.getSprite().hasParent())
 		{
 		    if (tama.getEquippedItem() != null)
 		    {
@@ -1883,7 +1935,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		if (tama.getStatus() != Tamagotchi.DEAD)
+		if (tama.getStatus() != Tamagotchi.DEAD && tama.getSprite().hasParent())
 		{
 		    if (tama.getCurrentSickness() < 1 && tama.getCurrentHunger() < tama.getMaxHunger())
 		    {
@@ -1908,7 +1960,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		if (tama.getStatus() != Tamagotchi.DEAD)
+		if (tama.getStatus() != Tamagotchi.DEAD && tama.getSprite().hasParent())
 		{
 		    if (tama.getCurrentHunger() >= tama.getMaxHunger() && tama.getCurrentHealth() > 0)
 		    {
@@ -2036,7 +2088,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 				}
 				else if (this.getType() == Item.EQUIP)
 				{
-				    equipItem(this);
+				    equipItem(this, true);
 				}
 			    }
 			    else if (this.collidesWith(trashCan))
