@@ -1,13 +1,17 @@
 package com.tamaproject.database;
 
+import com.tamaproject.entity.Backpack;
 import com.tamaproject.entity.Item;
 import com.tamaproject.entity.Tamagotchi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.anddev.andengine.opengl.texture.region.TextureRegion;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -40,6 +44,7 @@ public class DBAdapter {
 	public static final String colBattleLevel = "battleLevel";
 	public static final String colStatus = "status";
 	public static final String colBirthday = "birthday";
+	public static final String colEquippedItem = "equippedItem";
 	public static final String colAge = "age";
 	private static final String TamaTable = "Tamagotchi";
 	
@@ -47,10 +52,10 @@ public class DBAdapter {
 	public static final String colXCoord = "xCoord";
 	public static final String colYCoord = "yCoord";
 	public static final String colItem = "itemName";
+	public static final String colScale = "scale";
 	private static final String IPOTable = "InPlayObjects";
 	
 	public static final String colItemID = "_id";
-	public static final String colCategory = "category";
 	public static final String colItemName = "itemName";
 	public static final String colHealth = "health";
 	public static final String colHunger = "hunger";
@@ -63,6 +68,10 @@ public class DBAdapter {
 	public static final String colQuantity = "quantity";
 	private static final String BackpackTable = "Backpack";
 	
+	public static final String colSpriteName = "spriteName";
+	public static final String colFileName = "filename";
+	private static final String FilenameTable = "Filename";
+	
 	private static final String dbName = "TamagotchiProject";
 	private static final int dbVersion = 1;
 	private static final String tag = "DBAdapter";
@@ -70,17 +79,20 @@ public class DBAdapter {
 	private static final String createTamaTable = "create table "+TamaTable+" (_id integer primary key autoincrement, curHealth integer" +
 			"not null, maxHealth integer not null, curHunger integer not null, maxHunger integer not null, curXP integer not null, " +
 			"maxXP integer not null, curSickness integer not null, maxSickness integer not null, poop integer not null, battleLevel" +
-			"integer not null, status integer not null, birthday integer not null, age integer not null, filePath text);";
+			"integer not null, status integer not null, birthday integer not null, equippedItem text not null, age integer not null, filePath text);";
 	
 	private static final String createIPOTable = "create table "+IPOTable+" (_id integer primary key autoincrement, xCoord float" +
 			"not null, yCoord float not null, itemName text not null);";
 	
-	private static final String createItemTable = "create table "+ItemTable+" (category text," +
-			"itemName text unique not null, health integer not null, hunger integer not null, sickness integer not null, xp integer not null," +
-			"description text not null, filePath);";
+	private static final String createItemTable = "create table "+ItemTable+" (_id integer primary key autoincrement " +
+			"itemName text unique not null, health integer not null, " +
+			"hunger integer not null, sickness integer not null, xp integer not null, description text not null);";
 	
 	private static final String createBackpackTable = "create table "+BackpackTable+" (itemName text unique not null, quantity integer" +
 			"not null);";
+	
+	private static final String createFilenameTable = "create table "+FilenameTable+" (spriteName text unique not null, filename text not null);";
+	
 	
 	private final Context context;
 	
@@ -161,8 +173,17 @@ public class DBAdapter {
 			initialValues.put(colBattleLevel, t.getBattleLevel());
 			initialValues.put(colStatus, t.getStatus());
 			initialValues.put(colBirthday, t.getBirthday());
+			initialValues.put(colEquippedItem, t.getEquippedItemName());
 			initialValues.put(colAge, t.getAge());
-			return db.insert(TamaTable, null, initialValues);
+			long success = db.insert(TamaTable, null, initialValues);
+			
+			if(success < 0) {
+				return saveTama(t);
+			}
+			else {
+				return success;
+			}
+		
 		}
 		
 		/**
@@ -171,7 +192,7 @@ public class DBAdapter {
 		 * @param t
 		 * @returns true if tamagotchi is saved successfully
 		 */
-		public boolean savaTama(Tamagotchi t) {
+		public int saveTama(Tamagotchi t) {
 			
 			ContentValues args = new ContentValues();
 			args.put(colID, t.getID());
@@ -183,12 +204,12 @@ public class DBAdapter {
 			args.put(colMaxXP, t.getMaxXP());
 			args.put(colCurSickness, t.getCurrentSickness());
 			args.put(colMaxSickness, t.getMaxSickness());
-			/*args.put(colPoop, poop);*/
 			args.put(colBattleLevel, t.getBattleLevel());
 			args.put(colStatus, t.getStatus());
 			args.put(colBirthday, t.getBirthday());
+			args.put(colEquippedItem, t.getEquippedItemName());
 			args.put(colAge, t.getAge());
-			return db.update(TamaTable, args, colID+"="+t.getID(), null) > 0;
+			return db.update(TamaTable, args, colID+"="+t.getID(), null);
 		}
 		
 		/**
@@ -254,7 +275,7 @@ public class DBAdapter {
 		 * @param quantity
 		 * @return
 		 */
-		
+		 
 		public long insertBackpack(List<Item> item) {
 			Map<String, Integer> table = new HashMap<String, Integer>();
 			
@@ -269,8 +290,7 @@ public class DBAdapter {
 					table.put(name, counter + 1);
 				}
 			}
-			/* return db.update */
-			return parseTable(table);
+			return insertParseTable(table);
 		}
 		
 		/**
@@ -278,7 +298,7 @@ public class DBAdapter {
 		 * @param table
 		 * @return
 		 */
-		public long parseTable(Map<String, Integer> table) {
+		public long insertParseTable(Map<String, Integer> table) {
 			Iterator it = table.entrySet().iterator();
 			long success = (Long) null;
 			ContentValues initialValues = new ContentValues();
@@ -294,20 +314,42 @@ public class DBAdapter {
 			return success;
 		}
 		
+		public boolean saveParseTable(Map<String, Integer> table) {
+			Iterator it = table.entrySet().iterator();
+			ContentValues args = new ContentValues();
+			int success = (Integer) null;
+			while(it.hasNext()) {
+				Map.Entry pair = (Map.Entry) it.next();
+				args.put(colItemName2, (String) pair.getKey());
+				args.put(colQuantity, (Integer) pair.getValue());
+				success = db.update(BackpackTable, args, colItemName2+"="+pair.getKey(), null);
+				if(success < 0) {
+					return false;
+				}
+			}
+			return success > 0;
+		}
+		
 		/**
 		 * Retrieves the last saved attributes of the Tamagotchi
 		 * 		
 		 * @param id
 		 * @return
 		 */
-		public Tamagotchi retreatTama(int id) {
-			Cursor mCursor =  db.query(true, TamaTable, new String[] {colID,colCurHealth, colMaxHealth, 
+		public Tamagotchi retrieveTama(int id, Hashtable<String, TextureRegion> table) {
+			Cursor cursor1 =  db.query(true, TamaTable, new String[] {colID,colCurHealth, colMaxHealth, 
 					colCurHunger, colMaxHunger, colCurXP, colMaxXP, colCurSickness, 
-					colMaxSickness, colBattleLevel, colStatus, colBirthday}, colID+"="+id, null, null, null, null, null);
-			if(mCursor != null) {
-				mCursor.moveToFirst();
+					colMaxSickness, colBattleLevel, colStatus, colBirthday, colEquippedItem, colAge}, colID+"="+id, null, null, null, null, null);
+			
+			Cursor cursor2 = db.query(ItemTable, new String[] {colItemName, colHealth, colHunger, colSickness, colXP, colDescription},
+					colItemName+"="+cursor1.getString(cursor1.getColumnIndexOrThrow(colEquippedItem)), null, null, null, null);
+			
+			if(cursor1 != null && cursor2 != null) {
+				cursor1.moveToFirst();
+				cursor2.moveToFirst();
 			}
-			return this.loadTama(mCursor);
+			
+			return this.loadTama(cursor1, cursor2, table);
 			
 		}
 		
@@ -318,40 +360,41 @@ public class DBAdapter {
 		 * @param cursor
 		 * @returns the tamagotchi object
 		 */
-		Tamagotchi loadTama(Cursor cursor) {
-			
-			int curHealthIndex = cursor.getColumnIndexOrThrow(colCurHealth);
-			int maxHealthIndex = cursor.getColumnIndexOrThrow(colMaxHealth);
-			int curHungerIndex = cursor.getColumnIndexOrThrow(colCurHunger);
-			int maxHungerIndex = cursor.getColumnIndexOrThrow(colMaxHunger);
-			int curXPIndex = cursor.getColumnIndexOrThrow(colCurXP);
-			int maxXPIndex = cursor.getColumnIndexOrThrow(colMaxXP);
-			int curSicknessIndex = cursor.getColumnIndexOrThrow(colCurSickness);
-			int maxSicknessIndex = cursor.getColumnIndexOrThrow(colMaxSickness);
-			int battleLevelIndex = cursor.getColumnIndexOrThrow(colBattleLevel);
-			int satusIndex = cursor.getColumnIndexOrThrow(colStatus);
-			int birthdayIndex = cursor.getColumnIndexOrThrow(colBirthday);
-			int ageIndex = cursor.getColumnIndexOrThrow(colAge);
-			int idIndex = cursor.getColumnIndexOrThrow(colID);
+		Tamagotchi loadTama(Cursor cursor1, Cursor cursor2, Hashtable<String, TextureRegion> table) {
 				
-			int curHealth = cursor.getInt(curHealthIndex);
-			int maxHealth = cursor.getInt(maxHealthIndex);
-			int curHunger = cursor.getInt(curHungerIndex);
-			int maxHunger = cursor.getInt(maxHungerIndex);
-			int curXP = cursor.getInt(curXPIndex);
-			int maxXP = cursor.getInt(maxXPIndex);
-			int curSickness = cursor.getInt(curSicknessIndex);
-			int maxSickness = cursor.getInt(maxSicknessIndex);
-			int battleLevel = cursor.getInt(battleLevelIndex);
-			int status = cursor.getInt(satusIndex);
-			long birthday = cursor.getLong(birthdayIndex);
-				
-			long age = cursor.getLong(ageIndex);
-			int id = cursor.getInt(idIndex);
+			int curHealth = cursor1.getInt(cursor1.getColumnIndexOrThrow(colCurHealth));
+			int maxHealth = cursor1.getInt(cursor1.getColumnIndexOrThrow(colMaxHealth));
+			int curHunger = cursor1.getInt(cursor1.getColumnIndexOrThrow(colCurHunger));
+			int maxHunger = cursor1.getInt(cursor1.getColumnIndexOrThrow(colMaxHunger));
+			int curXP = cursor1.getInt(cursor1.getColumnIndexOrThrow(colCurXP));
+			int maxXP = cursor1.getInt(cursor1.getColumnIndexOrThrow(colMaxXP));
+			int curSickness = cursor1.getInt(cursor1.getColumnIndexOrThrow(colCurSickness));
+			int maxSickness = cursor1.getInt(cursor1.getColumnIndexOrThrow(colMaxSickness));
+			int battleLevel = cursor1.getInt(cursor1.getColumnIndexOrThrow(colBattleLevel));
+			int status = cursor1.getInt(cursor1.getColumnIndexOrThrow(colStatus));
+			long birthday = cursor1.getLong(cursor1.getColumnIndexOrThrow(colBirthday));
+			long age = cursor1.getLong(cursor1.getColumnIndexOrThrow(colAge));
+			int id = cursor1.getInt(cursor1.getColumnIndexOrThrow(colID));
 			
-			/* Change the null parameter to the equipped item */
+			String equippedItemName = cursor2.getString(cursor2.getColumnIndexOrThrow(colItemName));
+			int health = cursor2.getInt(cursor2.getColumnIndexOrThrow(colHealth));
+			int hunger = cursor2.getInt(cursor2.getColumnIndexOrThrow(colHunger));
+			int sickness = cursor2.getInt(cursor2.getColumnIndexOrThrow(colSickness));
+			int xp = cursor2.getInt(cursor2.getColumnIndexOrThrow(colXP));
+			String description = cursor2.getString(cursor2.getColumnIndexOrThrow(colDescription));
+			TextureRegion textureRegion = null;
+			Iterator it = table.entrySet().iterator();
+			while(it.hasNext()) {
+				Map.Entry pair = (Map.Entry) it.next();
+				textureRegion = pair.getValue();
+			}
+			
+			Item equippedItem = new Item(0, 0, textureRegion, equippedItemName, description, health, hunger, sickness, xp);
+			
+			
+			
 			return new Tamagotchi(curHealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness, maxSickness, 
-					battleLevel, status, birthday, null, age, id);
+					battleLevel, status, birthday, equippedItem, age, id);
 		}
 		
 		public Cursor retreatIPO() {
@@ -359,12 +402,38 @@ public class DBAdapter {
 		}
 		
 		public Cursor retreatItems() {
-			return db.query(ItemTable, new String[] {colItemID, colCategory, colItemName, colHealth, colHunger, 
+			return db.query(ItemTable, new String[] {colItemID, colItemName, colHealth, colHunger, 
 					colHunger, colSickness, colXP, colDescription}, null, null, null, null,  null);
 		}
 		
-		public Cursor retreatBackpack() {
-			return db.query(BackpackTable, new String[] {colItemName2, colQuantity}, null, null, null, null, null);
+		public ArrayList<Map<String, Integer>> retreatBackpack() {
+			Cursor c = db.query(BackpackTable, new String[] {colItemName2, colQuantity}, null, null, null, null, null);
+			
+			
+			if(c != null) {
+				c.moveToFirst();
+			}
+			
+			return this.getBackpack(c);
+		}
+		
+		private ArrayList<Map<String, Integer>> getBackpack(Cursor c){
+			
+			ArrayList<Map<String, Integer>> resultSet = new ArrayList<Map<String, Integer>>();
+			
+			c.moveToFirst();
+			Map<String, Integer> m;
+			if(!c.isAfterLast()) {
+				do {
+					int quantity = c.getInt(c.getColumnIndexOrThrow(colQuantity));
+					String itemName = c.getString(c.getColumnIndexOrThrow(colItemName2));
+					m = new HashMap<String, Integer>();
+					m.put(itemName, quantity);
+					resultSet.add(m);
+				} while(c.moveToNext());
+			}
+			
+			return resultSet;
 		}
 	}
 }
