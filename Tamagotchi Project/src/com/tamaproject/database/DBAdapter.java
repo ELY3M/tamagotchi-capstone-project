@@ -1,9 +1,5 @@
 package com.tamaproject.database;
 
-import com.tamaproject.entity.Backpack;
-import com.tamaproject.entity.Item;
-import com.tamaproject.entity.Tamagotchi;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -20,6 +16,9 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import com.tamaproject.entity.Item;
+import com.tamaproject.entity.Tamagotchi;
 
 
 /**
@@ -76,15 +75,15 @@ public class DBAdapter {
 	private static final int dbVersion = 1;
 	private static final String tag = "DBAdapter";
 	
-	private static final String createTamaTable = "create table "+TamaTable+" (_id integer primary key autoincrement, curHealth integer" +
+	private static final String createTamaTable = "create table "+TamaTable+" (_id integer primary key autoincrement, curHealth integer " +
 			"not null, maxHealth integer not null, curHunger integer not null, maxHunger integer not null, curXP integer not null, " +
-			"maxXP integer not null, curSickness integer not null, maxSickness integer not null, poop integer not null, battleLevel" +
+			"maxXP integer not null, curSickness integer not null, maxSickness integer not null, battleLevel " +
 			"integer not null, status integer not null, birthday integer not null, equippedItem text not null, age integer not null, filePath text);";
 	
 	private static final String createIPOTable = "create table "+IPOTable+" (_id integer primary key autoincrement, xCoord float" +
 			"not null, yCoord float not null, itemName text not null);";
 	
-	private static final String createItemTable = "create table "+ItemTable+" (_id integer primary key autoincrement " +
+	private static final String createItemTable = "create table "+ItemTable+" (_id integer primary key autoincrement, " +
 			"itemName text unique not null, health integer not null, " +
 			"hunger integer not null, sickness integer not null, xp integer not null, description text not null);";
 	
@@ -337,7 +336,7 @@ public class DBAdapter {
 		 * @param id
 		 * @return
 		 */
-		public Tamagotchi retrieveTama(int id, Hashtable<String, TextureRegion> table) {
+		public Tamagotchi retrieveTama(int id) {
 			Cursor cursor1 =  db.query(true, TamaTable, new String[] {colID,colCurHealth, colMaxHealth, 
 					colCurHunger, colMaxHunger, colCurXP, colMaxXP, colCurSickness, 
 					colMaxSickness, colBattleLevel, colStatus, colBirthday, colEquippedItem, colAge}, colID+"="+id, null, null, null, null, null);
@@ -354,7 +353,7 @@ public class DBAdapter {
 				cursor3.moveToFirst();
 			}
 			
-			return this.loadTama(cursor1, cursor2, cursor3, table);
+			return this.loadTama(cursor1, cursor2, cursor3);
 			
 		}
 		
@@ -365,7 +364,7 @@ public class DBAdapter {
 		 * @param cursor
 		 * @returns the tamagotchi object
 		 */
-		Tamagotchi loadTama(Cursor cursor1, Cursor cursor2, Cursor cursor3, Hashtable<String, TextureRegion> table) {
+		Tamagotchi loadTama(Cursor cursor1, Cursor cursor2, Cursor cursor3) {
 				
 			int curHealth = cursor1.getInt(cursor1.getColumnIndexOrThrow(colCurHealth));
 			int maxHealth = cursor1.getInt(cursor1.getColumnIndexOrThrow(colMaxHealth));
@@ -387,8 +386,8 @@ public class DBAdapter {
 			int sickness = cursor2.getInt(cursor2.getColumnIndexOrThrow(colSickness));
 			int xp = cursor2.getInt(cursor2.getColumnIndexOrThrow(colXP));
 			String description = cursor2.getString(cursor2.getColumnIndexOrThrow(colDescription));
-			TextureRegion textureRegion = table.get(cursor3.getString(cursor3.getColumnIndexOrThrow(colFileName)));
-			
+			//TextureRegion textureRegion = table.get(cursor3.getString(cursor3.getColumnIndexOrThrow(colFileName)));
+			TextureRegion textureRegion = null;
 			Item equippedItem = new Item(0, 0, textureRegion, equippedItemName, description, health, hunger, sickness, xp);
 			
 			

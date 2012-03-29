@@ -48,6 +48,20 @@ public class Item extends Sprite
 	this.xp = xp;
     }
 
+    public Item(float pX, float pY, TextureRegion pTextureRegion, String name, String description,
+	    int health, int hunger, int sickness, int xp, int type, int protection)
+    {
+	super(pX, pY, pTextureRegion);
+	this.name = name;
+	this.description = description;
+	this.health = health;
+	this.hunger = hunger;
+	this.sickness = sickness;
+	this.xp = xp;
+	this.type = type;
+	this.protection = protection;
+    }
+
     private void setDefault()
     {
 	this.name = "Dummy";

@@ -59,17 +59,17 @@ public class Tamagotchi
      */
     private void setDefault()
     {
-	this.currentHealth = 75;
+	this.currentHealth = 100;
 	this.maxHealth = 100;
 	this.currentHunger = 10;
 	this.maxHunger = 100;
 	this.currentXP = 10;
 	this.maxXP = 100;
-	this.currentSickness = 10;
+	this.currentSickness = 0;
 	this.maxSickness = 100;
 	this.battleLevel = 1;
 	this.status = Tamagotchi.ALIVE;
-	this.birthday = 1325376000000l;
+	this.birthday = System.currentTimeMillis();
 	this.age = 0;
 	this.id = 1;
     }
