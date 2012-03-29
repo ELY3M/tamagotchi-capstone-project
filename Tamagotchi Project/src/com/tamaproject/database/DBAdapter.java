@@ -410,18 +410,17 @@ public class DBAdapter {
 		 * @param table
 		 * @return an arraylist with item object and the quantity for each object
 		 */
-		public ArrayList<Map<Object, Integer>> getBackpack(Hashtable<String, TextureRegion> table) {
+		public ArrayList<Item> getBackpack(Hashtable<String, TextureRegion> table) {
 			Cursor c = db.query(BackpackTable, new String[] {colItemName2, colQuantity}, null, null, null, null, null);
 			Cursor c2 = db.query(ItemTable, new String[] {colItemName, colHealth, colHunger, colSickness, colXP, colDescription}, 
 					colItemName+"="+c.getString(c.getColumnIndexOrThrow(colItemName2)), null, null, null, null);
 			Cursor c3 = db.query(FilenameTable, new String[] {colFileName}, colItemName3+"="+c2.getString(c2.getColumnIndexOrThrow(colEquippedItem)), 
 					null, null, null, null);
 			
-			ArrayList<Map<Object, Integer>> resultSet = new ArrayList<Map<Object, Integer>>();
+			ArrayList<Item> resultSet = new ArrayList<Item>();
 			c.moveToFirst();
 			c2.moveToFirst();
 			c3.moveToFirst();
-			Map<Object, Integer> m;
 			
 			if(!c.isAfterLast() && !c2.isAfterLast() && !c3.isAfterLast()) {
 				do {
@@ -434,9 +433,7 @@ public class DBAdapter {
 					TextureRegion textureRegion = table.get(c3.getString(c3.getColumnIndexOrThrow(colFileName)));
 					int quantity = c.getInt(c.getColumnIndexOrThrow(colQuantity));
 					Item i = new Item(0, 0, textureRegion, itemName, description, health, hunger, sickness, xp);
-					m = new HashMap<Object, Integer>();
-					m.put(i, quantity);
-					resultSet.add(m);
+					resultSet.add(i);
 				} while(c.moveToNext() && c2.moveToNext() && c3.moveToNext());
 			}
 			return resultSet;
