@@ -68,7 +68,7 @@ public class DBAdapter {
 	public static final String colQuantity = "quantity";
 	private static final String BackpackTable = "Backpack";
 	
-	public static final String colSpriteName = "spriteName";
+	public static final String colItemName3 = "itemName";
 	public static final String colFileName = "filename";
 	private static final String FilenameTable = "Filename";
 	
@@ -91,7 +91,7 @@ public class DBAdapter {
 	private static final String createBackpackTable = "create table "+BackpackTable+" (itemName text unique not null, quantity integer" +
 			"not null);";
 	
-	private static final String createFilenameTable = "create table "+FilenameTable+" (spriteName text unique not null, filename text not null);";
+	private static final String createFilenameTable = "create table "+FilenameTable+" (itemName text unique not null, filename text not null);";
 	
 	
 	private final Context context;
@@ -344,12 +344,16 @@ public class DBAdapter {
 			Cursor cursor2 = db.query(ItemTable, new String[] {colItemName, colHealth, colHunger, colSickness, colXP, colDescription},
 					colItemName+"="+cursor1.getString(cursor1.getColumnIndexOrThrow(colEquippedItem)), null, null, null, null);
 			
-			if(cursor1 != null && cursor2 != null) {
+			Cursor cursor3 = db.query(FilenameTable, new String[] {colFileName}, colItemName3+"="+cursor1.getString(cursor1.getColumnIndexOrThrow(colEquippedItem)), 
+					null, null, null, null);
+			
+			if(cursor1 != null && cursor2 != null && cursor3 != null) {
 				cursor1.moveToFirst();
 				cursor2.moveToFirst();
+				cursor3.moveToFirst();
 			}
 			
-			return this.loadTama(cursor1, cursor2, table);
+			return this.loadTama(cursor1, cursor2, cursor3, table);
 			
 		}
 		
@@ -360,7 +364,7 @@ public class DBAdapter {
 		 * @param cursor
 		 * @returns the tamagotchi object
 		 */
-		Tamagotchi loadTama(Cursor cursor1, Cursor cursor2, Hashtable<String, TextureRegion> table) {
+		Tamagotchi loadTama(Cursor cursor1, Cursor cursor2, Cursor cursor3, Hashtable<String, TextureRegion> table) {
 				
 			int curHealth = cursor1.getInt(cursor1.getColumnIndexOrThrow(colCurHealth));
 			int maxHealth = cursor1.getInt(cursor1.getColumnIndexOrThrow(colMaxHealth));
@@ -382,12 +386,7 @@ public class DBAdapter {
 			int sickness = cursor2.getInt(cursor2.getColumnIndexOrThrow(colSickness));
 			int xp = cursor2.getInt(cursor2.getColumnIndexOrThrow(colXP));
 			String description = cursor2.getString(cursor2.getColumnIndexOrThrow(colDescription));
-			TextureRegion textureRegion = null;
-			Iterator it = table.entrySet().iterator();
-			while(it.hasNext()) {
-				Map.Entry pair = (Map.Entry) it.next();
-				textureRegion = pair.getValue();
-			}
+			TextureRegion textureRegion = table.get(cursor3.getString(cursor3.getColumnIndexOrThrow(colFileName)));
 			
 			Item equippedItem = new Item(0, 0, textureRegion, equippedItemName, description, health, hunger, sickness, xp);
 			
@@ -403,36 +402,43 @@ public class DBAdapter {
 		
 		public Cursor retreatItems() {
 			return db.query(ItemTable, new String[] {colItemID, colItemName, colHealth, colHunger, 
-					colHunger, colSickness, colXP, colDescription}, null, null, null, null,  null);
+					colSickness, colXP, colDescription}, null, null, null, null,  null);
 		}
 		
-		public ArrayList<Map<String, Integer>> retreatBackpack() {
+		/**
+		 * retrieves the backpack items from last saved and places them into an arraylist
+		 * @param table
+		 * @return an arraylist with item object and the quantity for each object
+		 */
+		public ArrayList<Map<Object, Integer>> getBackpack(Hashtable<String, TextureRegion> table) {
 			Cursor c = db.query(BackpackTable, new String[] {colItemName2, colQuantity}, null, null, null, null, null);
+			Cursor c2 = db.query(ItemTable, new String[] {colItemName, colHealth, colHunger, colSickness, colXP, colDescription}, 
+					colItemName+"="+c.getString(c.getColumnIndexOrThrow(colItemName2)), null, null, null, null);
+			Cursor c3 = db.query(FilenameTable, new String[] {colFileName}, colItemName3+"="+c2.getString(c2.getColumnIndexOrThrow(colEquippedItem)), 
+					null, null, null, null);
 			
-			
-			if(c != null) {
-				c.moveToFirst();
-			}
-			
-			return this.getBackpack(c);
-		}
-		
-		private ArrayList<Map<String, Integer>> getBackpack(Cursor c){
-			
-			ArrayList<Map<String, Integer>> resultSet = new ArrayList<Map<String, Integer>>();
-			
+			ArrayList<Map<Object, Integer>> resultSet = new ArrayList<Map<Object, Integer>>();
 			c.moveToFirst();
-			Map<String, Integer> m;
-			if(!c.isAfterLast()) {
-				do {
-					int quantity = c.getInt(c.getColumnIndexOrThrow(colQuantity));
-					String itemName = c.getString(c.getColumnIndexOrThrow(colItemName2));
-					m = new HashMap<String, Integer>();
-					m.put(itemName, quantity);
-					resultSet.add(m);
-				} while(c.moveToNext());
-			}
+			c2.moveToFirst();
+			c3.moveToFirst();
+			Map<Object, Integer> m;
 			
+			if(!c.isAfterLast() && !c2.isAfterLast() && !c3.isAfterLast()) {
+				do {
+					String itemName = c2.getString(c2.getColumnIndexOrThrow(colItemName));
+					int health = c2.getInt(c2.getColumnIndexOrThrow(colHealth));
+					int hunger = c2.getInt(c2.getColumnIndexOrThrow(colHunger));
+					int sickness = c2.getInt(c2.getColumnIndexOrThrow(colSickness));
+					int xp = c2.getInt(c2.getColumnIndexOrThrow(colXP));
+					String description = c2.getString(c2.getColumnIndexOrThrow(colDescription));
+					TextureRegion textureRegion = table.get(c3.getString(c3.getColumnIndexOrThrow(colFileName)));
+					int quantity = c.getInt(c.getColumnIndexOrThrow(colQuantity));
+					Item i = new Item(0, 0, textureRegion, itemName, description, health, hunger, sickness, xp);
+					m = new HashMap<Object, Integer>();
+					m.put(i, quantity);
+					resultSet.add(m);
+				} while(c.moveToNext() && c2.moveToNext() && c3.moveToNext());
+			}
 			return resultSet;
 		}
 	}
