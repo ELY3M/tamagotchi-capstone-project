@@ -133,6 +133,7 @@ public class DBAdapter {
 			db.execSQL("drop table if exists Backpack");
 			onCreate(db);
 		}
+	}
 		
 		/**
 		 * Opens the database
@@ -140,7 +141,7 @@ public class DBAdapter {
 		 * @return
 		 * @throws SQLException
 		 */
-		public DatabaseHelper open() throws SQLException {
+		public DBAdapter open() throws SQLException {
 			db = DBHelper.getWritableDatabase();
 			return this;
 		}
@@ -408,7 +409,7 @@ public class DBAdapter {
 		/**
 		 * retrieves the backpack items from last saved and places them into an arraylist
 		 * @param table
-		 * @return an arraylist with item object and the quantity for each object
+		 * @return an arraylist of item objects
 		 */
 		public ArrayList<Item> getBackpack(Hashtable<String, TextureRegion> table) {
 			Cursor c = db.query(BackpackTable, new String[] {colItemName2, colQuantity}, null, null, null, null, null);
@@ -438,5 +439,4 @@ public class DBAdapter {
 			}
 			return resultSet;
 		}
-	}
 }
