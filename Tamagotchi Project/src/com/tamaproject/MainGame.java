@@ -736,7 +736,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadTama(final int centerX, final int centerY)
     {
-	Tamagotchi tempTama = dbHelper.loadTama(1);
+	Tamagotchi tempTama = dbHelper.loadTama(1, listTR);
 	if (tempTama != null)
 	{
 	    Debug.d("Tama loaded from database!");
@@ -745,6 +745,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
 	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
 	    this.tama.getSprite().setScale(1.00f);
+	    if(this.tama.getEquippedItem()!=null)
+	    {
+		this.tama.getEquippedItem().setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
+		tama.getSprite().attachChild(this.tama.getEquippedItem());
+	    }
 	}
 
 	if (firstRun)

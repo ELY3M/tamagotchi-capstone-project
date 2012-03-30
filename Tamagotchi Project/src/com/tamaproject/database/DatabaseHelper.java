@@ -289,7 +289,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
      * @param id
      * @return a Tamagotchi object
      */
-    public Tamagotchi loadTama(int id)
+    public Tamagotchi loadTama(int id, Hashtable<String, TextureRegion> table)
     {
 	try
 	{
@@ -335,8 +335,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		    int protection = c2.getInt(c2.getColumnIndex("protection"));
 		    int type = c2.getInt(c2.getColumnIndex("type"));
 		    String description = c2.getString(c2.getColumnIndex("description"));
-		    // TextureRegion textureRegion = table.get(cursor3.getString(cursor3.getColumnIndex(colFileName)));
-		    TextureRegion textureRegion = null;
+		    TextureRegion textureRegion = table.get(c3.getString(c3.getColumnIndex("filename")));
 
 		    equippedItem = new Item(0, 0, textureRegion, equippedItemName, description, health, hunger, sickness, xp, type, protection);
 		}
@@ -387,6 +386,8 @@ public class DatabaseHelper extends SQLiteOpenHelper
      */
     public long insertParseTable(Map<String, Integer> table)
     {
+	db.delete("Backpack", null, null);
+
 	Iterator it = table.entrySet().iterator();
 	ContentValues bp = new ContentValues();
 	long success = 0;
