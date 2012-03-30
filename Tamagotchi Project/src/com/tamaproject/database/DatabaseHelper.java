@@ -246,18 +246,14 @@ public class DatabaseHelper extends SQLiteOpenHelper
     	long age = t.getAge();
     	if(t.getEquippedItemName() == "None") {
     		equippedItem = null;
-    		db.execSQL("insert into Tamagotchi (_id, curhealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness" +
-    				"maxSickness, battleLevel, status, birthday, equippedItem, age) values("+id+", "+curHealth+", "+maxHealth+", "
-    				+curHunger+", "+maxHunger+", "+curXP+", "+maxXP+", "+curSickness+", "+maxSickness+", "+battleLevel+", "+
-    				status+", "+birthday+", "+equippedItem+", "+age+")");
     	}
     	else {
     		equippedItem = t.getEquippedItemName();
-    		db.execSQL("insert into Tamagotchi (_id, curhealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness" +
-    				"maxSickness, battleLevel, status, birthday, equippedItem, age) values("+id+", "+curHealth+", "+maxHealth+", "
-    				+curHunger+", "+maxHunger+", "+curXP+", "+maxXP+", "+curSickness+", "+maxSickness+", "+battleLevel+", "+
-    				status+", "+birthday+", "+equippedItem+", "+age+")");
     	}
+    	db.execSQL("insert into Tamagotchi (_id, curhealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness" +
+				"maxSickness, battleLevel, status, birthday, equippedItem, age) values("+id+", "+curHealth+", "+maxHealth+", "
+				+curHunger+", "+maxHunger+", "+curXP+", "+maxXP+", "+curSickness+", "+maxSickness+", "+battleLevel+", "+
+				status+", "+birthday+", "+equippedItem+", "+age+")");
     	
 	/*ContentValues initialValues = new ContentValues();
 	initialValues.put("_id", t.getID());
