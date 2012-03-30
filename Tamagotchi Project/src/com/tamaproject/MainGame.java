@@ -259,7 +259,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	try
 	{
-	    dbHelper.createDatabase();
+	    DatabaseHelper.createDatabaseIfNotExists(this);
 	    Debug.d("createDatabase()");
 	} catch (IOException e)
 	{
@@ -291,10 +291,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.thoughtBubble = new Sprite(tama.getSprite().getWidth(), -tama.getSprite().getHeight(), listTR.get("thought_bubble.png"));
 	this.tama.getSprite().attachChild(this.thoughtBubble);
 	this.thoughtBubble.setVisible(false);
-
-	final Item eItem = new GameItem(0, 0, this.listTR.get("treasure.png"));
-	eItem.setType(Item.EQUIP);
-	equipItem(eItem, false);
 
 	this.mainLayers.add(mainLayer);
 	this.mainLayers.add(weatherLayer);
@@ -653,12 +649,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	super.onPause();
 	this.mEngine.stop();
 	totalPlayTime += System.currentTimeMillis() - startPlayTime;
-	dbHelper.insertTama(tama);
-	
-	/*if (dbHelper.insertTama(tama) < 0)
-	    Debug.d("Save Tama failed!");
+
+	long result = dbHelper.insertTama(tama);
+	if (result < 0)
+	    Debug.d("Save Tama failed! " + result);
 	else
-	    Debug.d("Save Tama success!");*/
+	    Debug.d("Save Tama success! " + result);
     }
 
     @Override
