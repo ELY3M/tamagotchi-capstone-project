@@ -653,11 +653,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	super.onPause();
 	this.mEngine.stop();
 	totalPlayTime += System.currentTimeMillis() - startPlayTime;
-
-	if (dbHelper.insertTama(tama) < 0)
+	dbHelper.insertTama(tama);
+	
+	/*if (dbHelper.insertTama(tama) < 0)
 	    Debug.d("Save Tama failed!");
 	else
-	    Debug.d("Save Tama success!");
+	    Debug.d("Save Tama success!");*/
     }
 
     @Override

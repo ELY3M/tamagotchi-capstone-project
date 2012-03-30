@@ -231,6 +231,27 @@ public class DatabaseHelper extends SQLiteOpenHelper
      */
     public long insertTama(Tamagotchi t)
     {
+    	String equippedItem;
+    	/*int id = t.getID();
+    	int curHealth = t.getCurrentHealth();
+    	int maxHealth = t.getMaxHealth();
+    	int curHunger = t.getCurrentHunger();
+    	int maxHunger = t.getMaxHunger();
+    	int curXP = t.getCurrentXP();
+    	int maxXP = t.getMaxXP();
+    	int curSickness = t.getCurrentSickness();
+    	int maxSickness = t.getMaxSickness();
+    	int battleLevel = t.getBattleLevel();
+    	int status = t.getStatus();
+    	long birthday = t.getBirthday();
+    	long age = t.getAge();*/
+    	if(t.getEquippedItemName() == "None") {
+    		equippedItem = null;
+    	}
+    	else {
+    		equippedItem = t.getEquippedItemName();
+    	}
+    	
 	ContentValues initialValues = new ContentValues();
 	initialValues.put("_id", t.getID());
 	initialValues.put("curHealth", t.getCurrentHealth());
@@ -245,7 +266,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	initialValues.put("battleLevel", t.getBattleLevel());
 	initialValues.put("status", t.getStatus());
 	initialValues.put("birthday", t.getBirthday());
-	initialValues.put("equippedItem", t.getEquippedItemName());
+	initialValues.put("equippedItem", equippedItem);
 	initialValues.put("age", t.getAge());
 	long success = db.insert("Tamagotchi", null, initialValues);
 
