@@ -249,20 +249,32 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public Scene onLoadScene()
     {
-    	try {
-    		dbHelper = new DatabaseHelper(this);
-    	} catch(IOException e) {
-    		e.printStackTrace();
-    	}
-    	
-    	try {
-    		dbHelper.createDatabase();
-    	} catch(IOException e) {
-    		e.printStackTrace();
-    	}
-    	
-    	dbHelper.openDatabase();
-    	
+	try
+	{
+	    dbHelper = new DatabaseHelper(this);
+	} catch (IOException e)
+	{
+	    e.printStackTrace();
+	}
+
+	try
+	{
+	    dbHelper.createDatabase();
+	    Debug.d("createDatabase()");
+	} catch (IOException e)
+	{
+	    e.printStackTrace();
+	}
+
+	try
+	{
+	    dbHelper.openDatabase();
+	    Debug.d("openDatabase()");
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+
 	// this.mEngine.registerUpdateHandler(new FPSLogger());
 
 	// Enable vibration
@@ -641,6 +653,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	super.onPause();
 	this.mEngine.stop();
 	totalPlayTime += System.currentTimeMillis() - startPlayTime;
+
+	if (dbHelper.insertTama(tama) < 0)
+	    Debug.d("Save Tama failed!");
+	else
+	    Debug.d("Save Tama success!");
     }
 
     @Override
@@ -716,6 +733,16 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadTama(final int centerX, final int centerY)
     {
+	Tamagotchi tempTama = dbHelper.loadTama(1);
+	if (tempTama != null)
+	{
+	    firstRun = false;
+	    this.tama = tempTama;
+	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
+	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
+	    this.tama.getSprite().setScale(1.00f);
+	}
+
 	if (firstRun)
 	{
 	    this.tama = new Tamagotchi();
