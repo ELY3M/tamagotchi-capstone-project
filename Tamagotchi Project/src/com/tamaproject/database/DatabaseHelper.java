@@ -288,6 +288,27 @@ public class DatabaseHelper extends SQLiteOpenHelper
      */
     public int saveTama(Tamagotchi t)
     {
+    	
+    	String equippedItem;
+    	/*int id = t.getID();
+    	int curHealth = t.getCurrentHealth();
+    	int maxHealth = t.getMaxHealth();
+    	int curHunger = t.getCurrentHunger();
+    	int maxHunger = t.getMaxHunger();
+    	int curXP = t.getCurrentXP();
+    	int maxXP = t.getMaxXP();
+    	int curSickness = t.getCurrentSickness();
+    	int maxSickness = t.getMaxSickness();
+    	int battleLevel = t.getBattleLevel();
+    	int status = t.getStatus();
+    	long birthday = t.getBirthday();
+    	long age = t.getAge();*/
+    	if(t.getEquippedItemName() == "None") {
+    		equippedItem = null;
+    	}
+    	else {
+    		equippedItem = t.getEquippedItemName();
+    	}
 	ContentValues args = new ContentValues();
 	args.put("_id", t.getID());
 	args.put("curHealth", t.getCurrentHealth());
@@ -302,7 +323,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	args.put("battleLevel", t.getBattleLevel());
 	args.put("status", t.getStatus());
 	args.put("birthday", t.getBirthday());
-	args.put("equippedItem", t.getEquippedItemName());
+	args.put("equippedItem", equippedItem);
 	args.put("age", t.getAge());
 	return db.update("Tamagotchi", args, "_id = " + t.getID(), null);
     }
@@ -317,16 +338,16 @@ public class DatabaseHelper extends SQLiteOpenHelper
     {
 	try
 	{
+		
 	    Cursor c = db.rawQuery("Select _id, curHealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness," + "maxSickness, battleLevel, status, birthday, equippedItem, age from Tamagotchi where _id = " + id, null);
-	    Cursor c2 = db.rawQuery("Select _id, itemName, health, hunger, sickness, xp, protection, type, description " + "where itemName = " + c.getString(c.getColumnIndex("equippedItem")), null);
-	    Cursor c3 = db.rawQuery("Select itemName, filename from Filenames where itemName = " + c.getString(c.getColumnIndex("equippedItem")), null);
-	    if (c != null && c2 != null && c3 != null)
+	    
+	    
+	    
+	    if (c != null)
 	    {
 		c.moveToFirst();
-		c2.moveToFirst();
-		c3.moveToFirst();
 	    }
-
+	    
 	    int curHealth = c.getInt(c.getColumnIndex("curHealth"));
 	    int maxHealth = c.getInt(c.getColumnIndex("maxHealth"));
 	    int curHunger = c.getInt(c.getColumnIndex("curHunger"));
@@ -339,21 +360,34 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	    int status = c.getInt(c.getColumnIndex("stauts"));
 	    long birthday = c.getLong(c.getColumnIndex("birthday"));
 	    long age = c.getLong(c.getColumnIndex("age"));
-
-	    String equippedItemName = c2.getString(c2.getColumnIndex("itemName"));
-	    int health = c2.getInt(c2.getColumnIndex("health"));
-	    int hunger = c2.getInt(c2.getColumnIndex("hunger"));
-	    int sickness = c2.getInt(c2.getColumnIndex("sickness"));
-	    int xp = c2.getInt(c2.getColumnIndex("xp"));
-	    int protection = c2.getInt(c2.getColumnIndex("protection"));
-	    int type = c2.getInt(c2.getColumnIndex("type"));
-	    String description = c2.getString(c2.getColumnIndex("description"));
-	    // TextureRegion textureRegion = table.get(cursor3.getString(cursor3.getColumnIndex(colFileName)));
-	    TextureRegion textureRegion = null;
-	    Item equippedItem = new Item(0, 0, textureRegion, equippedItemName, description, health, hunger, sickness, xp, type, protection);
-
-	    return new Tamagotchi(curHealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness, maxSickness, battleLevel, status, birthday, equippedItem, age, id);
-
+	    
+	    if(c.getString(c.getColumnIndex("equippedItem")) == null) {
+	    	return new Tamagotchi(curHealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness, maxSickness, battleLevel, status, birthday, null, age, id);
+	    }
+	    else {
+	    	Cursor c2 = db.rawQuery("Select _id, itemName, health, hunger, sickness, xp, protection, type, description " + "where itemName = " + c.getString(c.getColumnIndex("equippedItem")), null);
+	    	Cursor c3 = db.rawQuery("Select itemName, filename from Filenames where itemName = " + c.getString(c.getColumnIndex("equippedItem")), null);
+	    	if(c2 != null && c3 != null) {
+	    		c2.moveToFirst();
+	    		c3.moveToFirst();
+	    	}
+	    	
+	    	String equippedItemName = c2.getString(c2.getColumnIndex("itemName"));
+		    int health = c2.getInt(c2.getColumnIndex("health"));
+		    int hunger = c2.getInt(c2.getColumnIndex("hunger"));
+		    int sickness = c2.getInt(c2.getColumnIndex("sickness"));
+		    int xp = c2.getInt(c2.getColumnIndex("xp"));
+		    int protection = c2.getInt(c2.getColumnIndex("protection"));
+		    int type = c2.getInt(c2.getColumnIndex("type"));
+		    String description = c2.getString(c2.getColumnIndex("description"));
+		    // TextureRegion textureRegion = table.get(cursor3.getString(cursor3.getColumnIndex(colFileName)));
+		    TextureRegion textureRegion = null;
+		    
+		   
+		   	Item equippedItem = new Item(0, 0, textureRegion, equippedItemName, description, health, hunger, sickness, xp, type, protection);
+		    return new Tamagotchi(curHealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness, maxSickness, battleLevel, status, birthday, equippedItem, age, id);
+	    }
+	    
 	} catch (Exception e)
 	{
 	    System.err.println(e);
