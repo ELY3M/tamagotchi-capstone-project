@@ -198,7 +198,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private ChangeableText backpackLabel;
     private Rectangle backpackBackground;
 
-    private boolean vibrateOn = false;
+    private boolean vibrateOn = true;
 
     private List<String> notificationList = new LinkedList<String>();
 
@@ -745,8 +745,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
 	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
 	    this.tama.getSprite().setScale(1.00f);
-	    if(this.tama.getEquippedItem()!=null)
+	    if (this.tama.getEquippedItem() != null)
 	    {
+		this.tama.setEquippedItem(new GameItem(this.tama.getEquippedItem()));
 		this.tama.getEquippedItem().setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
 		tama.getSprite().attachChild(this.tama.getEquippedItem());
 	    }
@@ -1952,7 +1953,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	/**
 	 * Timer to generate poop
 	 */
-	this.mScene.registerUpdateHandler(new TimerHandler(5, true, new ITimerCallback()
+	this.mScene.registerUpdateHandler(new TimerHandler(60, true, new ITimerCallback()
 	{
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
