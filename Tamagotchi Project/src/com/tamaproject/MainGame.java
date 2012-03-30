@@ -207,7 +207,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private boolean firstRun = true;
 
-    private DatabaseHelper dbHelper = new DatabaseHelper(this);
+    private DatabaseHelper dbHelper;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -249,6 +249,20 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public Scene onLoadScene()
     {
+    	try {
+    		dbHelper = new DatabaseHelper(this);
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    	}
+    	
+    	try {
+    		dbHelper.createDatabase();
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    	}
+    	
+    	dbHelper.openDatabase();
+    	
 	// this.mEngine.registerUpdateHandler(new FPSLogger());
 
 	// Enable vibration

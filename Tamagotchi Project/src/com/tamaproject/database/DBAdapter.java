@@ -1,5 +1,9 @@
 package com.tamaproject.database;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -14,6 +18,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
@@ -28,7 +33,7 @@ import com.tamaproject.entity.Tamagotchi;
  *
  */
 
-public class DBAdapter {
+public class DBAdapter extends SQLiteOpenHelper {
 	
 	public static final String colID = "_id";
 	public static final String colCurHealth = "curHealth";
@@ -60,6 +65,8 @@ public class DBAdapter {
 	public static final String colHunger = "hunger";
 	public static final String colSickness = "sickness";
 	public static final String colXP = "xp";
+	public static final String colProtection = "protection";
+	public static final String colType = "type";
 	public static final String colDescription = "description";
 	private static final String ItemTable = "Items";
 	
@@ -71,21 +78,23 @@ public class DBAdapter {
 	public static final String colFileName = "filename";
 	private static final String FilenameTable = "Filename";
 	
-	private static final String dbName = "TamagotchiProject";
+	private static String DB_PATH = "/data/data/com.tamaproject/databases/";
+	private static final String DB_NAME = "tamagotchi";
 	private static final int dbVersion = 1;
 	private static final String tag = "DBAdapter";
 	
 	private static final String createTamaTable = "create table "+TamaTable+" (_id integer primary key autoincrement, curHealth integer " +
 			"not null, maxHealth integer not null, curHunger integer not null, maxHunger integer not null, curXP integer not null, " +
 			"maxXP integer not null, curSickness integer not null, maxSickness integer not null, battleLevel " +
-			"integer not null, status integer not null, birthday integer not null, equippedItem text not null, age integer not null, filePath text);";
+			"integer not null, status integer not null, birthday integer not null, equippedItem text not null, age integer not null);";
 	
 	private static final String createIPOTable = "create table "+IPOTable+" (_id integer primary key autoincrement, xCoord float" +
-			"not null, yCoord float not null, itemName text not null);";
+			"not null, yCoord float not null, itemName text not null, scale float not null);";
 	
 	private static final String createItemTable = "create table "+ItemTable+" (_id integer primary key autoincrement, " +
 			"itemName text unique not null, health integer not null, " +
-			"hunger integer not null, sickness integer not null, xp integer not null, description text not null);";
+			"hunger integer not null, sickness integer not null, xp integer not null, protection integer not null, " +
+			"type integer not null, description text not null);";
 	
 	private static final String createBackpackTable = "create table "+BackpackTable+" (itemName text unique not null, quantity integer" +
 			"not null);";
@@ -99,8 +108,62 @@ public class DBAdapter {
 	private static SQLiteDatabase db;
 	
 	public DBAdapter(Context ctx) {
+		super(ctx, DB_NAME, null, dbVersion);
 		this.context = ctx;
 		DBHelper = new DatabaseHelper(context);
+	}
+	
+	public void createDatabase() throws IOException {
+		boolean dbExist = checkDatabase();
+		
+		if(dbExist) {
+			System.out.println("Database Exists");
+		}
+		else {
+			this.getReadableDatabase();
+			
+			try {
+				copyDatabase();
+			} catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private boolean checkDatabase() {
+		SQLiteDatabase checkDB = null;
+		
+		try {
+			String path = DB_PATH + DB_NAME;
+			checkDB = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
+		} catch(SQLiteException e) {
+			e.printStackTrace();
+		}
+		
+		if(checkDB != null) {
+			checkDB.close();
+		}
+		
+		return checkDB != null ? true : false;
+	}
+	
+	private void copyDatabase() throws IOException {
+		InputStream input = context.getAssets().open(DB_NAME);
+		String outFileName = DB_PATH + DB_NAME;
+		OutputStream output = new FileOutputStream(outFileName);
+		byte[] buffer = new byte[1024];
+		int length;
+		while((length = input.read(buffer)) > 0) {
+			output.write(buffer, 0, length);
+		}
+		
+		output.flush();
+		output.close();
+		input.close();
+	}
+	
+	public void openDatabase() throws SQLiteException {
+		
 	}
 	
 	private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -111,7 +174,7 @@ public class DBAdapter {
 		 * @param context
 		 */
 		DatabaseHelper(Context context) {
-			super(context, dbName, null, dbVersion);
+			super(context, DB_NAME, null, dbVersion);
 		}
 		
 		@Override
