@@ -389,7 +389,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
     {
 	Iterator it = table.entrySet().iterator();
 	ContentValues bp = new ContentValues();
-	long success = (Long) null;
+	long success = 0;
 	while (it.hasNext())
 	{
 	    Map.Entry pair = (Map.Entry) it.next();
@@ -398,35 +398,20 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	    success = db.insert("Backpack", null, bp);
 	    if (success < 0)
 	    {
-		return success;
+		ContentValues args = new ContentValues();
+		args.put("quantity", (Integer) pair.getValue());
+		success = db.update("Backpack", args, "itemName = '" + pair.getKey() + "'", null);
+		if (success < 0)
+		    return success;
+		else
+		    System.out.println(pair.getKey() + " saved");
+	    }
+	    else
+	    {
+		System.out.println(pair.getKey() + " saved");
 	    }
 	}
 	return success;
-    }
-
-    /**
-     * saves the backpack into the database after the initial save
-     * 
-     * @param table
-     * @return true if save is successful else false
-     */
-    public boolean saveParseTable(Map<String, Integer> table)
-    {
-	Iterator it = table.entrySet().iterator();
-	ContentValues args = new ContentValues();
-	int success = (Integer) null;
-	while (it.hasNext())
-	{
-	    Map.Entry pair = (Map.Entry) it.next();
-	    args.put("itemName", (String) pair.getKey());
-	    args.put("quantity", (Integer) pair.getValue());
-	    success = db.update("Backpack", args, "itemName = " + pair.getKey(), null);
-	    if (success < 0)
-	    {
-		return false;
-	    }
-	}
-	return success > 0;
     }
 
     /**
@@ -437,34 +422,48 @@ public class DatabaseHelper extends SQLiteOpenHelper
      */
     public ArrayList<Item> getBackpack(Hashtable<String, TextureRegion> table)
     {
-	Cursor c = db.rawQuery("select itemName, quantity from Backpack", null);
-	Cursor c2 = db.rawQuery("select itemName, health, hunger, sickness, xp, protection, description " + "from Items where itemName = " + c.getString(c.getColumnIndex("itemName")), null);
-	Cursor c3 = db.rawQuery("select filename from Filenames where itemName = " + c2.getString(c2.getColumnIndex("itemName")), null);
-
-	ArrayList<Item> resultSet = new ArrayList<Item>();
-	c.moveToFirst();
-	c2.moveToFirst();
-	c3.moveToFirst();
-
-	if (!c.isAfterLast() && !c2.isAfterLast() && c3.isAfterLast())
+	System.out.println("Get Backpack");
+	try
 	{
-	    do
-	    {
-		String itemName = c2.getString(c2.getColumnIndex("itemName"));
-		int health = c2.getInt(c2.getColumnIndex("health"));
-		int hunger = c2.getInt(c2.getColumnIndex("hunger"));
-		int sickness = c2.getInt(c2.getColumnIndex("sickness"));
-		int xp = c2.getInt(c2.getColumnIndex("xp"));
-		int protection = c2.getInt(c2.getColumnIndex("protection"));
-		int type = c2.getInt(c2.getColumnIndex("type"));
-		String description = c2.getString(c2.getColumnIndex("description"));
+	    Cursor c = db.rawQuery("select itemName, quantity from Backpack", null);
+	    c.moveToFirst();
 
-		TextureRegion textureRegion = table.get(c3.getString(c3.getColumnIndex("filename")));
-		int quantity = c.getInt(c.getColumnIndex("quantity"));
-		Item i = new Item(0, 0, textureRegion, itemName, description, health, hunger, sickness, xp, type, protection);
-		resultSet.add(i);
-	    } while (c.moveToNext() && c2.moveToNext() && c3.moveToNext());
+	    ArrayList<Item> resultSet = new ArrayList<Item>();
+
+	    if (!c.isAfterLast())
+	    {
+		do
+		{
+		    Cursor c2 = db.rawQuery("select itemName, health, hunger, sickness, xp, protection, description, type from Items where itemName = '" + c.getString(c.getColumnIndex("itemName")) + "'", null);
+		    c2.moveToFirst();
+
+		    Cursor c3 = db.rawQuery("select filename from Filenames where itemName = '" + c2.getString(c2.getColumnIndex("itemName")) + "'", null);
+		    c3.moveToFirst();
+
+		    String itemName = c2.getString(c2.getColumnIndex("itemName"));
+		    int health = c2.getInt(c2.getColumnIndex("health"));
+		    int hunger = c2.getInt(c2.getColumnIndex("hunger"));
+		    int sickness = c2.getInt(c2.getColumnIndex("sickness"));
+		    int xp = c2.getInt(c2.getColumnIndex("xp"));
+		    int protection = c2.getInt(c2.getColumnIndex("protection"));
+		    int type = c2.getInt(c2.getColumnIndex("type"));
+		    String description = c2.getString(c2.getColumnIndex("description"));
+
+		    TextureRegion textureRegion = table.get(c3.getString(c3.getColumnIndex("filename")));
+		    int quantity = c.getInt(c.getColumnIndex("quantity"));
+		    for (int j = 0; j < quantity; j++)
+		    {
+			System.out.println("Adding " + itemName + " to backpack");
+			Item i = new Item(0, 0, textureRegion, itemName, description, health, hunger, sickness, xp, type, protection);
+			resultSet.add(i);
+		    }
+		} while (c.moveToNext());
+	    }
+	    return resultSet;
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	    return new ArrayList<Item>();
 	}
-	return resultSet;
     }
 }

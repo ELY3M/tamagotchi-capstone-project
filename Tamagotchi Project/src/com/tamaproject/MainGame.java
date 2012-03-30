@@ -655,6 +655,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    Debug.d("Save Tama failed! " + result);
 	else
 	    Debug.d("Save Tama success! " + result);
+
+	long resultBackpackSave = dbHelper.insertBackpack(bp.getItems());
+	if (resultBackpackSave < 0)
+	    Debug.d("Save backpack failed! " + resultBackpackSave);
+	else
+	    Debug.d("Save backpack success! " + resultBackpackSave);
     }
 
     @Override
@@ -733,6 +739,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	Tamagotchi tempTama = dbHelper.loadTama(1);
 	if (tempTama != null)
 	{
+	    Debug.d("Tama loaded from database!");
 	    firstRun = false;
 	    this.tama = tempTama;
 	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
@@ -1318,27 +1325,40 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadItems()
     {
-	final Item umbrella = new GameItem(0, 0, this.listTR.get("umbrella.png"), "Umbrella", "This item protects the Tamagotchi from the rain. blah blah blah more text lol", 0, 0, 0, 0);
-	umbrella.setType(Item.EQUIP);
-	umbrella.setProtection(Protection.RAIN);
-	this.bp.addItem(umbrella);
-
-	final Item newItem = new GameItem(0, 0, this.listTR.get("star.png"), "Level item", 7, 0, 0, 10000);
-	this.bp.addItem(newItem);
-
-	final Item cureAll = new GameItem(0, 0, this.listTR.get("bandaid.png"), "Cure All", 0, -10000, -10000, 0);
-	this.bp.addItem(cureAll);
-
-	final Item killTama = new GameItem(0, 0, this.listTR.get("skull.png"), "Kill Tama", "This item kills the Tamagotchi.", -10000, 0, 0, 0);
-	this.bp.addItem(killTama);
-
-	for (int i = 0; i < 26; i++)
+	ArrayList<Item> backpackItems = dbHelper.getBackpack(listTR);
+	if (backpackItems.isEmpty())
 	{
-	    Item item = new GameItem(0, 0, this.listTR.get("apple.png"), "Apple", 7, 0, 0, 0);
-	    this.bp.addItem(item);
-	}
+	    final Item umbrella = new GameItem(0, 0, this.listTR.get("umbrella.png"), "Umbrella", "This item protects the Tamagotchi from the rain. blah blah blah more text lol", 0, 0, 0, 0);
+	    umbrella.setType(Item.EQUIP);
+	    umbrella.setProtection(Protection.RAIN);
+	    this.bp.addItem(umbrella);
 
-	bp.resetPositions(cameraWidth, cameraHeight);
+	    final Item newItem = new GameItem(0, 0, this.listTR.get("star.png"), "Level item", 7, 0, 0, 10000);
+	    this.bp.addItem(newItem);
+
+	    final Item cureAll = new GameItem(0, 0, this.listTR.get("bandaid.png"), "Cure All", 0, -10000, -10000, 0);
+	    this.bp.addItem(cureAll);
+
+	    final Item killTama = new GameItem(0, 0, this.listTR.get("skull.png"), "Kill Tama", "This item kills the Tamagotchi.", -10000, 0, 0, 0);
+	    this.bp.addItem(killTama);
+
+	    for (int i = 0; i < 26; i++)
+	    {
+		Item item = new GameItem(0, 0, this.listTR.get("apple.png"), "Apple", 7, 0, 0, 0);
+		this.bp.addItem(item);
+	    }
+
+	    bp.resetPositions(cameraWidth, cameraHeight);
+	}
+	else
+	{
+	    Debug.d("Backpack loaded from database!");
+	    for (Item item : backpackItems)
+	    {
+		bp.addItem(new GameItem(item));
+	    }
+	    bp.resetPositions(cameraWidth, cameraHeight);
+	}
     }
 
     /**
@@ -2053,6 +2073,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private class GameItem extends Item
     {
+	public GameItem(Item item)
+	{
+	    super(item.getX(), item.getY(), item.getTextureRegion(), item.getName(), item.getDescription(), item.getHealth(), item.getHunger(), item.getSickness(), item.getXp(), item.getType(), item.getProtection());
+	}
+
 	public GameItem(float x, float y, TextureRegion textureRegion)
 	{
 	    super(x, y, textureRegion);
