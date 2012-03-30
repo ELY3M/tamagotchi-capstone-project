@@ -228,10 +228,10 @@ public class DatabaseHelper extends SQLiteOpenHelper
      * 
      * @param t
      */
-    public void insertTama(Tamagotchi t)
+    public long insertTama(Tamagotchi t)
     {
     	String equippedItem;
-    	int id = t.getID();
+    	/*int id = t.getID();
     	int curHealth = t.getCurrentHealth();
     	int maxHealth = t.getMaxHealth();
     	int curHunger = t.getCurrentHunger();
@@ -243,19 +243,19 @@ public class DatabaseHelper extends SQLiteOpenHelper
     	int battleLevel = t.getBattleLevel();
     	int status = t.getStatus();
     	long birthday = t.getBirthday();
-    	long age = t.getAge();
+    	long age = t.getAge();*/
     	if(t.getEquippedItemName() == "None") {
     		equippedItem = null;
     	}
     	else {
     		equippedItem = t.getEquippedItemName();
     	}
-    	db.execSQL("insert into Tamagotchi (_id, curhealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness" +
+    	/*db.execSQL("insert into Tamagotchi (_id, curhealth, maxHealth, curHunger, maxHunger, curXP, maxXP, curSickness" +
 				"maxSickness, battleLevel, status, birthday, equippedItem, age) values("+id+", "+curHealth+", "+maxHealth+", "
 				+curHunger+", "+maxHunger+", "+curXP+", "+maxXP+", "+curSickness+", "+maxSickness+", "+battleLevel+", "+
-				status+", "+birthday+", "+equippedItem+", "+age+")");
+				status+", "+birthday+", "+equippedItem+", "+age+")");*/
     	
-	/*ContentValues initialValues = new ContentValues();
+	ContentValues initialValues = new ContentValues();
 	initialValues.put("_id", t.getID());
 	initialValues.put("curHealth", t.getCurrentHealth());
 	initialValues.put("maxHealth", t.getMaxHealth());
@@ -265,7 +265,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	initialValues.put("maxXP", t.getMaxXP());
 	initialValues.put("curSickness", t.getCurrentSickness());
 	initialValues.put("maxSickness", t.getMaxSickness());
-	/* initialValues.put(colPoop, ); 
+	/* initialValues.put(colPoop, );*/ 
 	initialValues.put("battleLevel", t.getBattleLevel());
 	initialValues.put("status", t.getStatus());
 	initialValues.put("birthday", t.getBirthday());
@@ -280,7 +280,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	else
 	{
 	    return success;
-	}*/
+	}
     }
 
     /**
