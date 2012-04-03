@@ -87,6 +87,8 @@ import com.tamaproject.entity.Backpack;
 import com.tamaproject.entity.Item;
 import com.tamaproject.entity.Protection;
 import com.tamaproject.entity.Tamagotchi;
+import com.tamaproject.multiplayer.MultiplayerConstants;
+import com.tamaproject.multiplayer.TamaBattle;
 import com.tamaproject.util.TextUtil;
 import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
@@ -112,6 +114,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private static final int CONFIRM_QUITGAME = 1;
     private static final int CONFIRM_REMOVEITEM = 2;
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
+    private static final int TAMA_BATTLE_CODE = 1337;
     private static final boolean FULLSCREEN = true;
     private static final int MAX_NOTIFICATIONS = 5; // max notifications to display
 
@@ -650,17 +653,20 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.stop();
 	totalPlayTime += System.currentTimeMillis() - startPlayTime;
 
-	long result = dbHelper.insertTama(tama);
-	if (result < 0)
-	    Debug.d("Save Tama failed! " + result);
-	else
-	    Debug.d("Save Tama success! " + result);
+	if (dbHelper != null)
+	{
+	    long result = dbHelper.insertTama(tama);
+	    if (result < 0)
+		Debug.d("Save Tama failed! " + result);
+	    else
+		Debug.d("Save Tama success! " + result);
 
-	long resultBackpackSave = dbHelper.insertBackpack(bp.getItems());
-	if (resultBackpackSave < 0)
-	    Debug.d("Save backpack failed! " + resultBackpackSave);
-	else
-	    Debug.d("Save backpack success! " + resultBackpackSave);
+	    long resultBackpackSave = dbHelper.insertBackpack(bp.getItems());
+	    if (resultBackpackSave < 0)
+		Debug.d("Save backpack failed! " + resultBackpackSave);
+	    else
+		Debug.d("Save backpack success! " + resultBackpackSave);
+	}
     }
 
     @Override
@@ -676,17 +682,23 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	super.onDestroy();
 
-	int seconds = (int) (totalPlayTime / 1000) % 60;
-	int minutes = (int) ((totalPlayTime / (1000 * 60)) % 60);
-	int hours = (int) ((totalPlayTime / (1000 * 60 * 60)) % 24);
-	int days = (int) (totalPlayTime / (1000 * 60 * 60 * 24));
+	try
+	{
+	    int seconds = (int) (totalPlayTime / 1000) % 60;
+	    int minutes = (int) ((totalPlayTime / (1000 * 60)) % 60);
+	    int hours = (int) ((totalPlayTime / (1000 * 60 * 60)) % 24);
+	    int days = (int) (totalPlayTime / (1000 * 60 * 60 * 24));
 
-	Toast.makeText(this, "Total Playtime: " + days + " days, " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds", Toast.LENGTH_SHORT).show();
+	    Toast.makeText(this, "Total Playtime: " + days + " days, " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds", Toast.LENGTH_SHORT).show();
 
-	tama.addToAge(totalPlayTime);
+	    if (tama != null)
+		tama.addToAge(totalPlayTime);
 
-	stopGPS();
-	finish();
+	    stopGPS();
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
     }
 
     @Override
@@ -1059,7 +1071,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		if (pSceneTouchEvent.isActionDown())
 		{
-		    showNotification("Multiplayer is still in development!");
+		    Intent intent = new Intent(MainGame.this.getApplicationContext(), TamaBattle.class);
+		    intent.putExtra(MultiplayerConstants.BATTLE_LEVEL, tama.getBattleLevel());
+		    intent.putExtra(MultiplayerConstants.HEALTH, tama.getCurrentHealth());
+		    intent.putExtra(MultiplayerConstants.MAX_HEALTH, tama.getMaxHealth());
+		    Toast.makeText(MainGame.this.getApplicationContext(), "Starting multiplayer!", Toast.LENGTH_SHORT).show();
+		    MainGame.this.startActivityForResult(intent, TAMA_BATTLE_CODE);
 		    return true;
 		}
 		return false;
@@ -1629,6 +1646,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    }
 	    super.onActivityResult(requestCode, resultCode, data);
 	    this.mEngine.start();
+	}
+	else if (requestCode == TAMA_BATTLE_CODE && resultCode == RESULT_OK)
+	{
+	    int xpGain = data.getIntExtra(MultiplayerConstants.XP_GAIN, 0);
+	    Debug.d("[TamaBattle] XP GAIN: " + xpGain);
+	    super.onActivityResult(requestCode, resultCode, data);
 	}
     }
 

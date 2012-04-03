@@ -4,7 +4,14 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="8" />
+    <uses-sdk android:minSdkVersion="8" /> 
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
     <application
         android:icon="@drawable/icon"
@@ -19,19 +26,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".GameActivity"
-            android:label="Game"
-            android:screenOrientation="portrait" >
-        </activity>
-        <activity
             android:name=".minigames.TamaShooter"
             android:configChanges="orientation" />
+        <activity
+            android:name=".multiplayer.TamaBattle"
+            android:configChanges="orientation" />
     </application>
-
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.VIBRATE" />
 
 </manifest>
