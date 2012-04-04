@@ -174,7 +174,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		engine.setTouchController(new MultiTouchController());
 		if (MultiTouch.isSupportedDistinct(this))
 		{
-		    Toast.makeText(this, "MultiTouch detected --> Both controls will work properly!", Toast.LENGTH_LONG).show();
+		    //Toast.makeText(this, "MultiTouch detected --> Both controls will work properly!", Toast.LENGTH_LONG).show();
 		}
 		else
 		{
@@ -282,28 +282,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    });
 
 	    scene.setTouchAreaBindingEnabled(true);
-
-	    scene.registerUpdateHandler(new IUpdateHandler()
-	    {
-
-		@Override
-		public void reset()
-		{
-
-		}
-
-		@Override
-		public void onUpdate(float arg0)
-		{
-		    /*
-		     * if (mPlayerSprites.get(playerNumber) != null) { try { Debug.d("Sending player move message..."); final MoveSpriteClientMessage message = (MoveSpriteClientMessage)
-		     * TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE); message.set(playerNumber, mPlayerSprites.get(playerNumber).getX(),
-		     * mPlayerSprites.get(playerNumber).getY(), true);
-		     * 
-		     * mServerConnector.sendClientMessage(message); TamaBattle.this.mMessagePool.recycleMessage(message); } catch (Exception e) { e.printStackTrace(); } }
-		     */
-		}
-	    });
 	}
 
 	return scene;
@@ -354,28 +332,18 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		}
 	    }).create();
 	case DIALOG_CHOOSE_SERVER_OR_CLIENT_ID:
-	    return new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_info).setTitle("Be Server or Client ...").setCancelable(false).setPositiveButton("Client", new OnClickListener()
+	    return new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_info).setTitle("Start new multiplayer battle").setCancelable(false).setPositiveButton("Join", new OnClickListener()
 	    {
 		@Override
 		public void onClick(final DialogInterface pDialog, final int pWhich)
 		{
 		    TamaBattle.this.showDialog(DIALOG_ENTER_SERVER_IP_ID);
 		}
-	    }).setNeutralButton("Server", new OnClickListener()
+	    }).setNegativeButton("Host", new OnClickListener()
 	    {
 		@Override
 		public void onClick(final DialogInterface pDialog, final int pWhich)
 		{
-		    TamaBattle.this.toast("You can add and move sprites, which are only shown on the clients.");
-		    TamaBattle.this.initServer();
-		    TamaBattle.this.showDialog(DIALOG_SHOW_SERVER_IP_ID);
-		}
-	    }).setNegativeButton("Both", new OnClickListener()
-	    {
-		@Override
-		public void onClick(final DialogInterface pDialog, final int pWhich)
-		{
-		    TamaBattle.this.toast("You can add sprites and move them, by dragging them.");
 		    TamaBattle.this.initServerAndClient();
 		    TamaBattle.this.showDialog(DIALOG_SHOW_SERVER_IP_ID);
 		}
@@ -439,7 +407,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void addSprite(final int pID, final float pX, final float pY)
     {
 	final Scene scene = this.mEngine.getScene();
-	/* Create the face and add it to the scene. */
 	final Sprite face = new Sprite(0, 0, this.mSpriteTextureRegion);
 	face.setPosition(pX - face.getWidth() * 0.5f, pY - face.getHeight() * 0.5f);
 	face.setUserData(pID);
@@ -450,6 +417,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     public void addPlayerSprite(final int pID, final float pX, final float pY)
     {
+	/**
+	 * Don't add until the engine is done loading
+	 */
 	while (!this.loadComplete)
 	{
 	    try
@@ -461,6 +431,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    }
 	}
 
+	/**
+	 * Don't add sprite if it already exists
+	 */
 	if (this.mPlayerSprites.get(pID) != null)
 	    return;
 
@@ -487,6 +460,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 	if (pID == playerNumber)
 	{
+	    /**
+	     * Add analog controls
+	     */
 	    final PhysicsHandler physicsHandler = new PhysicsHandler(player);
 	    player.registerUpdateHandler(physicsHandler);
 
@@ -513,6 +489,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 	    scene.setChildScene(velocityOnScreenControl);
 
+	    /**
+	     * Send position of sprite to server on each update
+	     */
 	    player.registerUpdateHandler(new IUpdateHandler()
 	    {
 
@@ -545,6 +524,18 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	scene.attachChild(player);
     }
 
+    /**
+     * Moves the sprite on the screen to position.
+     * 
+     * @param pID
+     *            Sprite's ID
+     * @param pX
+     *            X-coordinate
+     * @param pY
+     *            Y-coordinate
+     * @param isPlayer
+     *            True if sprite is a player, False otherwise
+     */
     public void moveSprite(final int pID, final float pX, final float pY, final boolean isPlayer)
     {
 
