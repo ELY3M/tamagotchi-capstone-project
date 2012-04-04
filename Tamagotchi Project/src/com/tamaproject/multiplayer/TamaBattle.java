@@ -6,8 +6,15 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
+import org.anddev.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
+import org.anddev.andengine.engine.camera.hud.controls.BaseOnScreenControl;
+import org.anddev.andengine.engine.camera.hud.controls.AnalogOnScreenControl.IAnalogOnScreenControlListener;
+import org.anddev.andengine.engine.handler.IUpdateHandler;
+import org.anddev.andengine.engine.handler.physics.PhysicsHandler;
 import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
@@ -17,7 +24,11 @@ import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.Scene.ITouchArea;
 import org.anddev.andengine.entity.scene.background.ColorBackground;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
+import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
+import org.anddev.andengine.extension.input.touch.controller.MultiTouch;
+import org.anddev.andengine.extension.input.touch.controller.MultiTouchController;
+import org.anddev.andengine.extension.input.touch.exception.MultiTouchException;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
@@ -76,13 +87,13 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private static final int CAMERA_WIDTH = 800;
     private static final int CAMERA_HEIGHT = 480;
 
-    private static final int SERVER_PORT = 4444;
+    private static final int SERVER_PORT = 4444, CLIENT_PORT = 4445;
 
     private static final short FLAG_MESSAGE_SERVER_ADD_SPRITE = 1;
     private static final short FLAG_MESSAGE_SERVER_MOVE_SPRITE = 2;
     private static final short FLAG_MESSAGE_SERVER_ID_PLAYER = 3;
     private static final short FLAG_MESSAGE_CLIENT_REQUEST_ID = 4,
-	    FLAG_MESSAGE_SERVER_ADD_PLAYER_SPRITE = 5;
+	    FLAG_MESSAGE_SERVER_ADD_PLAYER_SPRITE = 5, FLAG_MESSAGE_CLIENT_MOVE_SPRITE = 6;
 
     private static final int DIALOG_CHOOSE_SERVER_OR_CLIENT_ID = 0;
     private static final int DIALOG_ENTER_SERVER_IP_ID = DIALOG_CHOOSE_SERVER_OR_CLIENT_ID + 1;
@@ -109,16 +120,19 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private int numPlayers = 0;
 
-    private int playerNumber = 0;
+    private int playerNumber = -1;
 
     private AnimatedSprite tama;
 
     private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
-    private BitmapTextureAtlas mTamaBitmapTextureAtlas;
+    private BitmapTextureAtlas mTamaBitmapTextureAtlas, mOnScreenControlTexture;
     private TiledTextureRegion mTamaTextureRegion;
+    private TextureRegion mOnScreenControlBaseTextureRegion, mOnScreenControlKnobTextureRegion;
 
     private boolean loadComplete = false;
+
+    private Scene scene;
 
     // ===========================================================
     // Constructors
@@ -135,6 +149,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MOVE_SPRITE, MoveSpriteServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_ID_PLAYER, GetPlayerIdServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_ADD_PLAYER_SPRITE, AddPlayerSpriteServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
     }
 
     // ===========================================================
@@ -151,7 +166,31 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 
 	this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
-	return new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera));
+	final Engine engine = new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera));
+	try
+	{
+	    if (MultiTouch.isSupported(this))
+	    {
+		engine.setTouchController(new MultiTouchController());
+		if (MultiTouch.isSupportedDistinct(this))
+		{
+		    Toast.makeText(this, "MultiTouch detected --> Both controls will work properly!", Toast.LENGTH_LONG).show();
+		}
+		else
+		{
+		    Toast.makeText(this, "MultiTouch detected, but your device has problems distinguishing between fingers.\n\nControls are placed at different vertical locations.", Toast.LENGTH_LONG).show();
+		}
+	    }
+	    else
+	    {
+		Toast.makeText(this, "Sorry your device does NOT support MultiTouch!\n\n(Falling back to SingleTouch.)\n\nControls are placed at different vertical locations.", Toast.LENGTH_LONG).show();
+	    }
+	} catch (final MultiTouchException e)
+	{
+	    Toast.makeText(this, "Sorry your Android Version does NOT support MultiTouch!\n\n(Falling back to SingleTouch.)\n\nControls are placed at different vertical locations.", Toast.LENGTH_LONG).show();
+	}
+	return engine;
+
     }
 
     @Override
@@ -166,7 +205,13 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("animated_gfx/");
 	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
 	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animate_test.png", 0, 0, 3, 4);
-	this.mEngine.getTextureManager().loadTexture(this.mTamaBitmapTextureAtlas);
+
+	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
+	this.mOnScreenControlTexture = new BitmapTextureAtlas(256, 128, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mOnScreenControlBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_base.png", 0, 0);
+	this.mOnScreenControlKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_knob.png", 128, 0);
+
+	this.mEngine.getTextureManager().loadTextures(this.mTamaBitmapTextureAtlas, this.mOnScreenControlTexture);
     }
 
     @Override
@@ -174,7 +219,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     {
 	// this.mEngine.registerUpdateHandler(new FPSLogger());
 
-	final Scene scene = new Scene();
+	scene = new Scene();
 	scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
 
 	/* We allow only the server to actively send around messages. */
@@ -222,7 +267,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			final Integer faceID = (Integer) face.getUserData();
 
 			final MoveSpriteServerMessage moveSpriteServerMessage = (MoveSpriteServerMessage) TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_MOVE_SPRITE);
-			moveSpriteServerMessage.set(faceID, pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+			moveSpriteServerMessage.set(faceID, pSceneTouchEvent.getX(), pSceneTouchEvent.getY(), false);
 
 			TamaBattle.this.mSocketServer.sendBroadcastServerMessage(moveSpriteServerMessage);
 
@@ -237,6 +282,28 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    });
 
 	    scene.setTouchAreaBindingEnabled(true);
+
+	    scene.registerUpdateHandler(new IUpdateHandler()
+	    {
+
+		@Override
+		public void reset()
+		{
+
+		}
+
+		@Override
+		public void onUpdate(float arg0)
+		{
+		    /*
+		     * if (mPlayerSprites.get(playerNumber) != null) { try { Debug.d("Sending player move message..."); final MoveSpriteClientMessage message = (MoveSpriteClientMessage)
+		     * TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE); message.set(playerNumber, mPlayerSprites.get(playerNumber).getX(),
+		     * mPlayerSprites.get(playerNumber).getY(), true);
+		     * 
+		     * mServerConnector.sendClientMessage(message); TamaBattle.this.mMessagePool.recycleMessage(message); } catch (Exception e) { e.printStackTrace(); } }
+		     */
+		}
+	    });
 	}
 
 	return scene;
@@ -393,7 +460,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		e.printStackTrace();
 	    }
 	}
-	final Scene scene = this.mEngine.getScene();
+
+	if (this.mPlayerSprites.get(pID) != null)
+	    return;
+
 	final AnimatedSprite player = new AnimatedSprite(0, 0, this.mTamaTextureRegion);
 	float x = 0, y = 0;
 	if (pID % 2 == 0)
@@ -409,19 +479,87 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	player.setPosition(x - player.getWidth() * 0.5f, y - player.getHeight() * 0.5f);
 	player.animate(new long[] { 300, 300, 300 }, 0, 2, true);
 	player.setUserData(pID);
+
 	synchronized (mPlayerSprites)
 	{
 	    this.mPlayerSprites.put(pID, player);
 	}
+
+	if (pID == playerNumber)
+	{
+	    final PhysicsHandler physicsHandler = new PhysicsHandler(player);
+	    player.registerUpdateHandler(physicsHandler);
+
+	    /* Velocity control (left). */
+	    final int x1 = 0;
+	    final int y1 = CAMERA_HEIGHT - mOnScreenControlBaseTextureRegion.getHeight();
+	    final AnalogOnScreenControl velocityOnScreenControl = new AnalogOnScreenControl(x1, y1, mCamera, mOnScreenControlBaseTextureRegion, mOnScreenControlKnobTextureRegion, 0.1f, new IAnalogOnScreenControlListener()
+	    {
+		@Override
+		public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl,
+			final float pValueX, final float pValueY)
+		{
+		    physicsHandler.setVelocity(pValueX * 100, pValueY * 100);
+		}
+
+		@Override
+		public void onControlClick(final AnalogOnScreenControl pAnalogOnScreenControl)
+		{
+		    /* Nothing. */
+		}
+	    });
+	    velocityOnScreenControl.getControlBase().setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+	    velocityOnScreenControl.getControlBase().setAlpha(0.5f);
+
+	    scene.setChildScene(velocityOnScreenControl);
+
+	    player.registerUpdateHandler(new IUpdateHandler()
+	    {
+
+		@Override
+		public void reset()
+		{
+
+		}
+
+		@Override
+		public void onUpdate(float arg0)
+		{
+		    try
+		    {
+			final MoveSpriteClientMessage message = (MoveSpriteClientMessage) TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE);
+			message.set(playerNumber, player.getX(), player.getY(), true);
+
+			mServerConnector.sendClientMessage(message);
+			TamaBattle.this.mMessagePool.recycleMessage(message);
+		    } catch (Exception e)
+		    {
+			e.printStackTrace();
+		    }
+
+		}
+	    });
+	}
+
 	scene.registerTouchArea(player);
 	scene.attachChild(player);
     }
 
-    public void moveSprite(final int pID, final float pX, final float pY)
+    public void moveSprite(final int pID, final float pX, final float pY, final boolean isPlayer)
     {
-	/* Find and move the face. */
-	final Sprite face = this.mSprites.get(pID);
-	face.setPosition(pX - face.getWidth() * 0.5f, pY - face.getHeight() * 0.5f);
+
+	final BaseSprite sprite;
+	if (isPlayer)
+	{
+	    sprite = this.mPlayerSprites.get(pID);
+	}
+	else
+	{
+	    sprite = this.mSprites.get(pID);
+	}
+
+	if (sprite != null)
+	    sprite.setPosition(pX - sprite.getWidth() * 0.5f, pY - sprite.getHeight() * 0.5f);
     }
 
     private void initServerAndClient()
@@ -501,6 +639,29 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		    }
 		});
 
+		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class, new IClientMessageHandler<SocketConnection>()
+		{
+
+		    @Override
+		    public void onHandleMessage(ClientConnector<SocketConnection> arg0,
+			    IClientMessage clientMessage) throws IOException
+		    {
+			MoveSpriteClientMessage message = (MoveSpriteClientMessage) clientMessage;
+			try
+			{
+			    final MoveSpriteServerMessage moveSpriteServerMessage = (MoveSpriteServerMessage) TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_MOVE_SPRITE);
+			    moveSpriteServerMessage.set(message.mID, message.mX, message.mY, message.mIsPlayer);
+
+			    TamaBattle.this.mSocketServer.sendBroadcastServerMessage(moveSpriteServerMessage);
+			    TamaBattle.this.mMessagePool.recycleMessage(moveSpriteServerMessage);
+			} catch (Exception e)
+			{
+			    e.printStackTrace();
+			}
+		    }
+
+		});
+
 		return clientConnector;
 	    }
 	};
@@ -561,7 +722,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			final IServerMessage pServerMessage) throws IOException
 		{
 		    final MoveSpriteServerMessage moveSpriteServerMessage = (MoveSpriteServerMessage) pServerMessage;
-		    TamaBattle.this.moveSprite(moveSpriteServerMessage.mID, moveSpriteServerMessage.mX, moveSpriteServerMessage.mY);
+		    if (moveSpriteServerMessage.mID != playerNumber && moveSpriteServerMessage.mIsPlayer)
+			TamaBattle.this.moveSprite(moveSpriteServerMessage.mID, moveSpriteServerMessage.mX, moveSpriteServerMessage.mY, moveSpriteServerMessage.mIsPlayer);
 		}
 	    });
 
@@ -618,6 +780,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     // Inner and Anonymous Classes
     // ===========================================================
 
+    /**
+     * Client sends this message to the server to request it's player ID number
+     * 
+     * @author Jonathan
+     * 
+     */
     public static class RequestPlayerIdClientMessage extends ClientMessage
     {
 
@@ -641,6 +809,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     }
 
+    /**
+     * Server sends this message to client telling it which player it is.
+     * 
+     * @author Jonathan
+     * 
+     */
     public static class GetPlayerIdServerMessage extends ServerMessage
     {
 	private int playerNumber;
@@ -787,24 +961,28 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	private int mID;
 	private float mX;
 	private float mY;
+	private boolean mIsPlayer;
 
 	public MoveSpriteServerMessage()
 	{
 
 	}
 
-	public MoveSpriteServerMessage(final int pID, final float pX, final float pY)
+	public MoveSpriteServerMessage(final int pID, final float pX, final float pY,
+		final boolean pIsPlayer)
 	{
 	    this.mID = pID;
 	    this.mX = pX;
 	    this.mY = pY;
+	    this.mIsPlayer = pIsPlayer;
 	}
 
-	public void set(final int pID, final float pX, final float pY)
+	public void set(final int pID, final float pX, final float pY, final boolean isPlayer)
 	{
 	    this.mID = pID;
 	    this.mX = pX;
 	    this.mY = pY;
+	    this.mIsPlayer = isPlayer;
 	}
 
 	@Override
@@ -820,6 +998,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    this.mID = pDataInputStream.readInt();
 	    this.mX = pDataInputStream.readFloat();
 	    this.mY = pDataInputStream.readFloat();
+	    this.mIsPlayer = pDataInputStream.readBoolean();
 	}
 
 	@Override
@@ -829,6 +1008,63 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    pDataOutputStream.writeInt(this.mID);
 	    pDataOutputStream.writeFloat(this.mX);
 	    pDataOutputStream.writeFloat(this.mY);
+	    pDataOutputStream.writeBoolean(this.mIsPlayer);
+	}
+    }
+
+    public static class MoveSpriteClientMessage extends ClientMessage
+    {
+	private int mID;
+	private float mX;
+	private float mY;
+	private boolean mIsPlayer;
+
+	public MoveSpriteClientMessage()
+	{
+
+	}
+
+	public MoveSpriteClientMessage(final int pID, final float pX, final float pY,
+		final boolean pIsPlayer)
+	{
+	    this.mID = pID;
+	    this.mX = pX;
+	    this.mY = pY;
+	    this.mIsPlayer = pIsPlayer;
+	}
+
+	public void set(final int pID, final float pX, final float pY, final boolean isPlayer)
+	{
+	    this.mID = pID;
+	    this.mX = pX;
+	    this.mY = pY;
+	    this.mIsPlayer = isPlayer;
+	}
+
+	@Override
+	public short getFlag()
+	{
+	    return FLAG_MESSAGE_CLIENT_MOVE_SPRITE;
+	}
+
+	@Override
+	protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+		throws IOException
+	{
+	    this.mID = pDataInputStream.readInt();
+	    this.mX = pDataInputStream.readFloat();
+	    this.mY = pDataInputStream.readFloat();
+	    this.mIsPlayer = pDataInputStream.readBoolean();
+	}
+
+	@Override
+	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+		throws IOException
+	{
+	    pDataOutputStream.writeInt(this.mID);
+	    pDataOutputStream.writeFloat(this.mX);
+	    pDataOutputStream.writeFloat(this.mY);
+	    pDataOutputStream.writeBoolean(this.mIsPlayer);
 	}
     }
 
