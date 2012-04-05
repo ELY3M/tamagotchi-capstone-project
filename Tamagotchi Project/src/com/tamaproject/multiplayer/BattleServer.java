@@ -29,13 +29,17 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	IUpdateHandler, TamaBattleConstants
 {
     private int numPlayers = 0;
-    private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
+    final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
+    private IBattleServerListener battleServerListener;
+    private int mSpriteIDCounter = 0;
 
     public BattleServer(
-	    final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener)
+	    final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener,
+	    final IBattleServerListener pBattleServerListener)
     {
 	super(SERVER_PORT, pSocketConnectionClientConnectorListener, new DefaultSocketServerListener<SocketConnectionClientConnector>());
 	this.initMessagePool();
+	this.battleServerListener = pBattleServerListener;
     }
 
     private void initMessagePool()
@@ -47,7 +51,6 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_FIRE_BULLET, FireBulletClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_FIRE_BULLET, FireBulletServerMessage.class);
-
     }
 
     @Override
@@ -100,27 +103,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    e.printStackTrace();
 		}
 
-		/*
-		synchronized (mPlayerSprites)
-		{
-		    int key = 0;
-		    for (int i = 0; i < mPlayerSprites.size(); i++)
-		    {
-			key = mPlayerSprites.keyAt(i);
-			AnimatedSprite aSprite = mPlayerSprites.get(key);
-			try
-			{
-			    final AddSpriteServerMessage apMessage = (AddSpriteServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ADD_SPRITE);
-			    apMessage.set(0, key, aSprite.getX(), aSprite.getY(), true);
-			    BattleServer.this.sendBroadcastServerMessage(apMessage);
-			    BattleServer.this.mMessagePool.recycleMessage(apMessage);
-			} catch (Exception e)
-			{
-			    e.printStackTrace();
-			}
-		    }
-		}
-		*/
+		battleServerListener.updateAllPlayers();
 	    }
 	});
 
@@ -181,7 +164,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		try
 		{
 		    final FireBulletServerMessage bMessage = (FireBulletServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_FIRE_BULLET);
-		    //bMessage.set(message.playerID, BattleServer.this.mSpriteIDCounter++, message.mX, message.mY, message.mIsPlayer);
+		    bMessage.set(message.playerID, BattleServer.this.mSpriteIDCounter++, message.mX, message.mY, message.mIsPlayer);
 
 		    BattleServer.this.sendBroadcastServerMessage(bMessage);
 		    BattleServer.this.mMessagePool.recycleMessage(bMessage);
@@ -194,6 +177,11 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	});
 
 	return clientConnector;
+    }
+
+    public interface IBattleServerListener
+    {
+	public void updateAllPlayers();
     }
 
 }

@@ -29,8 +29,6 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
     {
 	super(new SocketConnection(new Socket(pServerIP, SERVER_PORT)), pSocketConnectionServerConnectorListener);
 	
-	final int playerNumber = ((TamaBattle)pBattleServerConnectorListener).playerNumber;
-
 	this.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class, new IServerMessageHandler<SocketConnection>()
 	{
 	    @Override
@@ -63,16 +61,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    final IServerMessage pServerMessage) throws IOException
 	    {
 		final MoveSpriteServerMessage moveSpriteServerMessage = (MoveSpriteServerMessage) pServerMessage;
-		if (moveSpriteServerMessage.mIsPlayer)
-		{
-		    if (moveSpriteServerMessage.mID != playerNumber)
-			pBattleServerConnectorListener.moveSprite(moveSpriteServerMessage.mID, moveSpriteServerMessage.mX, moveSpriteServerMessage.mY, moveSpriteServerMessage.mIsPlayer);
-		}
-		else
-		{
-		    if (moveSpriteServerMessage.playerID != playerNumber)
-			pBattleServerConnectorListener.moveSprite(moveSpriteServerMessage.mID, moveSpriteServerMessage.mX, moveSpriteServerMessage.mY, moveSpriteServerMessage.mIsPlayer);
-		}
+		pBattleServerConnectorListener.moveSprite(moveSpriteServerMessage.mID, moveSpriteServerMessage.mX, moveSpriteServerMessage.mY, moveSpriteServerMessage.mIsPlayer);
 	    }
 	});
 
@@ -86,8 +75,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    final IServerMessage pServerMessage) throws IOException
 	    {
 		final GetPlayerIdServerMessage serverMessage = (GetPlayerIdServerMessage) pServerMessage;
-		((TamaBattle)pBattleServerConnectorListener).playerNumber = serverMessage.playerNumber;
-		Debug.d("I am player " + playerNumber);
+		pBattleServerConnectorListener.setPlayerNumber(serverMessage.playerNumber);
 	    }
 	});
 
@@ -110,5 +98,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	public void addPlayerSprite(final int pID, final float pX, final float pY);
 
 	public void moveSprite(final int pID, final float pX, final float pY, final boolean isPlayer);
+	
+	public void setPlayerNumber(final int playerNumber);
     }
 }
