@@ -68,6 +68,8 @@ import com.tamaproject.BaseAndEngineGame;
 import com.tamaproject.adt.messages.client.ClientMessageFlags;
 import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
 import com.tamaproject.adt.messages.server.ServerMessageFlags;
+import com.tamaproject.multiplayer.BattleServerConnector.IBattleServerConnectorListener;
+import com.tamaproject.util.TamaBattleConstants;
 
 /**
  * Multiplayer battle mode between multiple Tamagotchis.
@@ -75,7 +77,8 @@ import com.tamaproject.adt.messages.server.ServerMessageFlags;
  * @author Jonathan
  * 
  */
-public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags, ServerMessageFlags
+public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
+	ServerMessageFlags, TamaBattleConstants, IBattleServerConnectorListener
 {
     // ===========================================================
     // Constants
@@ -87,20 +90,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private static final int CAMERA_WIDTH = 800;
     private static final int CAMERA_HEIGHT = 480;
-
-    private static final int SERVER_PORT = 4444;
-
-    private static final short FLAG_MESSAGE_SERVER_ADD_SPRITE = 1;
-    private static final short FLAG_MESSAGE_SERVER_MOVE_SPRITE = 2;
-    private static final short FLAG_MESSAGE_SERVER_ID_PLAYER = 3;
-    private static final short FLAG_MESSAGE_CLIENT_REQUEST_ID = 4,
-	    FLAG_MESSAGE_CLIENT_MOVE_SPRITE = 6, FLAG_MESSAGE_CLIENT_ADD_SPRITE = 7,
-	    FLAG_MESSAGE_SERVER_FIRE_BULLET = 8, FLAG_MESSAGE_CLIENT_FIRE_BULLET = 9,
-	    FLAG_MESSAGE_SERVER_REMOVE_SPRITE = 10;
-
-    private static final int DIALOG_CHOOSE_SERVER_OR_CLIENT_ID = 0;
-    private static final int DIALOG_ENTER_SERVER_IP_ID = DIALOG_CHOOSE_SERVER_OR_CLIENT_ID + 1;
-    private static final int DIALOG_SHOW_SERVER_IP_ID = DIALOG_ENTER_SERVER_IP_ID + 1;
 
     // ===========================================================
     // Fields
@@ -123,7 +112,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private int numPlayers = 0;
 
-    private int playerNumber = -1;
+    int playerNumber = -1;
 
     private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
@@ -136,6 +125,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private Sprite crosshairSprite;
 
     private Scene scene;
+
+    private boolean isServer = false;
 
     // ===========================================================
     // Constructors
@@ -193,11 +184,11 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    }
 	    else
 	    {
-		Toast.makeText(this, "Sorry your device does NOT support MultiTouch!\n\n(Falling back to SingleTouch.)\n\nControls are placed at different vertical locations.", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "Sorry your device does NOT support MultiTouch!\n\n(Falling back to SingleTouch.)", Toast.LENGTH_LONG).show();
 	    }
 	} catch (final MultiTouchException e)
 	{
-	    Toast.makeText(this, "Sorry your Android Version does NOT support MultiTouch!\n\n(Falling back to SingleTouch.)\n\nControls are placed at different vertical locations.", Toast.LENGTH_LONG).show();
+	    Toast.makeText(this, "Sorry your Android Version does NOT support MultiTouch!\n\n(Falling back to SingleTouch.)", Toast.LENGTH_LONG).show();
 	}
 	return engine;
 
@@ -453,7 +444,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	else
 	    bullet.setPosition(player.getX() + player.getWidth(), player.getY() + player.getHeight() / 2);
 	bullet.setUserData(pID);
-	if (playerID == playerNumber)
+	
+	if (isServer)
 	{
 	    int c = 1000;
 	    float xDim = pX - bullet.getX();
@@ -851,6 +843,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	};
 
 	this.mSocketServer.start();
+	this.isServer = true;
     }
 
     private void initClient()
@@ -1013,7 +1006,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
      */
     public static class GetPlayerIdServerMessage extends ServerMessage
     {
-	private int playerNumber;
+	int playerNumber;
 
 	public GetPlayerIdServerMessage()
 	{
