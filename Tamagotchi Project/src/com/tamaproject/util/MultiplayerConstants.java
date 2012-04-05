@@ -1,4 +1,4 @@
-package com.tamaproject.multiplayer;
+package com.tamaproject.util;
 
 public class MultiplayerConstants
 {

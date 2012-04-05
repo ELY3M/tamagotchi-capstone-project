@@ -1,7 +1,5 @@
 package com.tamaproject.multiplayer;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -28,8 +26,6 @@ import org.anddev.andengine.extension.input.touch.controller.MultiTouch;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouchController;
 import org.anddev.andengine.extension.input.touch.exception.MultiTouchException;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;
-import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
-import org.anddev.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
 import org.anddev.andengine.extension.multiplayer.protocol.client.connector.SocketConnectionServerConnector.ISocketConnectionServerConnectorListener;
 import org.anddev.andengine.extension.multiplayer.protocol.server.SocketServer;
@@ -64,6 +60,7 @@ import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
 import com.tamaproject.adt.messages.server.ServerMessageFlags;
 import com.tamaproject.multiplayer.BattleServer.IBattleServerListener;
 import com.tamaproject.multiplayer.BattleServerConnector.IBattleServerConnectorListener;
+import com.tamaproject.util.MultiplayerConstants;
 import com.tamaproject.util.TamaBattleConstants;
 
 /**
@@ -74,7 +71,7 @@ import com.tamaproject.util.TamaBattleConstants;
  */
 public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	ServerMessageFlags, TamaBattleConstants, IBattleServerConnectorListener,
-	IBattleServerListener
+	IBattleServerListener, BattleMessages
 {
     // ===========================================================
     // Constants
@@ -96,7 +93,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private BitmapTextureAtlas mBitmapTextureAtlas;
     private TextureRegion mSpriteTextureRegion, mCrossHairTextureRegion;
 
-    private int mSpriteIDCounter;
     private final SparseArray<Sprite> mSprites = new SparseArray<Sprite>();
     private final SparseArray<AnimatedSprite> mPlayerSprites = new SparseArray<AnimatedSprite>();
 
@@ -105,8 +101,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private BattleServerConnector mServerConnector;
 
     private int health = 0, maxHealth = 0, battleLevel = 0;
-
-    private int numPlayers = 0;
 
     int playerNumber = -1;
 
@@ -142,7 +136,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_FIRE_BULLET, FireBulletClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_FIRE_BULLET, FireBulletServerMessage.class);
-
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER, SendPlayerStatsServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MODIFY_PLAYER, ModifyPlayerStatsServerMessage.class);
     }
 
     // ===========================================================
@@ -662,8 +658,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	else
 	    player.animate(new long[] { 300, 300, 300 }, 6, 8, true); // make player face right
 
-	player.setUserData(pID);
-
 	synchronized (mPlayerSprites)
 	{
 	    this.mPlayerSprites.put(pID, player);
@@ -818,285 +812,66 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	Debug.d("I am player " + playerNumber);
     }
 
+    @Override
+    public void setPlayerData(int playerID, int health, int maxHealth, int battleLevel)
+    {
+	if (playerID == playerNumber)
+	    return;
+	try
+	{
+	    AnimatedSprite sprite = this.mPlayerSprites.get(playerID);
+	    sprite.setUserData(new PlayerInfo(health, maxHealth, battleLevel, playerID));
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
+    @Override
+    public void updateAllPlayerInfo()
+    {
+	Debug.d("Sending updated player info to clients...");
+	synchronized (mPlayerSprites)
+	{
+	    int key = 0;
+	    for (int i = 0; i < mPlayerSprites.size(); i++)
+	    {
+		key = mPlayerSprites.keyAt(i);
+		AnimatedSprite aSprite = mPlayerSprites.get(key);
+		try
+		{
+		    final SendPlayerStatsServerMessage message = (SendPlayerStatsServerMessage) mBattleServer.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER);
+		    PlayerInfo info = (PlayerInfo) aSprite.getUserData();
+		    message.set(info.getHealth(), info.getMaxHealth(), info.getBattleLevel(), info.getPlayerID());
+		    mBattleServer.sendBroadcastServerMessage(message);
+		    mBattleServer.mMessagePool.recycleMessage(message);
+		} catch (Exception e)
+		{
+		    e.printStackTrace();
+		}
+	    }
+	}
+    }
+
+    @Override
+    public void sendPlayerInfoToServer()
+    {
+	Debug.d("Sending player info to server...");
+	try
+	{
+	    final SendPlayerStatsClientMessage message = (SendPlayerStatsClientMessage) TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER);
+	    message.set(this.health, this.maxHealth, this.battleLevel, playerNumber);
+	    mServerConnector.sendClientMessage(message);
+	    this.mMessagePool.recycleMessage(message);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
-
-    /**
-     * Client sends this message to the server to request it's player ID number
-     * 
-     * @author Jonathan
-     * 
-     */
-    public static class RequestPlayerIdClientMessage extends ClientMessage
-    {
-
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_CLIENT_REQUEST_ID;
-	}
-
-	@Override
-	protected void onReadTransmissionData(DataInputStream arg0) throws IOException
-	{
-
-	}
-
-	@Override
-	protected void onWriteTransmissionData(DataOutputStream arg0) throws IOException
-	{
-
-	}
-
-    }
-
-    /**
-     * Server sends this message to client telling it which player it is.
-     * 
-     * @author Jonathan
-     * 
-     */
-    public static class GetPlayerIdServerMessage extends ServerMessage
-    {
-	int playerNumber;
-
-	public GetPlayerIdServerMessage()
-	{
-
-	}
-
-	public GetPlayerIdServerMessage(final int playerNumber)
-	{
-	    this.playerNumber = playerNumber;
-	}
-
-	public void set(final int playerNumber)
-	{
-	    this.playerNumber = playerNumber;
-	}
-
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_SERVER_ID_PLAYER;
-	}
-
-	@Override
-	protected void onReadTransmissionData(final DataInputStream pDataInputStream)
-		throws IOException
-	{
-	    this.playerNumber = pDataInputStream.readInt();
-	}
-
-	@Override
-	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
-		throws IOException
-	{
-	    pDataOutputStream.writeInt(this.playerNumber);
-	}
-
-    }
-
-    public static class AddSpriteServerMessage extends SpriteServerMessage
-    {
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_SERVER_ADD_SPRITE;
-	}
-    }
-
-    public static class AddSpriteClientMessage extends SpriteClientMessage
-    {
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_CLIENT_ADD_SPRITE;
-	}
-    }
-
-    /**
-     * Server sends this message to all clients telling them to move some sprite to a specific location.
-     * 
-     * @author Jonathan
-     * 
-     */
-    public static class MoveSpriteServerMessage extends SpriteServerMessage
-    {
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_SERVER_MOVE_SPRITE;
-	}
-    }
-
-    /**
-     * Client sends this message to server to tell it to move a sprite to a specified location.
-     * 
-     * @author Jonathan
-     * 
-     */
-    public static class MoveSpriteClientMessage extends SpriteClientMessage
-    {
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_CLIENT_MOVE_SPRITE;
-	}
-
-    }
-
-    public static class FireBulletServerMessage extends SpriteServerMessage
-    {
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_SERVER_FIRE_BULLET;
-	}
-    }
-
-    public static class FireBulletClientMessage extends SpriteClientMessage
-    {
-
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_CLIENT_FIRE_BULLET;
-	}
-
-    }
-
-    public static class RemoveSpriteServerMessage extends SpriteServerMessage
-    {
-
-	@Override
-	public short getFlag()
-	{
-	    return FLAG_MESSAGE_SERVER_REMOVE_SPRITE;
-	}
-
-    }
-
-    public static abstract class SpriteClientMessage extends ClientMessage
-    {
-
-	int playerID;
-	int mID;
-	float mX;
-	float mY;
-	boolean mIsPlayer;
-
-	public SpriteClientMessage()
-	{
-
-	}
-
-	public SpriteClientMessage(final int playerID, final int pID, final float pX,
-		final float pY, final boolean pIsPlayer)
-	{
-	    this.playerID = playerID;
-	    this.mID = pID;
-	    this.mX = pX;
-	    this.mY = pY;
-	    this.mIsPlayer = pIsPlayer;
-	}
-
-	public void set(final int playerID, final int pID, final float pX, final float pY,
-		final boolean pIsPlayer)
-	{
-	    this.playerID = playerID;
-	    this.mID = pID;
-	    this.mX = pX;
-	    this.mY = pY;
-	    this.mIsPlayer = pIsPlayer;
-	}
-
-	public abstract short getFlag();
-
-	@Override
-	protected void onReadTransmissionData(final DataInputStream pDataInputStream)
-		throws IOException
-	{
-	    this.playerID = pDataInputStream.readInt();
-	    this.mID = pDataInputStream.readInt();
-	    this.mX = pDataInputStream.readFloat();
-	    this.mY = pDataInputStream.readFloat();
-	    this.mIsPlayer = pDataInputStream.readBoolean();
-	}
-
-	@Override
-	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
-		throws IOException
-	{
-	    pDataOutputStream.writeInt(this.playerID);
-	    pDataOutputStream.writeInt(this.mID);
-	    pDataOutputStream.writeFloat(this.mX);
-	    pDataOutputStream.writeFloat(this.mY);
-	    pDataOutputStream.writeBoolean(this.mIsPlayer);
-	}
-
-    }
-
-    public static abstract class SpriteServerMessage extends ServerMessage
-    {
-
-	int playerID;
-	int mID;
-	float mX;
-	float mY;
-	boolean mIsPlayer;
-
-	public SpriteServerMessage()
-	{
-
-	}
-
-	public SpriteServerMessage(final int playerID, final int pID, final float pX,
-		final float pY, final boolean pIsPlayer)
-	{
-	    this.playerID = playerID;
-	    this.mID = pID;
-	    this.mX = pX;
-	    this.mY = pY;
-	    this.mIsPlayer = pIsPlayer;
-	}
-
-	public void set(final int playerID, final int pID, final float pX, final float pY,
-		final boolean pIsPlayer)
-	{
-	    this.playerID = playerID;
-	    this.mID = pID;
-	    this.mX = pX;
-	    this.mY = pY;
-	    this.mIsPlayer = pIsPlayer;
-	}
-
-	public abstract short getFlag();
-
-	@Override
-	protected void onReadTransmissionData(final DataInputStream pDataInputStream)
-		throws IOException
-	{
-	    this.playerID = pDataInputStream.readInt();
-	    this.mID = pDataInputStream.readInt();
-	    this.mX = pDataInputStream.readFloat();
-	    this.mY = pDataInputStream.readFloat();
-	    this.mIsPlayer = pDataInputStream.readBoolean();
-	}
-
-	@Override
-	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
-		throws IOException
-	{
-	    pDataOutputStream.writeInt(this.playerID);
-	    pDataOutputStream.writeInt(this.mID);
-	    pDataOutputStream.writeFloat(this.mX);
-	    pDataOutputStream.writeFloat(this.mY);
-	    pDataOutputStream.writeBoolean(this.mIsPlayer);
-	}
-
-    }
 
     /**
      * Checks to see if you have connected to the server.
@@ -1162,16 +937,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	public void onStarted(final ClientConnector<SocketConnection> pConnector)
 	{
 	    TamaBattle.this.toast("SERVER: Client connected: " + pConnector.getConnection().getSocket().getInetAddress().getHostAddress());
-	    numPlayers++;
-	    Debug.d("Number of players: " + numPlayers);
 	}
 
 	@Override
 	public void onTerminated(final ClientConnector<SocketConnection> pConnector)
 	{
 	    TamaBattle.this.toast("SERVER: Client disconnected: " + pConnector.getConnection().getSocket().getInetAddress().getHostAddress());
-	    numPlayers--;
-	    Debug.d("Number of players: " + numPlayers);
 	}
     }
 

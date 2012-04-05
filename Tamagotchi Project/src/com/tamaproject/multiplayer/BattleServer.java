@@ -3,7 +3,6 @@ package com.tamaproject.multiplayer;
 import java.io.IOException;
 
 import org.anddev.andengine.engine.handler.IUpdateHandler;
-import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.server.IClientMessageHandler;
@@ -15,18 +14,10 @@ import org.anddev.andengine.extension.multiplayer.protocol.server.connector.Sock
 import org.anddev.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.anddev.andengine.extension.multiplayer.protocol.util.MessagePool;
 
-import com.tamaproject.multiplayer.TamaBattle.AddSpriteClientMessage;
-import com.tamaproject.multiplayer.TamaBattle.AddSpriteServerMessage;
-import com.tamaproject.multiplayer.TamaBattle.FireBulletClientMessage;
-import com.tamaproject.multiplayer.TamaBattle.FireBulletServerMessage;
-import com.tamaproject.multiplayer.TamaBattle.GetPlayerIdServerMessage;
-import com.tamaproject.multiplayer.TamaBattle.MoveSpriteClientMessage;
-import com.tamaproject.multiplayer.TamaBattle.MoveSpriteServerMessage;
-import com.tamaproject.multiplayer.TamaBattle.RequestPlayerIdClientMessage;
 import com.tamaproject.util.TamaBattleConstants;
 
 public class BattleServer extends SocketServer<SocketConnectionClientConnector> implements
-	IUpdateHandler, TamaBattleConstants
+	IUpdateHandler, TamaBattleConstants, BattleMessages
 {
     private int numPlayers = 0;
     final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
@@ -51,6 +42,9 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_FIRE_BULLET, FireBulletClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_FIRE_BULLET, FireBulletServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER, SendPlayerStatsServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MODIFY_PLAYER, ModifyPlayerStatsServerMessage.class);
     }
 
     @Override
@@ -176,12 +170,31 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
 	});
 
+	clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class, new IClientMessageHandler<SocketConnection>()
+	{
+
+	    @Override
+	    public void onHandleMessage(ClientConnector<SocketConnection> arg0,
+		    IClientMessage clientMessage) throws IOException
+	    {
+		SendPlayerStatsClientMessage message = (SendPlayerStatsClientMessage) clientMessage;
+		battleServerListener.setPlayerData(message.playerID, message.health, message.maxHealth, message.battleLevel);
+		battleServerListener.updateAllPlayerInfo();
+	    }
+
+	});
+
 	return clientConnector;
     }
 
     public interface IBattleServerListener
     {
 	public void updateAllPlayers();
+	
+	public void updateAllPlayerInfo();
+
+	public void setPlayerData(final int playerID, final int health, final int maxHealth,
+		final int battleLevel);
     }
 
 }

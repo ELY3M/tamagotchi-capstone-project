@@ -13,14 +13,10 @@ import org.anddev.andengine.util.Debug;
 import com.tamaproject.adt.messages.client.ClientMessageFlags;
 import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
 import com.tamaproject.adt.messages.server.ServerMessageFlags;
-import com.tamaproject.multiplayer.TamaBattle.AddSpriteServerMessage;
-import com.tamaproject.multiplayer.TamaBattle.FireBulletServerMessage;
-import com.tamaproject.multiplayer.TamaBattle.GetPlayerIdServerMessage;
-import com.tamaproject.multiplayer.TamaBattle.MoveSpriteServerMessage;
 import com.tamaproject.util.TamaBattleConstants;
 
 public class BattleServerConnector extends ServerConnector<SocketConnection> implements
-	TamaBattleConstants, ClientMessageFlags, ServerMessageFlags
+	TamaBattleConstants, ClientMessageFlags, ServerMessageFlags, BattleMessages
 {
     public BattleServerConnector(
 	    final String pServerIP,
@@ -76,6 +72,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	    {
 		final GetPlayerIdServerMessage serverMessage = (GetPlayerIdServerMessage) pServerMessage;
 		pBattleServerConnectorListener.setPlayerNumber(serverMessage.playerNumber);
+		pBattleServerConnectorListener.sendPlayerInfoToServer();
 	    }
 	});
 
@@ -100,5 +97,9 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	public void moveSprite(final int pID, final float pX, final float pY, final boolean isPlayer);
 	
 	public void setPlayerNumber(final int playerNumber);
+	
+	public void setPlayerData(final int playerID, final int health, final int maxHealth, final int battleLevel);
+	
+	public void sendPlayerInfoToServer();
     }
 }
