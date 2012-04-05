@@ -53,6 +53,7 @@ import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextur
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
+import org.anddev.andengine.util.pool.GenericPool;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -100,7 +101,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private BitmapTextureAtlas mBitmapTextureAtlas;
     private TextureRegion mSpriteTextureRegion, mCrossHairTextureRegion;
 
-    private int mSpriteIDCounter, bulletCounter = 0;
+    private int mSpriteIDCounter;
     private final SparseArray<Sprite> mSprites = new SparseArray<Sprite>();
     private final SparseArray<AnimatedSprite> mPlayerSprites = new SparseArray<AnimatedSprite>();
 
@@ -393,11 +394,19 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     /**
      * Called because the bullet can be recycled
      */
-    private void sendBulletToBulletPool(Sprite pBulletSprite)
+    private void sendBulletToBulletPool(final Sprite pBulletSprite)
     {
 	synchronized (BULLET_POOL)
 	{
-	    BULLET_POOL.recyclePoolItem(pBulletSprite);
+	    runOnUpdateThread(new Runnable()
+	    {
+	        @Override
+	        public void run()
+	        {
+	            pBulletSprite.clearUpdateHandlers();
+	            BULLET_POOL.recyclePoolItem(pBulletSprite);
+	        }
+	    });
 	}
     }
 
@@ -444,7 +453,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	else
 	    bullet.setPosition(player.getX() + player.getWidth(), player.getY() + player.getHeight() / 2);
 	bullet.setUserData(pID);
-	
+
 	if (isServer)
 	{
 	    int c = 1000;
@@ -514,7 +523,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    }
 	});
 	mSprites.put(pID, bullet);
-	scene.attachChild(bullet);
+	if (!bullet.hasParent())
+	    scene.attachChild(bullet);
     }
 
     /**
@@ -1321,4 +1331,5 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    Debug.d("Number of players: " + numPlayers);
 	}
     }
+
 }

@@ -44,7 +44,5 @@ public class BulletPool extends GenericPool<Sprite>
     protected void onHandleObtainItem(final Sprite pBullet)
     {
 	pBullet.reset();
-	pBullet.detachSelf();
-	pBullet.clearUpdateHandlers();
     }
 }
