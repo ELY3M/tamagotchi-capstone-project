@@ -20,6 +20,7 @@ import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolic
 import org.anddev.andengine.entity.Entity;
 import org.anddev.andengine.entity.primitive.Line;
 import org.anddev.andengine.entity.primitive.Rectangle;
+import org.anddev.andengine.entity.scene.CameraScene;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.background.ColorBackground;
@@ -116,7 +117,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private int health = 0, maxHealth = 0, battleLevel = 0;
 
     int playerNumber = -1;
-
+    int numPlayers = 1;
     private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
     private BitmapTextureAtlas mTamaBitmapTextureAtlas, mOnScreenControlTexture;
@@ -128,6 +129,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private Sprite crosshairSprite;
 
     private Scene scene;
+    private Scene lobbyScene;
 
     private boolean isServer = false;
 
@@ -244,11 +246,60 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
     }
 
+    private void createLobbyScene()
+    {
+	Debug.d("Creating lobby...");
+	lobbyScene = new Scene();
+	lobbyScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	lobbyScene.setBackgroundEnabled(true);
+	ipText = new Text(15, 15, mFont, "Server IP: " + IP);
+	lobbyScene.attachChild(ipText);
+	final Text startText = new Text(15, 15, mFont, "Start Game");
+	final Rectangle startButton = new Rectangle(0, 0, startText.getWidth() + 30, startText.getHeight() + 30)
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		Debug.d("Touched start button...");
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    this.setColor(1, 0, 0);
+		}
+		else if (pSceneTouchEvent.isActionUp())
+		{
+		    mEngine.setScene(scene);
+		    return true;
+		}
+		return true;
+	    }
+	};
+
+	startButton.setColor(0, 1, 0);
+	startButton.setPosition(CAMERA_WIDTH - startButton.getWidth() - 20, CAMERA_HEIGHT - startButton.getHeight() - 20);
+	startButton.attachChild(startText);
+	lobbyScene.registerTouchArea(startButton);
+	lobbyScene.attachChild(startButton);
+	if (isServer)
+	{
+	    final Text playerText = new Text(100, 100, mFont, "Player " + playerNumber + ", Server");
+	    lobbyScene.attachChild(playerText);
+	}
+	else
+	{
+	    final Text waitingText = new Text(0, 0, mFont, "Waiting for players...");
+	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2);
+	    lobbyScene.attachChild(waitingText);
+	}
+	lobbyScene.setTouchAreaBindingEnabled(true);
+    }
+
     @Override
     public Scene onLoadScene()
     {
 	// this.mEngine.registerUpdateHandler(new FPSLogger());
 
+	this.createLobbyScene();
 	scene = new Scene();
 	scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
 
@@ -343,6 +394,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void onLoadComplete()
     {
 	this.loadComplete = true;
+	this.mEngine.setScene(lobbyScene);
     }
 
     @Override
@@ -1127,6 +1179,13 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	public void onStarted(final ClientConnector<SocketConnection> pConnector)
 	{
 	    TamaBattle.this.toast("SERVER: Client connected: " + pConnector.getConnection().getSocket().getInetAddress().getHostAddress());
+	    if (isServer && lobbyScene != null)
+	    {
+		final Text temp = (Text) lobbyScene.getLastChild();
+		numPlayers++;
+		final Text pText = new Text(temp.getX(), temp.getY() + 50, mFont, "Player " + numPlayers + ", " + pConnector.getConnection().getSocket().getInetAddress().getHostAddress());
+		lobbyScene.attachChild(pText);
+	    }
 	}
 
 	@Override
