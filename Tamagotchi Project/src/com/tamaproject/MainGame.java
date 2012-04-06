@@ -357,6 +357,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			    mScene.unregisterTouchArea(s);
 			    inPlayObjects.remove(s);
 			}
+			ipoToRemove.clear();
 		    }
 
 		    /**

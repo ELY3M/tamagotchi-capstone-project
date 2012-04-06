@@ -1,6 +1,7 @@
 package com.tamaproject.multiplayer;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import org.anddev.andengine.engine.handler.IUpdateHandler;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;
@@ -12,6 +13,8 @@ import org.anddev.andengine.extension.multiplayer.protocol.server.connector.Sock
 import org.anddev.andengine.extension.multiplayer.protocol.server.connector.SocketConnectionClientConnector.ISocketConnectionClientConnectorListener;
 import org.anddev.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.anddev.andengine.extension.multiplayer.protocol.util.MessagePool;
+
+import android.util.SparseArray;
 
 import com.tamaproject.util.TamaBattleConstants;
 
@@ -28,6 +31,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
     final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
     private IBattleServerListener battleServerListener;
     private int mSpriteIDCounter = 0;
+    final SparseArray<String> playerIps = new SparseArray<String>();
 
     public BattleServer(
 	    final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener,
@@ -77,6 +81,10 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    IClientMessage pClientMessage) throws IOException
 	    {
 		numPlayers++;
+		String IP = pClientConnector.getConnection().getSocket().getInetAddress().getHostAddress();
+		playerIps.put(numPlayers, IP);
+		System.out.println("New player IP added: " + numPlayers + ", " + IP);
+		
 		final GetPlayerIdServerMessage sMessage = (GetPlayerIdServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ID_PLAYER);
 		sMessage.playerNumber = numPlayers;
 		pClientConnector.sendServerMessage(sMessage);

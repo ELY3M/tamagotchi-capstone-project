@@ -16,5 +16,6 @@ public interface TamaBattleConstants
     static final int DIALOG_CHOOSE_SERVER_OR_CLIENT_ID = 0;
     static final int DIALOG_ENTER_SERVER_IP_ID = DIALOG_CHOOSE_SERVER_OR_CLIENT_ID + 1;
     static final int DIALOG_SHOW_SERVER_IP_ID = DIALOG_ENTER_SERVER_IP_ID + 1;
+    static final int BAR_LENGTH = 100, BAR_HEIGHT = 15;
 
 }
