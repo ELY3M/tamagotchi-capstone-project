@@ -4,15 +4,15 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry kind="lib" path="libs/andengine/andengineaugmentedrealityextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andenginelivewallpaperextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andenginemodplayerextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andenginemultiplayerextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andenginemultitouchextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andenginephysicsbox2dextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andenginesvgtextureregionextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andenginetexturepackerextension.jar"/>
-	<classpathentry kind="lib" path="libs/andengine/andengine2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="libs/andengine2.jar"/>
+	<classpathentry kind="lib" path="libs/andengineaugmentedrealityextension.jar"/>
+	<classpathentry kind="lib" path="libs/andenginelivewallpaperextension.jar"/>
+	<classpathentry kind="lib" path="libs/andenginemodplayerextension.jar"/>
+	<classpathentry kind="lib" path="libs/andenginemultiplayerextension.jar"/>
+	<classpathentry kind="lib" path="libs/andenginemultitouchextension.jar"/>
+	<classpathentry kind="lib" path="libs/andenginephysicsbox2dextension.jar"/>
+	<classpathentry kind="lib" path="libs/andenginesvgtextureregionextension.jar"/>
+	<classpathentry kind="lib" path="libs/andenginetexturepackerextension.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

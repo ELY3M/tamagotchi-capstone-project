@@ -1,7 +1,6 @@
 package com.tamaproject.multiplayer;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import org.anddev.andengine.engine.handler.IUpdateHandler;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;

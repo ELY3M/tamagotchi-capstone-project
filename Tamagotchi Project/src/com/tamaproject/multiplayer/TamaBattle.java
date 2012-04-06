@@ -613,7 +613,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			{
 			    if ((bulletOwner % 2 == 0 && key % 2 == 0) || (bulletOwner % 2 != 0 && key % 2 != 0))
 				return;
-			    
+
 			    Debug.d("Collision!");
 			    PlayerInfo info = (PlayerInfo) mPlayerSprites.get(key).getUserData();
 			    info.setHealth(info.getHealth() - 10);
@@ -795,6 +795,37 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		@Override
 		public void onUpdate(float arg0)
 		{
+		    float x = player.getX();
+		    float y = player.getY();
+
+		    if (x < 0 || x + player.getWidth() > CAMERA_WIDTH)
+		    {
+			if (x < 0)
+			    player.setPosition(0, y);
+			else
+			    player.setPosition(CAMERA_WIDTH - player.getWidth(), y);
+		    }
+
+		    x = player.getX();
+		    if (y < 0 || y + player.getHeight() > CAMERA_HEIGHT)
+		    {
+			if (y < 0)
+			    player.setPosition(x, 0);
+			else
+			    player.setPosition(x, CAMERA_HEIGHT - player.getHeight());
+		    }
+
+		    if (playerNumber % 2 == 0)
+		    {
+			if (player.getX() < CAMERA_WIDTH / 2)
+			    player.setPosition(CAMERA_WIDTH / 2, player.getY());
+		    }
+		    else
+		    {
+			if (player.getX() + player.getWidth() > CAMERA_WIDTH / 2)
+			    player.setPosition(CAMERA_WIDTH / 2 - player.getWidth(), player.getY());
+		    }
+
 		    try
 		    {
 			final MoveSpriteClientMessage message = (MoveSpriteClientMessage) TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE);

@@ -1,6 +1,5 @@
 package com.tamaproject.multiplayer;
 
-import org.anddev.andengine.entity.modifier.ColorModifier;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.util.pool.GenericPool;
