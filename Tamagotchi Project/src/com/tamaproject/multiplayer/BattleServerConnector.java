@@ -15,6 +15,12 @@ import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
 import com.tamaproject.adt.messages.server.ServerMessageFlags;
 import com.tamaproject.util.TamaBattleConstants;
 
+/**
+ * This class is for clients to handle messages coming from the server.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class BattleServerConnector extends ServerConnector<SocketConnection> implements
 	TamaBattleConstants, ClientMessageFlags, ServerMessageFlags, BattleMessages
 {
@@ -24,7 +30,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	    final IBattleServerConnectorListener pBattleServerConnectorListener) throws IOException
     {
 	super(new SocketConnection(new Socket(pServerIP, SERVER_PORT)), pSocketConnectionServerConnectorListener);
-	
+
 	this.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class, new IServerMessageHandler<SocketConnection>()
 	{
 	    @Override
@@ -86,6 +92,17 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		pBattleServerConnectorListener.fireBullet(message.playerID, message.mID, message.mX, message.mY);
 	    }
 	});
+
+	this.registerServerMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER, SendPlayerStatsServerMessage.class, new IServerMessageHandler<SocketConnection>()
+	{
+	    @Override
+	    public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector,
+		    final IServerMessage pServerMessage) throws IOException
+	    {
+		final SendPlayerStatsServerMessage message = (SendPlayerStatsServerMessage) pServerMessage;
+		pBattleServerConnectorListener.setPlayerData(message.playerID, message.health, message.maxHealth, message.battleLevel);
+	    }
+	});
     }
 
     public static interface IBattleServerConnectorListener
@@ -95,11 +112,12 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	public void addPlayerSprite(final int pID, final float pX, final float pY);
 
 	public void moveSprite(final int pID, final float pX, final float pY, final boolean isPlayer);
-	
+
 	public void setPlayerNumber(final int playerNumber);
-	
-	public void setPlayerData(final int playerID, final int health, final int maxHealth, final int battleLevel);
-	
+
+	public void setPlayerData(final int playerID, final int health, final int maxHealth,
+		final int battleLevel);
+
 	public void sendPlayerInfoToServer();
     }
 }

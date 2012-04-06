@@ -7,7 +7,6 @@ import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.server.IClientMessageHandler;
 import org.anddev.andengine.extension.multiplayer.protocol.server.SocketServer;
-import org.anddev.andengine.extension.multiplayer.protocol.server.SocketServer.ISocketServerListener.DefaultSocketServerListener;
 import org.anddev.andengine.extension.multiplayer.protocol.server.connector.ClientConnector;
 import org.anddev.andengine.extension.multiplayer.protocol.server.connector.SocketConnectionClientConnector;
 import org.anddev.andengine.extension.multiplayer.protocol.server.connector.SocketConnectionClientConnector.ISocketConnectionClientConnectorListener;
@@ -16,6 +15,12 @@ import org.anddev.andengine.extension.multiplayer.protocol.util.MessagePool;
 
 import com.tamaproject.util.TamaBattleConstants;
 
+/**
+ * This class is for the server to handle incoming messages from the clients.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class BattleServer extends SocketServer<SocketConnectionClientConnector> implements
 	IUpdateHandler, TamaBattleConstants, BattleMessages
 {
@@ -26,9 +31,10 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
     public BattleServer(
 	    final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener,
+	    final ISocketServerListener<SocketConnectionClientConnector> pSocketServerListener,
 	    final IBattleServerListener pBattleServerListener)
     {
-	super(SERVER_PORT, pSocketConnectionClientConnectorListener, new DefaultSocketServerListener<SocketConnectionClientConnector>());
+	super(SERVER_PORT, pSocketConnectionClientConnectorListener, pSocketServerListener);
 	this.initMessagePool();
 	this.battleServerListener = pBattleServerListener;
     }
@@ -36,13 +42,9 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
     private void initMessagePool()
     {
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_ADD_SPRITE, AddSpriteServerMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_ADD_SPRITE, AddSpriteClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MOVE_SPRITE, MoveSpriteServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_ID_PLAYER, GetPlayerIdServerMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_FIRE_BULLET, FireBulletClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_FIRE_BULLET, FireBulletServerMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER, SendPlayerStatsServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MODIFY_PLAYER, ModifyPlayerStatsServerMessage.class);
     }
@@ -50,14 +52,12 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
     @Override
     public void onUpdate(float arg0)
     {
-	// TODO Auto-generated method stub
 
     }
 
     @Override
     public void reset()
     {
-	// TODO Auto-generated method stub
 
     }
 
@@ -97,7 +97,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    e.printStackTrace();
 		}
 
-		battleServerListener.updateAllPlayers();
+		battleServerListener.updateAllPlayerSprites();
 	    }
 	});
 
@@ -189,8 +189,8 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
     public interface IBattleServerListener
     {
-	public void updateAllPlayers();
-	
+	public void updateAllPlayerSprites();
+
 	public void updateAllPlayerInfo();
 
 	public void setPlayerData(final int playerID, final int health, final int maxHealth,

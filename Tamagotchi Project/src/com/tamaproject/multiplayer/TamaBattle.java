@@ -2,6 +2,8 @@ package com.tamaproject.multiplayer;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -118,6 +120,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private boolean isServer = false;
 
+    private final List<Sprite> bulletsToRemove = new ArrayList<Sprite>();
+
     // ===========================================================
     // Constructors
     // ===========================================================
@@ -224,6 +228,31 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	crosshairSprite = new Sprite(0, 0, mCrossHairTextureRegion);
 	crosshairSprite.setVisible(false);
 	topLayer.attachChild(crosshairSprite);
+
+	scene.registerUpdateHandler(new IUpdateHandler()
+	{
+
+	    @Override
+	    public void reset()
+	    {
+
+	    }
+
+	    @Override
+	    public void onUpdate(float arg0)
+	    {
+		synchronized (bulletsToRemove)
+		{
+		    for (Sprite s : bulletsToRemove)
+		    {
+			int id = ((BulletInfo) s.getUserData()).getID();
+			mSprites.remove(id);
+			sendBulletToBulletPool(s);
+		    }
+		    bulletsToRemove.clear();
+		}
+	    }
+	});
 
 	scene.setOnSceneTouchListener(new IOnSceneTouchListener()
 	{
@@ -379,7 +408,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     }
 
     @Override
-    public void updateAllPlayers()
+    /**
+     * Sends a message to all clients to add new player sprites onto the screen.
+     */
+    public void updateAllPlayerSprites()
     {
 	synchronized (mPlayerSprites)
 	{
@@ -425,8 +457,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private void initServer()
     {
-	this.mBattleServer = new BattleServer(new ClientConnectorListener(), this);
-
+	this.mBattleServer = new BattleServer(new ClientConnectorListener(), new ServerStateListener(), this);
 	this.mBattleServer.start();
 	this.isServer = true;
     }
@@ -436,7 +467,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	try
 	{
 	    this.mServerConnector = new BattleServerConnector(mServerIP, new ServerConnectorListener(), this);
-
 	    this.mServerConnector.getConnection().start();
 
 	    Intent intent = getIntent();
@@ -459,15 +489,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     {
 	synchronized (BULLET_POOL)
 	{
-	    runOnUpdateThread(new Runnable()
-	    {
-		@Override
-		public void run()
-		{
-		    pBulletSprite.clearUpdateHandlers();
-		    BULLET_POOL.recyclePoolItem(pBulletSprite);
-		}
-	    });
+	    pBulletSprite.clearUpdateHandlers();
+	    BULLET_POOL.recyclePoolItem(pBulletSprite);
 	}
     }
 
@@ -480,17 +503,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	{
 	    return BULLET_POOL.obtainPoolItem();
 	}
-    }
-
-    public void addSprite(final int pID, final float pX, final float pY)
-    {
-	final Scene scene = this.mEngine.getScene();
-	final Sprite face = new Sprite(0, 0, this.mSpriteTextureRegion);
-	face.setPosition(pX - face.getWidth() * 0.5f, pY - face.getHeight() * 0.5f);
-	face.setUserData(pID);
-	this.mSprites.put(pID, face);
-	scene.registerTouchArea(face);
-	scene.attachChild(face);
     }
 
     /**
@@ -542,11 +554,14 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			if (bullet.collidesWith(mPlayerSprites.get(key)) && ((BulletInfo) bullet.getUserData()).getPlayerID() != key)
 			{
 			    Debug.d("Collision!");
-			    // TODO Reduce health of player
+			    PlayerInfo info = (PlayerInfo) mPlayerSprites.get(key).getUserData();
+			    info.setHealth(info.getHealth() - 10);
+			    mPlayerSprites.get(key).setUserData(info);
+			    if (info.getHealth() <= 0)
+				Debug.d("Player " + key + " has lost!");
 
-			    // Remove bullet
-			    mSprites.remove(pID);
-			    sendBulletToBulletPool(bullet);
+			    Debug.d("Player " + key + "'s health: " + info.getHealth());
+
 			    try
 			    {
 				final MoveSpriteClientMessage message = (MoveSpriteClientMessage) TamaBattle.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE);
@@ -557,6 +572,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			    {
 				e.printStackTrace();
 			    }
+
+			    // Remove bullet
+			    bulletsToRemove.add(mSprites.get(pID));
 			    return;
 			}
 		    }
@@ -589,8 +607,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		if (bullet.getX() > CAMERA_WIDTH + 100 || bullet.getY() > CAMERA_HEIGHT + 100 || bullet.getX() < -100 || bullet.getY() < -100)
 		{
 		    Debug.d("Recycled bullet!");
-		    mSprites.remove(pID);
-		    sendBulletToBulletPool(bullet);
+		    bulletsToRemove.add(bullet);
 		}
 	    }
 	});
@@ -759,8 +776,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		return;
 	    if (pX == -1 && pY == -1)
 	    {
-		sendBulletToBulletPool(mSprites.get(pID));
-		mSprites.remove(pID);
+		bulletsToRemove.add(mSprites.get(pID));
+		return;
 	    }
 	}
 	final BaseSprite sprite;
@@ -776,14 +793,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	if (sprite != null)
 	{
 	    sprite.setPosition(pX, pY);
-
-	    if (!isPlayer)
-		if (sprite.getX() > CAMERA_WIDTH || sprite.getY() > CAMERA_HEIGHT || sprite.getX() < 0 || sprite.getY() < 0)
-		{
-		    Debug.d("Recycled bullet!");
-		    mSprites.remove(pID);
-		    sendBulletToBulletPool((Sprite) sprite);
-		}
 	}
 
     }
@@ -806,6 +815,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	});
     }
 
+    @Override
+    /**
+     * Sets the playerNumber, which identifies the player
+     */
     public void setPlayerNumber(final int playerNumber)
     {
 	this.playerNumber = playerNumber;
@@ -813,12 +826,24 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     }
 
     @Override
+    /**
+     * Sets the appropriate sprite's user data to reflect that player's stats.
+     */
     public void setPlayerData(int playerID, int health, int maxHealth, int battleLevel)
     {
-	if (playerID == playerNumber)
-	    return;
 	try
 	{
+	    Debug.d("Waiting for sprite to be ready...");
+	    while (this.mPlayerSprites.get(playerID) == null)
+	    {
+		try
+		{
+		    Thread.sleep(500l);
+		} catch (Exception e)
+		{
+		}
+	    }
+	    Debug.d("Sprite ready!");
 	    AnimatedSprite sprite = this.mPlayerSprites.get(playerID);
 	    sprite.setUserData(new PlayerInfo(health, maxHealth, battleLevel, playerID));
 	} catch (Exception e)
@@ -828,6 +853,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     }
 
     @Override
+    /**
+     * Sends updated player user data to all the clients.
+     */
     public void updateAllPlayerInfo()
     {
 	Debug.d("Sending updated player info to clients...");
@@ -837,10 +865,32 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    for (int i = 0; i < mPlayerSprites.size(); i++)
 	    {
 		key = mPlayerSprites.keyAt(i);
+		Debug.d("Waiting for sprite to be ready for player " + key + "...");
+		while (this.mPlayerSprites.get(key) == null)
+		{
+		    try
+		    {
+			Thread.sleep(500l);
+		    } catch (Exception e)
+		    {
+		    }
+		}
+		Debug.d("Sprite Ready!");
 		AnimatedSprite aSprite = mPlayerSprites.get(key);
 		try
 		{
 		    final SendPlayerStatsServerMessage message = (SendPlayerStatsServerMessage) mBattleServer.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER);
+		    Debug.d("Waiting for info to be ready for player " + key + "...");
+		    while (aSprite.getUserData() == null)
+		    {
+			try
+			{
+			    Thread.sleep(500l);
+			} catch (Exception e)
+			{
+			}
+		    }
+		    Debug.d("Info Ready!");
 		    PlayerInfo info = (PlayerInfo) aSprite.getUserData();
 		    message.set(info.getHealth(), info.getMaxHealth(), info.getBattleLevel(), info.getPlayerID());
 		    mBattleServer.sendBroadcastServerMessage(message);
@@ -853,7 +903,33 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
     }
 
+    /**
+     * Updates the userData for the sprite that belongs to the specified player.
+     * 
+     * @param playerID
+     *            Player's number.
+     */
+    public void updatePlayerInfo(final int playerID)
+    {
+	Debug.d("Sending updated player info for player " + playerID + " to clients...");
+	AnimatedSprite aSprite = mPlayerSprites.get(playerID);
+	try
+	{
+	    final SendPlayerStatsServerMessage message = (SendPlayerStatsServerMessage) mBattleServer.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER);
+	    PlayerInfo info = (PlayerInfo) aSprite.getUserData();
+	    message.set(info.getHealth(), info.getMaxHealth(), info.getBattleLevel(), info.getPlayerID());
+	    mBattleServer.sendBroadcastServerMessage(message);
+	    mBattleServer.mMessagePool.recycleMessage(message);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
     @Override
+    /**
+     * Sends your own player information to the server, so that it can let the other clients know.
+     */
     public void sendPlayerInfoToServer()
     {
 	Debug.d("Sending player info to server...");
