@@ -103,6 +103,16 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		pBattleServerConnectorListener.setPlayerData(message.playerID, message.health, message.maxHealth, message.battleLevel);
 	    }
 	});
+
+	this.registerServerMessage(FLAG_MESSAGE_SERVER_START_GAME, StartGameServerMessage.class, new IServerMessageHandler<SocketConnection>()
+	{
+	    @Override
+	    public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector,
+		    final IServerMessage pServerMessage) throws IOException
+	    {
+		pBattleServerConnectorListener.startGame();
+	    }
+	});
     }
 
     public static interface IBattleServerConnectorListener
@@ -119,5 +129,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		final int battleLevel);
 
 	public void sendPlayerInfoToServer();
+	
+	public void startGame();
     }
 }

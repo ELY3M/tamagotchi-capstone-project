@@ -39,6 +39,33 @@ public interface BattleMessages extends TamaBattleConstants
 	}
 
     }
+    
+    public static class StartGameServerMessage extends ServerMessage
+    {
+	public StartGameServerMessage()
+	{
+	    
+	}
+
+	@Override
+	public short getFlag()
+	{
+	    return FLAG_MESSAGE_SERVER_START_GAME;
+	}
+
+	@Override
+	protected void onReadTransmissionData(DataInputStream arg0) throws IOException
+	{
+
+	}
+
+	@Override
+	protected void onWriteTransmissionData(DataOutputStream arg0) throws IOException
+	{
+
+	}
+
+    }
 
     /**
      * Server sends this message to client telling it which player it is.

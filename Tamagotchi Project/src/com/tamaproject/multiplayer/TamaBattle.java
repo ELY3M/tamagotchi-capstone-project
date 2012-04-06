@@ -254,34 +254,44 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	lobbyScene.setBackgroundEnabled(true);
 	ipText = new Text(15, 15, mFont, "Server IP: " + IP);
 	lobbyScene.attachChild(ipText);
-	final Text startText = new Text(15, 15, mFont, "Start Game");
-	final Rectangle startButton = new Rectangle(0, 0, startText.getWidth() + 30, startText.getHeight() + 30)
-	{
-	    @Override
-	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
-		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
-	    {
-		Debug.d("Touched start button...");
-		if (pSceneTouchEvent.isActionDown())
-		{
-		    this.setColor(1, 0, 0);
-		}
-		else if (pSceneTouchEvent.isActionUp())
-		{
-		    mEngine.setScene(scene);
-		    return true;
-		}
-		return true;
-	    }
-	};
 
-	startButton.setColor(0, 1, 0);
-	startButton.setPosition(CAMERA_WIDTH - startButton.getWidth() - 20, CAMERA_HEIGHT - startButton.getHeight() - 20);
-	startButton.attachChild(startText);
-	lobbyScene.registerTouchArea(startButton);
-	lobbyScene.attachChild(startButton);
 	if (isServer)
 	{
+	    final Text startText = new Text(15, 15, mFont, "Start Game");
+	    final Rectangle startButton = new Rectangle(0, 0, startText.getWidth() + 30, startText.getHeight() + 30)
+	    {
+		@Override
+		public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+			final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+		{
+		    Debug.d("Touched start button...");
+		    if (pSceneTouchEvent.isActionDown())
+		    {
+			this.setColor(1, 0, 0);
+		    }
+		    else if (pSceneTouchEvent.isActionUp())
+		    {
+			try
+			{
+			    StartGameServerMessage startMessage = (StartGameServerMessage) mBattleServer.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_START_GAME);
+			    mBattleServer.sendBroadcastServerMessage(startMessage);
+			    mBattleServer.mMessagePool.recycleMessage(startMessage);
+			} catch (Exception e)
+			{
+			    e.printStackTrace();
+			}
+			return true;
+		    }
+		    return true;
+		}
+	    };
+
+	    startButton.setColor(0, 1, 0);
+	    startButton.setPosition(CAMERA_WIDTH - startButton.getWidth() - 20, CAMERA_HEIGHT - startButton.getHeight() - 20);
+	    startButton.attachChild(startText);
+	    lobbyScene.registerTouchArea(startButton);
+	    lobbyScene.attachChild(startButton);
+
 	    final Text playerText = new Text(100, 100, mFont, "Player " + playerNumber + ", Server");
 	    lobbyScene.attachChild(playerText);
 	}
@@ -388,6 +398,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 	scene.setTouchAreaBindingEnabled(true);
 	return scene;
+    }
+
+    @Override
+    public void startGame()
+    {
+	this.mEngine.setScene(scene);
     }
 
     @Override

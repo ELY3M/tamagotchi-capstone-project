@@ -50,6 +50,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_FIRE_BULLET, FireBulletServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER, SendPlayerStatsServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MODIFY_PLAYER, ModifyPlayerStatsServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_START_GAME, StartGameServerMessage.class);
     }
 
     @Override
