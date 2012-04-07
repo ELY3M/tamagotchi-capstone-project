@@ -10,6 +10,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import org.anddev.andengine.audio.music.Music;
 import org.anddev.andengine.audio.music.MusicFactory;
+import org.anddev.andengine.audio.sound.Sound;
 import org.anddev.andengine.audio.sound.SoundFactory;
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
@@ -107,6 +108,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private Camera mCamera;
 
     private Music backgroundMusic;
+    private Sound pewSound;
     private BitmapTextureAtlas mBitmapTextureAtlas, mFontTexture;
     private TextureRegion mSpriteTextureRegion, mCrossHairTextureRegion, mArrowTextureRegion,
 	    mKuchiTextureRegion;
@@ -172,7 +174,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 
 	this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
-	final Engine engine = new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera).setNeedsMusic(true));
+	final Engine engine = new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera).setNeedsMusic(true).setNeedsSound(true));
 
 	/**
 	 * Activate multitouch
@@ -233,11 +235,19 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.mEngine.getFontManager().loadFont(this.mFont);
 
 	this.mEngine.getTextureManager().loadTextures(this.mTamaBitmapTextureAtlas, this.mOnScreenControlTexture);
-	
+
 	this.mBackground = new RepeatingSpriteBackground(CAMERA_WIDTH, CAMERA_HEIGHT, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass_inverted.png"));
 
 	// Load sounds
 	SoundFactory.setAssetBasePath("mfx/");
+	try
+	{
+	    this.pewSound = SoundFactory.createSoundFromAsset(this.mEngine.getSoundManager(), this, "pew.mp3");
+	} catch (final IOException e)
+	{
+	    Debug.e(e);
+	}
+
 	MusicFactory.setAssetBasePath("mfx/");
 	try
 	{
@@ -317,20 +327,20 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    final Sprite tamaSprite = new Sprite(0, 0, mKuchiTextureRegion);
 	    tamaSprite.setPosition(CAMERA_WIDTH - tamaSprite.getWidth() - 100, 100);
 	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(2, 0, -360))));
-	    
+
 	    lobbyScene.attachChild(tamaSprite);
-	    lobbyScene.attachChild(playerText); //must be attached last
+	    lobbyScene.attachChild(playerText); // must be attached last
 	}
 	else
 	{
 	    final Text waitingText = new Text(0, 0, mFont, "Waiting for host to start game...");
 	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2 - 10);
-	
+
 	    final Sprite tamaSprite = new Sprite(0, 0, mKuchiTextureRegion);
 	    tamaSprite.setPosition(CAMERA_WIDTH / 2 - tamaSprite.getWidth() / 2, waitingText.getY() + waitingText.getHeight() + 50);
 	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(2, 0, -360))));
 	    lobbyScene.attachChild(tamaSprite);
-	    lobbyScene.attachChild(waitingText); //must be attached last
+	    lobbyScene.attachChild(waitingText); // must be attached last
 	}
 	lobbyScene.setTouchAreaBindingEnabled(true);
     }
@@ -406,7 +416,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	endScene.setTouchAreaBindingEnabled(true);
 
 	scene = new Scene();
-	//scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	// scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
 	scene.setBackground(mBackground);
 
 	topLayer = new Entity();
@@ -826,6 +836,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		}
 	    }
 	});
+	pewSound.play();
 	mSprites.put(pID, bullet);
 	if (!bullet.hasParent())
 	    bottomLayer.attachChild(bullet);
