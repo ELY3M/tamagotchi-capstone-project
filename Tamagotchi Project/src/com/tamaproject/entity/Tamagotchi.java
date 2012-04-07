@@ -57,7 +57,7 @@ public class Tamagotchi
     /**
      * For testing purposes. Sets the Tamagotchi to a default state if none has been specified.
      */
-    private void setDefault()
+    public void setDefault()
     {
 	this.currentHealth = 100;
 	this.maxHealth = 100;

@@ -15,6 +15,9 @@ import org.anddev.andengine.extension.multiplayer.protocol.util.MessagePool;
 
 import android.util.SparseArray;
 
+import com.tamaproject.multiplayer.BattleMessages.AddSpriteServerMessage;
+import com.tamaproject.multiplayer.BattleMessages.SendPlayerStatsServerMessage;
+import com.tamaproject.multiplayer.BattleMessages.StartGameServerMessage;
 import com.tamaproject.util.TamaBattleConstants;
 
 /**
@@ -84,7 +87,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		String IP = pClientConnector.getConnection().getSocket().getInetAddress().getHostAddress();
 		playerIps.put(numPlayers, IP);
 		System.out.println("New player IP added: " + numPlayers + ", " + IP);
-		
+
 		final GetPlayerIdServerMessage sMessage = (GetPlayerIdServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ID_PLAYER);
 		sMessage.playerNumber = numPlayers;
 		pClientConnector.sendServerMessage(sMessage);
@@ -193,6 +196,61 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	});
 
 	return clientConnector;
+    }
+
+    public void sendRemovePlayerMessage(final int playerID)
+    {
+	try
+	{
+	    AddSpriteServerMessage message = (AddSpriteServerMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ADD_SPRITE);
+	    message.set(0, playerID, -1, -1, true);
+	    this.sendBroadcastServerMessage(message);
+	    mMessagePool.recycleMessage(message);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
+    public void sendStartMessage()
+    {
+	try
+	{
+	    StartGameServerMessage startMessage = (StartGameServerMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_START_GAME);
+	    this.sendBroadcastServerMessage(startMessage);
+	    this.mMessagePool.recycleMessage(startMessage);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
+    public void sendAddPlayerSpriteMessage(final int playerID, final float x, final float y)
+    {
+	try
+	{
+	    final AddSpriteServerMessage apMessage = (AddSpriteServerMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ADD_SPRITE);
+	    apMessage.set(0, playerID, x, y, true);
+	    this.sendBroadcastServerMessage(apMessage);
+	    this.mMessagePool.recycleMessage(apMessage);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
+    public void sendPlayerStatsMessage(int health, int maxHealth, int battleLevel, int playerID)
+    {
+	try
+	{
+	    final SendPlayerStatsServerMessage spssMessage = (SendPlayerStatsServerMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER);
+	    spssMessage.set(health, maxHealth, battleLevel, playerID);
+	    this.sendBroadcastServerMessage(spssMessage);
+	    this.mMessagePool.recycleMessage(spssMessage);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
     }
 
     public interface IBattleServerListener

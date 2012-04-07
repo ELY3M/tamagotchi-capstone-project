@@ -2089,6 +2089,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.getTextureManager().loadTexture(mSplashTextureAtlas);
 	this.mSplashScene.attachChild(splashSprite);
 	this.mScene.setChildScene(mSplashScene);
+	this.tama.setDefault();
     }
 
     // ===========================================================
