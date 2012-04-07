@@ -104,7 +104,6 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    BattleServer.this.mMessagePool.recycleMessage(sMessage);
 
 		    battleServerListener.addPlayerSpriteToServer(numPlayers);
-
 		    battleServerListener.updateAllPlayerSprites();
 		}
 		else

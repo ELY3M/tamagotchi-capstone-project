@@ -165,7 +165,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     public TamaBattle()
     {
-
+	
     }
 
     // ===========================================================
@@ -209,6 +209,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	{
 	    Toast.makeText(this, "Sorry your Android Version does NOT support MultiTouch!\n\n(Falling back to SingleTouch.)", Toast.LENGTH_LONG).show();
 	}
+	
+
+	loadOptions();
+	
 	return engine;
 
     }
@@ -988,13 +992,14 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    int offset = pID * 10;
 	    if (pID % 2 == 0) // spawn on right side
 	    {
+		offset = (pID - 1) * 10;
 		x = CAMERA_WIDTH - player.getWidth() - 25 - offset;
-		y = CAMERA_HEIGHT / 2 - offset;
+		y = CAMERA_HEIGHT / 2 + offset;
 	    }
 	    else
 	    // spawn on left side
 	    {
-		x = (player.getWidth() + 25) + offset;
+		x = player.getWidth() + 25 + offset;
 		y = CAMERA_HEIGHT / 2 + offset;
 	    }
 	    player.setPosition(x - player.getWidth() * 0.5f, y - player.getHeight() * 0.5f);
@@ -1031,7 +1036,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			final float pValueX, final float pValueY)
 		{
 		    physicsHandler.setVelocity(pValueX * 100, pValueY * 100);
-		    // Debug.d("pValueX = " + pValueX + ", pValueY = " + pValueY);
 		}
 
 		@Override

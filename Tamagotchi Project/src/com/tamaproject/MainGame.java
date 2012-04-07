@@ -795,7 +795,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    mainLayer.attachChild(tama.getSprite());
 		}
 	    };
-	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(0.5f, 0, 45), new RotationModifier(0.5f, 45, 0), new RotationModifier(0.5f, 0, -45), new RotationModifier(0.5f, -45, 0)), 5, modListener);
+	    float time = 0.5f;
+	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(time, 0, 45), new RotationModifier(time, 45, 0), new RotationModifier(time, 0, -45), new RotationModifier(time, -45, 0)), 5, modListener);
 	    eggSprite.registerEntityModifier(loopEntityModifier);
 	    mainLayer.attachChild(eggSprite);
 	}

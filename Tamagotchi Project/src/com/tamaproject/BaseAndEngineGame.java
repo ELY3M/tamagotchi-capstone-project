@@ -2,6 +2,7 @@ package com.tamaproject;
 
 import org.anddev.andengine.ui.activity.BaseGameActivity;
 
+import android.content.SharedPreferences;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -15,7 +16,7 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
     // Fields
     // ===========================================================
 
-    protected boolean vibrateOn = false, soundOn = true;
+    protected boolean vibrateOn = false, soundOn = false;
 
     // ===========================================================
     // Constructors
@@ -52,10 +53,12 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
 	{
 	case VIBRATE:
 	    vibrateOn = vibrateOn ? false : true;
+	    savePreferences("VIBRATE", vibrateOn ? "true" : "false");
 	    return true;
 	case SOUND:
 	    soundOn = soundOn ? false : true;
-	    if(soundOn)
+	    savePreferences("SOUND", soundOn ? "true" : "false");
+	    if (soundOn)
 		resumeSound();
 	    else
 		pauseSound();
@@ -65,12 +68,31 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
 	}
     }
 
+    private void savePreferences(String key, String value)
+    {
+	SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+	SharedPreferences.Editor editor = sharedPreferences.edit();
+	editor.putString(key, value);
+	editor.commit();
+    }
+
+    protected void loadOptions()
+    {
+	SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+	String savedVibrate = sharedPreferences.getString("VIBRATE", "");
+	String savedSound = sharedPreferences.getString("SOUND", "");
+	if ("true".equals(savedSound))
+	    soundOn = true;
+	if ("true".equals(savedVibrate))
+	    vibrateOn = true;
+    }
+
     // ===========================================================
     // Methods
     // ===========================================================
-    
+
     public abstract void pauseSound();
-    
+
     public abstract void resumeSound();
 
     // ===========================================================
