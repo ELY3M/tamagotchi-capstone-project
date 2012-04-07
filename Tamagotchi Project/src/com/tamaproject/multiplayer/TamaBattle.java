@@ -22,11 +22,15 @@ import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
+import org.anddev.andengine.entity.modifier.LoopEntityModifier;
+import org.anddev.andengine.entity.modifier.RotationModifier;
+import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
 import org.anddev.andengine.entity.primitive.Line;
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.background.ColorBackground;
+import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
@@ -49,6 +53,7 @@ import org.anddev.andengine.opengl.font.FontFactory;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
+import org.anddev.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextureAtlasSource;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
@@ -103,7 +108,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private Music backgroundMusic;
     private BitmapTextureAtlas mBitmapTextureAtlas, mFontTexture;
-    private TextureRegion mSpriteTextureRegion, mCrossHairTextureRegion, mArrowTextureRegion;
+    private TextureRegion mSpriteTextureRegion, mCrossHairTextureRegion, mArrowTextureRegion,
+	    mKuchiTextureRegion;
+    private RepeatingSpriteBackground mBackground;
     private Font mFont;
     private final SparseArray<Sprite> mSprites = new SparseArray<Sprite>();
     private final SparseArray<AnimatedSprite> mPlayerSprites = new SparseArray<AnimatedSprite>();
@@ -200,11 +207,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void onLoadResources()
     {
 	// Load textures
-	this.mBitmapTextureAtlas = new BitmapTextureAtlas(64, 128, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mBitmapTextureAtlas = new BitmapTextureAtlas(128, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
 	this.mSpriteTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "particle_point.png", 0, 0);
 	this.mCrossHairTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "crosshair.png", 0, 33);
 	this.mArrowTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "down_arrow.png", 0, 74);
+	this.mKuchiTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "tama.png", 0, 105);
 
 	this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
 
@@ -225,6 +233,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.mEngine.getFontManager().loadFont(this.mFont);
 
 	this.mEngine.getTextureManager().loadTextures(this.mTamaBitmapTextureAtlas, this.mOnScreenControlTexture);
+	
+	this.mBackground = new RepeatingSpriteBackground(CAMERA_WIDTH, CAMERA_HEIGHT, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass_inverted.png"));
 
 	// Load sounds
 	SoundFactory.setAssetBasePath("mfx/");
@@ -303,13 +313,24 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    lobbyScene.attachChild(startButton);
 
 	    final Text playerText = new Text(100, 100, mFont, "Player " + playerNumber + ", Server");
-	    lobbyScene.attachChild(playerText);
+
+	    final Sprite tamaSprite = new Sprite(0, 0, mKuchiTextureRegion);
+	    tamaSprite.setPosition(CAMERA_WIDTH - tamaSprite.getWidth() - 100, 100);
+	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(2, 0, -360))));
+	    
+	    lobbyScene.attachChild(tamaSprite);
+	    lobbyScene.attachChild(playerText); //must be attached last
 	}
 	else
 	{
 	    final Text waitingText = new Text(0, 0, mFont, "Waiting for host to start game...");
-	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2);
-	    lobbyScene.attachChild(waitingText);
+	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2 - 10);
+	
+	    final Sprite tamaSprite = new Sprite(0, 0, mKuchiTextureRegion);
+	    tamaSprite.setPosition(CAMERA_WIDTH / 2 - tamaSprite.getWidth() / 2, waitingText.getY() + waitingText.getHeight() + 50);
+	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(2, 0, -360))));
+	    lobbyScene.attachChild(tamaSprite);
+	    lobbyScene.attachChild(waitingText); //must be attached last
 	}
 	lobbyScene.setTouchAreaBindingEnabled(true);
     }
@@ -385,7 +406,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	endScene.setTouchAreaBindingEnabled(true);
 
 	scene = new Scene();
-	scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	//scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	scene.setBackground(mBackground);
 
 	topLayer = new Entity();
 	bottomLayer = new Entity();
@@ -451,7 +473,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		{
 		    try
 		    {
-			if ((pSceneTouchEvent.getX() > mPlayerSprites.get(playerNumber).getX() && playerNumber % 2 != 0) || (pSceneTouchEvent.getX() < mPlayerSprites.get(playerNumber).getX() && playerNumber % 2 == 0))
+			AnimatedSprite p = mPlayerSprites.get(playerNumber);
+			if ((pSceneTouchEvent.getX() > p.getX() + p.getWidth() + 20 && playerNumber % 2 != 0) || (pSceneTouchEvent.getX() < mPlayerSprites.get(playerNumber).getX() - 20 && playerNumber % 2 == 0))
 			{
 			    // Fire a bullet
 			    Debug.d("Fire bullet!");
@@ -481,7 +504,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void startGame()
     {
 	this.mEngine.setScene(scene);
-	this.backgroundMusic.play();
+	if (soundOn)
+	    this.backgroundMusic.play();
     }
 
     @Override

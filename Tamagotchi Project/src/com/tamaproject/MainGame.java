@@ -26,6 +26,7 @@ import org.anddev.andengine.entity.IEntity;
 import org.anddev.andengine.entity.modifier.IEntityModifier.IEntityModifierListener;
 import org.anddev.andengine.entity.modifier.LoopEntityModifier;
 import org.anddev.andengine.entity.modifier.PathModifier;
+import org.anddev.andengine.entity.modifier.RotationModifier;
 import org.anddev.andengine.entity.modifier.PathModifier.IPathModifierListener;
 import org.anddev.andengine.entity.modifier.PathModifier.Path;
 import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
@@ -735,13 +736,13 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public void pauseSound()
     {
-	
+
     }
-    
+
     @Override
     public void resumeSound()
     {
-	
+
     }
 
     /**
@@ -798,7 +799,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    mainLayer.attachChild(tama.getSprite());
 		}
 	    };
-	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new org.anddev.andengine.entity.modifier.ScaleModifier(1, 1, 1.5f), new org.anddev.andengine.entity.modifier.ScaleModifier(1, 1.5f, 1)), 5, modListener);
+	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(0.5f, 0, 45), new RotationModifier(0.5f, 45, 0), new RotationModifier(0.5f, 0, -45), new RotationModifier(0.5f, -45, 0)), 5, modListener);
 	    eggSprite.registerEntityModifier(loopEntityModifier);
 	    mainLayer.attachChild(eggSprite);
 	}
