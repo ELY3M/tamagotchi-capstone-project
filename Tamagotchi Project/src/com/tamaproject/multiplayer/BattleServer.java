@@ -95,7 +95,6 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    numPlayers++;
 		    String IP = TextUtil.getIpAndPort(pClientConnector);
 		    playerIps.put(numPlayers, IP);
-		    battleServerListener.addPlayerToLobby(IP, numPlayers);
 		    System.out.println("New player IP added: " + numPlayers + ", " + IP);
 
 		    final GetPlayerIdServerMessage sMessage = (GetPlayerIdServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ID_PLAYER);
@@ -103,8 +102,8 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    pClientConnector.sendServerMessage(sMessage);
 		    BattleServer.this.mMessagePool.recycleMessage(sMessage);
 
-		    battleServerListener.addPlayerSpriteToServer(numPlayers);
-		    battleServerListener.updateAllPlayerSprites();
+		    battleServerListener.server_addPlayerSpriteToServer(numPlayers);
+		    battleServerListener.server_updateAllPlayerSprites();
 		}
 		else
 		{
@@ -199,8 +198,9 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    IClientMessage clientMessage) throws IOException
 	    {
 		SendPlayerStatsClientMessage message = (SendPlayerStatsClientMessage) clientMessage;
+		battleServerListener.server_addPlayerToLobby(playerIps.get(message.playerID), message.playerID, message.battleLevel);
 		battleServerListener.setPlayerData(message.playerID, message.health, message.maxHealth, message.battleLevel);
-		battleServerListener.updateAllPlayerInfo();
+		battleServerListener.server_updateAllPlayerInfo();
 	    }
 
 	});
@@ -218,8 +218,8 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		else
 		    deathMatchVotes--;
 		String ip = TextUtil.getIpAndPort(pConnector);
-		System.out.println("IP: "+ip);
-		battleServerListener.updateSkull(ip, msg.voteDeathMatch);		
+		System.out.println("IP: " + ip);
+		battleServerListener.server_updateSkull(ip, msg.voteDeathMatch);
 	    }
 
 	});
@@ -297,7 +297,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	    e.printStackTrace();
 	}
     }
-    
+
     public void sendDeathMatchMessage(final boolean isDeathMatch)
     {
 	try
@@ -319,23 +319,23 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
     public interface IBattleServerListener
     {
-	public void updateAllPlayerSprites();
+	public void server_updateAllPlayerSprites();
 
-	public void updateAllPlayerInfo();
+	public void server_updateAllPlayerInfo();
 
 	public void setPlayerData(final int playerID, final int health, final int maxHealth,
 		final int battleLevel);
-	
-	public void updateSkull(final String ip, final boolean vote);
-	
-	public void addPlayerToLobby(String ip, int playerId);
-	
-	public void addPlayerSpriteToServer(final int playerID);
+
+	public void server_updateSkull(final String ip, final boolean vote);
+
+	public void server_addPlayerToLobby(String ip, int playerId, int battleLevel);
+
+	public void server_addPlayerSpriteToServer(final int playerID);
     }
 
     public int getNumPlayers()
     {
-        return numPlayers;
+	return numPlayers;
     }
 
 }

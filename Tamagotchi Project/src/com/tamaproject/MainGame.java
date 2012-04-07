@@ -754,18 +754,23 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	Tamagotchi tempTama = dbHelper.loadTama(1, listTR);
 	if (tempTama != null)
 	{
-	    Debug.d("Tama loaded from database!");
-	    firstRun = false;
-	    this.tama = tempTama;
-	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
-	    this.tama.getSprite().setScale(1.00f);
-	    if (this.tama.getEquippedItem() != null)
+	    if (tempTama.checkStats() != Tamagotchi.DEAD)
 	    {
-		this.tama.setEquippedItem(new GameItem(this.tama.getEquippedItem()));
-		this.tama.getEquippedItem().setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
-		tama.getSprite().attachChild(this.tama.getEquippedItem());
+		Debug.d("Tama loaded from database!");
+		firstRun = false;
+		this.tama = tempTama;
+		this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
+		((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
+		this.tama.getSprite().setScale(1.00f);
+		if (this.tama.getEquippedItem() != null)
+		{
+		    this.tama.setEquippedItem(new GameItem(this.tama.getEquippedItem()));
+		    this.tama.getEquippedItem().setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
+		    tama.getSprite().attachChild(this.tama.getEquippedItem());
+		}
 	    }
+	    else
+		firstRun=true;
 	}
 
 	if (firstRun)
@@ -795,9 +800,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    mainLayer.attachChild(tama.getSprite());
 		}
 	    };
-	    float time = 0.5f;
-	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(time, 0, 45), new RotationModifier(time, 45, 0), new RotationModifier(time, 0, -45), new RotationModifier(time, -45, 0)), 5, modListener);
-	    eggSprite.registerEntityModifier(loopEntityModifier);
+	    float time = 0.25f;
+	    float degree = 25;
+	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(time, 0, degree), new RotationModifier(time, degree, 0), new RotationModifier(time, 0, -degree), new RotationModifier(time, -degree, 0)), 5);
+	    final SequenceEntityModifier seqEntityModifier = new SequenceEntityModifier(modListener, loopEntityModifier, new org.anddev.andengine.entity.modifier.ScaleModifier(0.1f, 1, 2));
+	    eggSprite.registerEntityModifier(seqEntityModifier);
 	    mainLayer.attachChild(eggSprite);
 	}
 	else
@@ -1602,6 +1609,15 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	{
 	    int xpGain = data.getIntExtra(MultiplayerConstants.XP_GAIN, 0);
 	    Debug.d("[TamaBattle] XP GAIN: " + xpGain);
+	    if (xpGain != 0)
+		showNotification("Your tama has gained " + xpGain + " XP!");
+	    int health = data.getIntExtra(MultiplayerConstants.HEALTH, -1000);
+	    if (health != -1000)
+	    {
+		Debug.d("Setting current health to " + health);
+		tama.setCurrentHealth(health);
+	    }
+	    // TODO: Update Health and stuff if deathmatch
 	    super.onActivityResult(requestCode, resultCode, data);
 	}
     }
@@ -2039,7 +2055,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.getTextureManager().loadTexture(mSplashTextureAtlas);
 	this.mSplashScene.attachChild(splashSprite);
 	this.mScene.setChildScene(mSplashScene);
-	this.tama.setDefault();
+	// this.tama.setDefault();
     }
 
     // ===========================================================

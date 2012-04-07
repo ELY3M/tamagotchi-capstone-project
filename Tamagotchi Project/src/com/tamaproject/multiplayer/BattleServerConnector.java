@@ -41,7 +41,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	    public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector,
 		    final IServerMessage pServerMessage) throws IOException
 	    {
-		pBattleServerConnectorListener.endGame();
+		pBattleServerConnectorListener.client_endGame();
 	    }
 	});
 
@@ -56,12 +56,12 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		{
 		    if (addSpriteServerMessage.mX >= 0 && addSpriteServerMessage.mY >= 0)
 		    {
-			pBattleServerConnectorListener.addPlayerSprite(addSpriteServerMessage.mID, addSpriteServerMessage.mX, addSpriteServerMessage.mY);
+			pBattleServerConnectorListener.client_addPlayerSprite(addSpriteServerMessage.mID, addSpriteServerMessage.mX, addSpriteServerMessage.mY);
 			Debug.d("[SERVER] Adding player " + addSpriteServerMessage.mID);
 		    }
 		    else
 		    {
-			pBattleServerConnectorListener.removePlayer(addSpriteServerMessage.mID);
+			pBattleServerConnectorListener.client_removePlayer(addSpriteServerMessage.mID);
 			Debug.d("[SERVER] Removing player " + addSpriteServerMessage.mID);
 		    }
 		}
@@ -75,7 +75,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    final IServerMessage pServerMessage) throws IOException
 	    {
 		final MoveSpriteServerMessage moveSpriteServerMessage = (MoveSpriteServerMessage) pServerMessage;
-		pBattleServerConnectorListener.moveSprite(moveSpriteServerMessage.mID, moveSpriteServerMessage.mX, moveSpriteServerMessage.mY, moveSpriteServerMessage.mIsPlayer);
+		pBattleServerConnectorListener.client_moveSprite(moveSpriteServerMessage.mID, moveSpriteServerMessage.mX, moveSpriteServerMessage.mY, moveSpriteServerMessage.mIsPlayer);
 	    }
 	});
 
@@ -89,8 +89,8 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    final IServerMessage pServerMessage) throws IOException
 	    {
 		final GetPlayerIdServerMessage serverMessage = (GetPlayerIdServerMessage) pServerMessage;
-		pBattleServerConnectorListener.setPlayerNumber(serverMessage.playerNumber);
-		pBattleServerConnectorListener.sendPlayerInfoToServer();
+		pBattleServerConnectorListener.client_setPlayerNumber(serverMessage.playerNumber);
+		pBattleServerConnectorListener.client_sendPlayerInfoToServer();
 	    }
 	});
 
@@ -101,7 +101,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    final IServerMessage pServerMessage) throws IOException
 	    {
 		final FireBulletServerMessage message = (FireBulletServerMessage) pServerMessage;
-		pBattleServerConnectorListener.fireBullet(message.playerID, message.mID, message.mX, message.mY);
+		pBattleServerConnectorListener.client_fireBullet(message.playerID, message.mID, message.mX, message.mY);
 	    }
 	});
 
@@ -122,7 +122,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	    public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector,
 		    final IServerMessage pServerMessage) throws IOException
 	    {
-		pBattleServerConnectorListener.startGame();
+		pBattleServerConnectorListener.client_startGame();
 	    }
 	});
 
@@ -133,7 +133,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    final IServerMessage pServerMessage) throws IOException
 	    {
 		int playerID = ((ReceivedDamageServerMessage) pServerMessage).playerNumber;
-		pBattleServerConnectorListener.handleReceivedDamage(playerID);
+		pBattleServerConnectorListener.client_handleReceivedDamage(playerID);
 	    }
 	});
 
@@ -144,7 +144,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    final IServerMessage pServerMessage) throws IOException
 	    {
 		DeathMatchServerMessage msg = (DeathMatchServerMessage) pServerMessage;
-		pBattleServerConnectorListener.setDeathMatch(msg.isDeathMatch);
+		pBattleServerConnectorListener.client_setDeathMatch(msg.isDeathMatch);
 	    }
 	});
     }
@@ -219,27 +219,27 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 
     public static interface IBattleServerConnectorListener
     {
-	public void fireBullet(final int playerID, final int pID, final float pX, final float pY);
+	public void client_fireBullet(final int playerID, final int pID, final float pX, final float pY);
 
-	public void addPlayerSprite(final int pID, final float pX, final float pY);
+	public void client_addPlayerSprite(final int pID, final float pX, final float pY);
 
-	public void moveSprite(final int pID, final float pX, final float pY, final boolean isPlayer);
+	public void client_moveSprite(final int pID, final float pX, final float pY, final boolean isPlayer);
 
-	public void setPlayerNumber(final int playerNumber);
+	public void client_setPlayerNumber(final int playerNumber);
 
 	public void setPlayerData(final int playerID, final int health, final int maxHealth,
 		final int battleLevel);
 
-	public void sendPlayerInfoToServer();
+	public void client_sendPlayerInfoToServer();
 
-	public void startGame();
+	public void client_startGame();
 
-	public void removePlayer(final int pID);
+	public void client_removePlayer(final int pID);
 
-	public void endGame();
+	public void client_endGame();
 
-	public void handleReceivedDamage(final int playerID);
+	public void client_handleReceivedDamage(final int playerID);
 	
-	public void setDeathMatch(final boolean isDeathMatch);
+	public void client_setDeathMatch(final boolean isDeathMatch);
     }
 }
