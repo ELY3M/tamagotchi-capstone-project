@@ -10,12 +10,12 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
     // ===========================================================
     // Constants
     // ===========================================================
-
-    private static final int MENU_TRACE = Menu.FIRST;
-
+    private static final int VIBRATE = 0, SOUND = 1;
     // ===========================================================
     // Fields
     // ===========================================================
+
+    protected boolean vibrateOn = false, soundOn = false;
 
     // ===========================================================
     // Constructors
@@ -32,15 +32,16 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
     @Override
     public boolean onCreateOptionsMenu(final Menu pMenu)
     {
-	pMenu.add(Menu.NONE, MENU_TRACE, Menu.NONE, "Start Method Tracing");
+	pMenu.add(Menu.NONE, VIBRATE, Menu.NONE, "Enable Vibration");
+	pMenu.add(Menu.NONE, SOUND, Menu.NONE, "Enable Sound");
 	return super.onCreateOptionsMenu(pMenu);
     }
 
     @Override
     public boolean onPrepareOptionsMenu(final Menu pMenu)
     {
-	pMenu.findItem(MENU_TRACE).setTitle(this.mEngine.isMethodTracing() ? "Stop Method Tracing"
-		: "Start Method Tracing");
+	pMenu.findItem(VIBRATE).setTitle(vibrateOn ? "Disable Vibration" : "Enable Vibration");
+	pMenu.findItem(SOUND).setTitle(soundOn ? "Disable Sound" : "Enable Sound");
 	return super.onPrepareOptionsMenu(pMenu);
     }
 
@@ -49,15 +50,11 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
     {
 	switch (pItem.getItemId())
 	{
-	case MENU_TRACE:
-	    if (this.mEngine.isMethodTracing())
-	    {
-		this.mEngine.stopMethodTracing();
-	    }
-	    else
-	    {
-		this.mEngine.startMethodTracing("AndEngine_" + System.currentTimeMillis() + ".trace");
-	    }
+	case VIBRATE:
+	    vibrateOn = vibrateOn ? false : true;
+	    return true;
+	case SOUND:
+	    soundOn = soundOn ? false : true;
 	    return true;
 	default:
 	    return super.onMenuItemSelected(pFeatureId, pItem);

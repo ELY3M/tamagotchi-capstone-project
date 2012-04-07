@@ -125,6 +125,17 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		pBattleServerConnectorListener.startGame();
 	    }
 	});
+
+	this.registerServerMessage(FLAG_MESSAGE_SERVER_RECEIVED_DAMAGE, ReceivedDamageServerMessage.class, new IServerMessageHandler<SocketConnection>()
+	{
+	    @Override
+	    public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector,
+		    final IServerMessage pServerMessage) throws IOException
+	    {
+		int playerID = ((ReceivedDamageServerMessage) pServerMessage).playerNumber;
+		pBattleServerConnectorListener.handleReceivedDamage(playerID);
+	    }
+	});
     }
 
     private void initMessagePool()
@@ -197,7 +208,9 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	public void startGame();
 
 	public void removePlayer(final int pID);
-	
+
 	public void endGame();
+
+	public void handleReceivedDamage(final int playerID);
     }
 }

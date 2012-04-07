@@ -56,6 +56,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MODIFY_PLAYER, ModifyPlayerStatsServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_START_GAME, StartGameServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_RECEIVED_DAMAGE, ReceivedDamageServerMessage.class);
     }
 
     @Override
@@ -267,6 +268,20 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	    spssMessage.set(health, maxHealth, battleLevel, playerID);
 	    this.sendBroadcastServerMessage(spssMessage);
 	    this.mMessagePool.recycleMessage(spssMessage);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+    
+    public void sendDamageMessage(int playerID)
+    {
+	try
+	{
+	    final ReceivedDamageServerMessage msg = (ReceivedDamageServerMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_RECEIVED_DAMAGE);
+	    msg.set(playerID);
+	    this.sendBroadcastServerMessage(msg);
+	    this.mMessagePool.recycleMessage(msg);
 	} catch (Exception e)
 	{
 	    e.printStackTrace();

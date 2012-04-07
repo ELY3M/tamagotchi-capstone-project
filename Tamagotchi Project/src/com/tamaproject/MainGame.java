@@ -201,8 +201,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private ChangeableText backpackLabel;
     private Rectangle backpackBackground;
 
-    private boolean vibrateOn = true;
-
     private List<String> notificationList = new LinkedList<String>();
 
     private Rectangle nightOverlayRect;
@@ -633,13 +631,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public boolean onKeyDown(final int pKeyCode, final KeyEvent pEvent)
     {
-	// if menu button is pressed
-	if (pKeyCode == KeyEvent.KEYCODE_MENU && pEvent.getAction() == KeyEvent.ACTION_DOWN)
-	{
-	    return true;
-	}
 	// if back key was pressed
-	else if (pKeyCode == KeyEvent.KEYCODE_BACK && pEvent.getAction() == KeyEvent.ACTION_DOWN)
+	if (pKeyCode == KeyEvent.KEYCODE_BACK && pEvent.getAction() == KeyEvent.ACTION_DOWN)
 	{
 	    showDialog(MainGame.CONFIRM_QUITGAME);
 	    return true;

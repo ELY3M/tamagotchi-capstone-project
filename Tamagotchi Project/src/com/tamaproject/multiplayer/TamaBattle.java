@@ -31,7 +31,6 @@ import org.anddev.andengine.entity.text.Text;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouch;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouchController;
 import org.anddev.andengine.extension.input.touch.exception.MultiTouchException;
-import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.anddev.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
 import org.anddev.andengine.extension.multiplayer.protocol.client.connector.SocketConnectionServerConnector.ISocketConnectionServerConnectorListener;
 import org.anddev.andengine.extension.multiplayer.protocol.server.SocketServer;
@@ -40,7 +39,6 @@ import org.anddev.andengine.extension.multiplayer.protocol.server.connector.Clie
 import org.anddev.andengine.extension.multiplayer.protocol.server.connector.SocketConnectionClientConnector;
 import org.anddev.andengine.extension.multiplayer.protocol.server.connector.SocketConnectionClientConnector.ISocketConnectionClientConnectorListener;
 import org.anddev.andengine.extension.multiplayer.protocol.shared.SocketConnection;
-import org.anddev.andengine.extension.multiplayer.protocol.util.MessagePool;
 import org.anddev.andengine.extension.multiplayer.protocol.util.WifiUtils;
 import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.font.Font;
@@ -290,9 +288,11 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     {
 	// this.mEngine.registerUpdateHandler(new FPSLogger());
 
+	this.enableVibrator();
 	this.loadLobbyScene();
 
 	endScene = new Scene();
+	endScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
 	winText = new Text(0, 0, mFont, "You win!");
 	winText.setScale(1.5f);
 	winText.setVisible(false);
@@ -740,6 +740,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			    {
 				mBattleServer.sendPlayerStatsMessage(info.getHealth(), info.getMaxHealth(), info.getBattleLevel(), info.getPlayerID());
 			    }
+
+			    mBattleServer.sendDamageMessage(key);
 
 			    return;
 			}
@@ -1197,6 +1199,13 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     {
 	Debug.d("Ending game...");
 	this.finish();
+    }
+
+    @Override
+    public void handleReceivedDamage(final int id)
+    {
+	if (id == playerNumber && vibrateOn)
+	    this.mEngine.vibrate(100l);
     }
 
     // ===========================================================

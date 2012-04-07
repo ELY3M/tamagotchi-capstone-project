@@ -39,12 +39,53 @@ public interface BattleMessages extends TamaBattleConstants
 	}
 
     }
-    
+
+    public static class ReceivedDamageServerMessage extends ServerMessage
+    {
+	int playerNumber;
+
+	public ReceivedDamageServerMessage()
+	{
+
+	}
+	
+	public ReceivedDamageServerMessage(final int id)
+	{
+	    this.playerNumber = id;
+	}
+
+	public void set(final int id)
+	{
+	    this.playerNumber = id;
+	}
+
+	@Override
+	public short getFlag()
+	{
+	    return FLAG_MESSAGE_SERVER_RECEIVED_DAMAGE;
+	}
+
+	@Override
+	protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+		throws IOException
+	{
+	    this.playerNumber = pDataInputStream.readInt();
+	}
+
+	@Override
+	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+		throws IOException
+	{
+	    pDataOutputStream.writeInt(this.playerNumber);
+	}
+
+    }
+
     public static class StartGameServerMessage extends ServerMessage
     {
 	public StartGameServerMessage()
 	{
-	    
+
 	}
 
 	@Override
@@ -200,7 +241,7 @@ public interface BattleMessages extends TamaBattleConstants
 
 	public ModifyPlayerStatsServerMessage()
 	{
-	    
+
 	}
 
 	public ModifyPlayerStatsServerMessage(int health, int playerID)
@@ -291,10 +332,10 @@ public interface BattleMessages extends TamaBattleConstants
     public static class SendPlayerStatsServerMessage extends ServerMessage
     {
 	int health, maxHealth, battleLevel, playerID;
-	
+
 	public SendPlayerStatsServerMessage()
 	{
-	    
+
 	}
 
 	public SendPlayerStatsServerMessage(int health, int maxHealth, int battleLevel, int playerID)
