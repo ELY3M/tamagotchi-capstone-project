@@ -40,6 +40,88 @@ public interface BattleMessages extends TamaBattleConstants
 
     }
 
+    public static class VoteDeathMatchClientMessage extends ClientMessage
+    {
+	boolean voteDeathMatch;
+
+	public VoteDeathMatchClientMessage()
+	{
+
+	}
+
+	public VoteDeathMatchClientMessage(final boolean vote)
+	{
+	    this.voteDeathMatch = vote;
+	}
+	
+	public void set(final boolean vote)
+	{
+	    this.voteDeathMatch = vote;
+	}
+	
+	@Override
+	public short getFlag()
+	{
+	    return FLAG_MESSAGE_CLIENT_VOTE_DEATHMATCH;
+	}
+
+	@Override
+	protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+		throws IOException
+	{
+	    this.voteDeathMatch = pDataInputStream.readBoolean();
+	}
+
+	@Override
+	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+		throws IOException
+	{
+	    pDataOutputStream.writeBoolean(this.voteDeathMatch);
+	}
+
+    }
+    
+    public static class DeathMatchServerMessage extends ServerMessage
+    {
+	boolean isDeathMatch;
+
+	public DeathMatchServerMessage()
+	{
+
+	}
+
+	public DeathMatchServerMessage(final boolean vote)
+	{
+	    this.isDeathMatch = vote;
+	}
+	
+	public void set(final boolean vote)
+	{
+	    this.isDeathMatch = vote;
+	}
+	
+	@Override
+	public short getFlag()
+	{
+	    return FLAG_MESSAGE_SERVER_DEATHMATCH;
+	}
+
+	@Override
+	protected void onReadTransmissionData(final DataInputStream pDataInputStream)
+		throws IOException
+	{
+	    this.isDeathMatch = pDataInputStream.readBoolean();
+	}
+
+	@Override
+	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream)
+		throws IOException
+	{
+	    pDataOutputStream.writeBoolean(this.isDeathMatch);
+	}
+
+    }
+
     public static class ReceivedDamageServerMessage extends ServerMessage
     {
 	int playerNumber;
@@ -48,7 +130,7 @@ public interface BattleMessages extends TamaBattleConstants
 	{
 
 	}
-	
+
 	public ReceivedDamageServerMessage(final int id)
 	{
 	    this.playerNumber = id;

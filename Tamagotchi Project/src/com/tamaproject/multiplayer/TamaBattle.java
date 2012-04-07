@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -79,6 +82,8 @@ import com.tamaproject.multiplayer.BattleServer.IBattleServerListener;
 import com.tamaproject.multiplayer.BattleServerConnector.IBattleServerConnectorListener;
 import com.tamaproject.util.MultiplayerConstants;
 import com.tamaproject.util.TamaBattleConstants;
+import com.tamaproject.util.TextUtil;
+import com.tamaproject.util.TextureUtil;
 
 /**
  * Multiplayer battle mode between multiple Tamagotchis.
@@ -108,15 +113,15 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private Camera mCamera;
 
     private Music backgroundMusic;
-    private Sound pewSound;
+    private Sound pewSound, fightSound;
     private BitmapTextureAtlas mBitmapTextureAtlas, mFontTexture;
-    private TextureRegion mSpriteTextureRegion, mCrossHairTextureRegion, mArrowTextureRegion,
-	    mKuchiTextureRegion;
+    public Hashtable<String, TextureRegion> listTR;
     private RepeatingSpriteBackground mBackground;
     private Font mFont;
     private final SparseArray<Sprite> mSprites = new SparseArray<Sprite>();
     private final SparseArray<AnimatedSprite> mPlayerSprites = new SparseArray<AnimatedSprite>();
     private final HashMap<String, Integer> ipArray = new HashMap<String, Integer>();
+    private final HashMap<String, Text> textIpArray = new HashMap<String, Text>();
 
     private Text ipText, winText, loseText;
 
@@ -129,8 +134,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private int health = 0, maxHealth = 0, battleLevel = 0;
 
     int playerNumber = -1;
-    int numPlayers = 1;
-    // private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
     private BitmapTextureAtlas mTamaBitmapTextureAtlas, mOnScreenControlTexture;
     private TiledTextureRegion mTamaTextureRegion;
@@ -150,6 +153,11 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private int team1 = 0, team2 = 0;
 
     private String IP;
+
+    private boolean isDeathMatch = false;
+    private boolean voteDeathMatch = false;
+
+    private AnimatedSprite me;
 
     // ===========================================================
     // Constructors
@@ -209,16 +217,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void onLoadResources()
     {
 	// Load textures
-	this.mBitmapTextureAtlas = new BitmapTextureAtlas(128, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
-	this.mSpriteTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "particle_point.png", 0, 0);
-	this.mCrossHairTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "crosshair.png", 0, 33);
-	this.mArrowTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "down_arrow.png", 0, 74);
-	this.mKuchiTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "tama.png", 0, 105);
-
-	this.mEngine.getTextureManager().loadTexture(this.mBitmapTextureAtlas);
-
-	BULLET_POOL = new BulletPool(mSpriteTextureRegion);
+	this.listTR = TextureUtil.loadTextures(this, this.mEngine, new String[] { new String("gfx/") });
+	BULLET_POOL = new BulletPool(listTR.get("particle_point.png"));
 
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("animated_gfx/");
 	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
@@ -243,6 +243,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	try
 	{
 	    this.pewSound = SoundFactory.createSoundFromAsset(this.mEngine.getSoundManager(), this, "pew.mp3");
+	    this.fightSound = SoundFactory.createSoundFromAsset(this.mEngine.getSoundManager(), this, "fight.mp3");
 	} catch (final IOException e)
 	{
 	    Debug.e(e);
@@ -287,16 +288,54 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private void loadLobbyScene()
     {
 	Debug.d("Creating lobby...");
+	final int padding = 40;
 	lobbyScene = new Scene();
 	lobbyScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
 	lobbyScene.setBackgroundEnabled(true);
 	ipText = new Text(15, 15, mFont, "Server IP: " + IP);
 	lobbyScene.attachChild(ipText);
+	final Sprite noSprite = new Sprite(0, 0, listTR.get("not_allowed.png"));
+	if (voteDeathMatch)
+	    noSprite.setVisible(false);
+	else
+	    noSprite.setVisible(true);
+	final Sprite voteDeathMatchButton = new Sprite(0, 0, listTR.get("skull.png"))
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    if (voteDeathMatch)
+		    {
+			voteDeathMatch = false;
+			noSprite.setVisible(true);
+		    }
+		    else
+		    {
+			voteDeathMatch = true;
+			noSprite.setVisible(false);
+		    }
+		    mServerConnector.sendVoteDeathMatch(voteDeathMatch);
+		}
+		else if (pSceneTouchEvent.isActionUp())
+		{
+
+		}
+		return true;
+	    }
+	};
+
+	voteDeathMatchButton.attachChild(noSprite);
+	voteDeathMatchButton.setPosition(padding, CAMERA_HEIGHT - voteDeathMatchButton.getHeight() - padding);
+	lobbyScene.attachChild(voteDeathMatchButton);
+	lobbyScene.registerTouchArea(voteDeathMatchButton);
 
 	if (isServer)
 	{
-	    final Text startText = new Text(15, 15, mFont, "Start Game");
-	    final Rectangle startButton = new Rectangle(0, 0, startText.getWidth() + 30, startText.getHeight() + 30)
+	    final Text startText = new Text(padding / 2, padding / 2, mFont, "Start Game");
+	    final Rectangle startButton = new Rectangle(0, 0, startText.getWidth() + padding, startText.getHeight() + padding)
 	    {
 		@Override
 		public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
@@ -310,7 +349,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		    else if (pSceneTouchEvent.isActionUp())
 		    {
 			mBattleServer.sendStartMessage();
-			return true;
 		    }
 		    return true;
 		}
@@ -322,23 +360,20 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    lobbyScene.registerTouchArea(startButton);
 	    lobbyScene.attachChild(startButton);
 
-	    final Text playerText = new Text(100, 100, mFont, "Player " + playerNumber + ", Server");
-
-	    final Sprite tamaSprite = new Sprite(0, 0, mKuchiTextureRegion);
+	    final Sprite tamaSprite = new Sprite(0, 0, listTR.get("tama.png"));
 	    tamaSprite.setPosition(CAMERA_WIDTH - tamaSprite.getWidth() - 100, 100);
-	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(2, 0, -360))));
+	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(4, 0, -360))));
 
 	    lobbyScene.attachChild(tamaSprite);
-	    lobbyScene.attachChild(playerText); // must be attached last
 	}
 	else
 	{
 	    final Text waitingText = new Text(0, 0, mFont, "Waiting for host to start game...");
 	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2 - 10);
 
-	    final Sprite tamaSprite = new Sprite(0, 0, mKuchiTextureRegion);
+	    final Sprite tamaSprite = new Sprite(0, 0, listTR.get("tama.png"));
 	    tamaSprite.setPosition(CAMERA_WIDTH / 2 - tamaSprite.getWidth() / 2, waitingText.getY() + waitingText.getHeight() + 50);
-	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(2, 0, -360))));
+	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(4, 0, -360))));
 	    lobbyScene.attachChild(tamaSprite);
 	    lobbyScene.attachChild(waitingText); // must be attached last
 	}
@@ -427,7 +462,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	ipText = new Text(15, 15, mFont, "Server IP: " + IP);
 	topLayer.attachChild(ipText);
 
-	crosshairSprite = new Sprite(0, 0, mCrossHairTextureRegion);
+	crosshairSprite = new Sprite(0, 0, listTR.get("crosshair.png"));
 	crosshairSprite.setVisible(false);
 	topLayer.attachChild(crosshairSprite);
 
@@ -513,9 +548,17 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public void startGame()
     {
+	if (isServer)
+	{
+	    if (mBattleServer.getNumPlayers() == mBattleServer.getDeathMatchVotes())
+		mBattleServer.sendDeathMatchMessage(true);
+	}
 	this.mEngine.setScene(scene);
 	if (soundOn)
+	{
+	    this.fightSound.play();
 	    this.backgroundMusic.play();
+	}
     }
 
     @Override
@@ -583,7 +626,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		public void onClick(final DialogInterface pDialog, final int pWhich)
 		{
 		    TamaBattle.this.initServerAndClient();
-		    TamaBattle.this.showDialog(DIALOG_SHOW_SERVER_IP_ID);
+		    // TamaBattle.this.showDialog(DIALOG_SHOW_SERVER_IP_ID);
 		}
 	    }).create();
 	default:
@@ -674,6 +717,14 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    Debug.e(t);
 	}
 
+	try
+	{
+	    IP = WifiUtils.getWifiIPv4Address(this);
+	} catch (UnknownHostException e)
+	{
+	    e.printStackTrace();
+	}
+
 	this.initClient();
     }
 
@@ -740,7 +791,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
      */
     public void fireBullet(final int playerID, final int pID, final float pX, final float pY)
     {
-	// final Sprite bullet = new Sprite(0, 0, this.mSpriteTextureRegion);
+	// final Sprite bullet = new Sprite(0, 0, this.listTR.get("particle_point.png"));
 	final Sprite bullet = getBulletFromBulletPool();
 	AnimatedSprite player = mPlayerSprites.get(playerID);
 	if (playerID % 2 == 0)
@@ -836,7 +887,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		}
 	    }
 	});
-	pewSound.play();
+	if (soundOn)
+	    pewSound.play();
 	mSprites.put(pID, bullet);
 	if (!bullet.hasParent())
 	    bottomLayer.attachChild(bullet);
@@ -933,16 +985,17 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	else
 	{
 	    float x = 0, y = 0;
+	    int offset = pID * 10;
 	    if (pID % 2 == 0) // spawn on right side
 	    {
-		x = CAMERA_WIDTH - player.getWidth() - 25;
-		y = CAMERA_HEIGHT / 2;
+		x = CAMERA_WIDTH - player.getWidth() - 25 - offset;
+		y = CAMERA_HEIGHT / 2 - offset;
 	    }
 	    else
 	    // spawn on left side
 	    {
-		x = player.getWidth() + 25;
-		y = CAMERA_HEIGHT / 2;
+		x = (player.getWidth() + 25) + offset;
+		y = CAMERA_HEIGHT / 2 + offset;
 	    }
 	    player.setPosition(x - player.getWidth() * 0.5f, y - player.getHeight() * 0.5f);
 	}
@@ -960,6 +1013,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	// If you are adding your own sprite.
 	if (pID == playerNumber)
 	{
+	    me = player;
 	    /**
 	     * Add analog controls
 	     */
@@ -1041,8 +1095,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		}
 	    });
 	}
-	scene.registerTouchArea(player);
 	bottomLayer.attachChild(player);
+	if (pID != playerNumber)
+	    bottomLayer.swapChildren(player, me);
     }
 
     /**
@@ -1163,7 +1218,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 		if (playerID == playerNumber)
 		{
-		    final Sprite arrowSprite = new Sprite(0, 0, mArrowTextureRegion);
+		    final Sprite arrowSprite = new Sprite(0, 0, listTR.get("down_arrow.png"));
 		    arrowSprite.setPosition(sprite.getWidth() * 0.5f - arrowSprite.getWidth() * 0.5f, -arrowSprite.getHeight() - 5);
 		    sprite.attachChild(arrowSprite);
 		}
@@ -1275,6 +1330,64 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    this.mEngine.vibrate(100l);
     }
 
+    @Override
+    public void setDeathMatch(final boolean isDeathMatch)
+    {
+	this.isDeathMatch = isDeathMatch;
+	final Sprite dmIcon = new Sprite(0, 0, listTR.get("skull.png"));
+	dmIcon.setPosition(ipText.getWidth(), ipText.getHeight() / 2 - dmIcon.getWidth() / 2);
+	dmIcon.setAlpha(0.7f);
+	ipText.attachChild(dmIcon);
+    }
+
+    @Override
+    public void updateSkull(final String ip, final boolean vote)
+    {
+	Text text = textIpArray.get(ip);
+	if (text == null)
+	{
+	    Debug.d("IP " + ip + " not found!");
+	    return;
+	}
+	if (text.getChildCount() == 0)
+	{
+	    if (vote)
+	    {
+		final Sprite skull = new Sprite(0, 0, listTR.get("skull.png"));
+		skull.setPosition(text.getWidth() + 20, text.getHeight() / 2 - skull.getHeight() / 2);
+		text.attachChild(skull);
+	    }
+	}
+	else
+	{
+	    text.getLastChild().setVisible(vote);
+	}
+    }
+
+    @Override
+    public void addPlayerToLobby(final String ip, final int playerId)
+    {
+	this.runOnUpdateThread(new Runnable()
+	{
+	    @Override
+	    public void run()
+	    {
+		final Text pText = new Text(100, 50 + playerId * 50, mFont, "Player " + playerId + ", " + ip);
+		ipArray.put(ip, playerId);
+		textIpArray.put(ip, pText);
+		if (lobbyScene != null)
+		    lobbyScene.attachChild(pText);
+
+	    }
+	});
+    }
+
+    @Override
+    public void addPlayerSpriteToServer(final int playerID)
+    {
+	addPlayerSprite(playerID, 0, 0);
+    }
+
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
@@ -1342,24 +1455,31 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	@Override
 	public void onStarted(final ClientConnector<SocketConnection> pConnector)
 	{
-	    String ip = pConnector.getConnection().getSocket().getInetAddress().getHostAddress() + ":" + pConnector.getConnection().getSocket().getPort();
-	    // TamaBattle.this.toast("SERVER: Client connected: " + ip);
-	    if (isServer && lobbyScene != null)
-	    {
-		final Text temp = (Text) lobbyScene.getLastChild();
-		numPlayers++;
-		final Text pText = new Text(temp.getX(), temp.getY() + 50, mFont, "Player " + numPlayers + ", " + ip);
-		ipArray.put(ip, numPlayers);
-		lobbyScene.attachChild(pText);
-	    }
+	    String ip = TextUtil.getIpAndPort(pConnector);
+	    Debug.d("SERVER: Client connected: " + ip);
 	}
 
 	@Override
 	public void onTerminated(final ClientConnector<SocketConnection> pConnector)
 	{
-	    String ip = pConnector.getConnection().getSocket().getInetAddress().getHostAddress() + ":" + pConnector.getConnection().getSocket().getPort();
-	    // TamaBattle.this.toast("SERVER: Client disconnected: " + ip);
+	    final String ip = TextUtil.getIpAndPort(pConnector);
+	    Debug.d("SERVER: Client disconnected: " + ip);
 	    mBattleServer.sendRemovePlayerMessage(ipArray.get(ip));
+	    runOnUpdateThread(new Runnable()
+	    {
+
+		@Override
+		public void run()
+		{
+		    try
+		    {
+			textIpArray.get(ip).detachSelf();
+		    } catch (Exception e)
+		    {
+			e.printStackTrace();
+		    }
+		}
+	    });
 	}
     }
 

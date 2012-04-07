@@ -1,5 +1,7 @@
 package com.tamaproject.util;
 
+import org.anddev.andengine.extension.multiplayer.protocol.server.connector.ClientConnector;
+import org.anddev.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.anddev.andengine.opengl.font.Font;
 
 public class TextUtil
@@ -40,10 +42,15 @@ public class TextUtil
 	    {
 		normalizedText.append(lines[j]);
 	    }
-	    
+
 	    normalizedText.append('\n');
 	}
 
 	return normalizedText.toString();
+    }
+
+    public static String getIpAndPort(final ClientConnector<SocketConnection> pConnector)
+    {
+	return pConnector.getConnection().getSocket().getInetAddress().getHostAddress() + ":" + pConnector.getConnection().getSocket().getPort();
     }
 }

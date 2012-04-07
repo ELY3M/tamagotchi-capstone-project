@@ -1,9 +1,7 @@
 package com.tamaproject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -26,9 +24,9 @@ import org.anddev.andengine.entity.IEntity;
 import org.anddev.andengine.entity.modifier.IEntityModifier.IEntityModifierListener;
 import org.anddev.andengine.entity.modifier.LoopEntityModifier;
 import org.anddev.andengine.entity.modifier.PathModifier;
-import org.anddev.andengine.entity.modifier.RotationModifier;
 import org.anddev.andengine.entity.modifier.PathModifier.IPathModifierListener;
 import org.anddev.andengine.entity.modifier.PathModifier.Path;
+import org.anddev.andengine.entity.modifier.RotationModifier;
 import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
 import org.anddev.andengine.entity.particle.ParticleSystem;
 import org.anddev.andengine.entity.particle.emitter.CircleOutlineParticleEmitter;
@@ -71,7 +69,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -91,6 +88,7 @@ import com.tamaproject.entity.Tamagotchi;
 import com.tamaproject.multiplayer.TamaBattle;
 import com.tamaproject.util.MultiplayerConstants;
 import com.tamaproject.util.TextUtil;
+import com.tamaproject.util.TextureUtil;
 import com.tamaproject.util.Weather;
 import com.tamaproject.weather.CurrentConditions;
 import com.tamaproject.weather.WeatherRetriever;
@@ -174,10 +172,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // Selection boxes for bottom bar
 
     // TextureRegions
-    public Hashtable<String, TextureRegion> listTR = new Hashtable<String, TextureRegion>();
-    public List<BitmapTextureAtlas> texturelist = new ArrayList<BitmapTextureAtlas>();
-    private String[] fileNames;
-    private String[] folderNameArray = new String[] { new String("gfx/") };
+    public Hashtable<String, TextureRegion> listTR;
 
     // Weather and GPS fields
     private LocationManager mlocManager;
@@ -229,7 +224,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mGrassBackground = new RepeatingSpriteBackground(cameraWidth, cameraHeight, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 
 	// Load all the textures in the gfx folder
-	this.loadTextures(this, this.mEngine);
+
+	this.listTR = TextureUtil.loadTextures(this, this.mEngine, new String[] { new String("gfx/") });
 
 	// Load fonts
 	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
@@ -1481,59 +1477,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 	NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 	return activeNetworkInfo != null;
-    }
-
-    /**
-     * Loads all bitmaps into TextureRegions from the gfx folder into hashtable with file name as the key
-     * 
-     * @param context
-     * @param pEngine
-     */
-    public void loadTextures(Context context, Engine pEngine)
-    {
-	BitmapFactory.Options opt = new BitmapFactory.Options();
-	opt.inJustDecodeBounds = true;
-
-	for (int i = 0; i < folderNameArray.length; i++)
-	{
-	    BitmapTextureAtlasTextureRegionFactory.setAssetBasePath(folderNameArray[i]);
-	    try
-	    {
-		fileNames = context.getResources().getAssets().list(folderNameArray[i].substring(0, folderNameArray[i].lastIndexOf("/")));
-		Arrays.sort(fileNames);
-		for (int j = 0; j < fileNames.length; j++)
-		{
-
-		    String rscPath = folderNameArray[i].concat(fileNames[j]);
-		    InputStream in = context.getResources().getAssets().open(rscPath);
-		    BitmapFactory.decodeStream(in, null, opt);
-
-		    int width = opt.outWidth;
-		    int height = opt.outHeight;
-
-		    boolean flag = MathUtils.isPowerOfTwo(width);
-
-		    if (!flag)
-		    {
-			width = MathUtils.nextPowerOfTwo(opt.outWidth);
-		    }
-		    flag = MathUtils.isPowerOfTwo(height);
-		    if (!flag)
-		    {
-			height = MathUtils.nextPowerOfTwo(opt.outHeight);
-		    }
-		    texturelist.add(new BitmapTextureAtlas(width, height, TextureOptions.BILINEAR_PREMULTIPLYALPHA));
-
-		    listTR.put(fileNames[j], BitmapTextureAtlasTextureRegionFactory.createFromAsset(texturelist.get(j), context, fileNames[j], 0, 0));
-		    pEngine.getTextureManager().loadTexture(texturelist.get(j));
-		}
-	    } catch (IOException e)
-	    {
-		e.printStackTrace();
-		return;
-	    }
-	}
-	context = null;
     }
 
     /**

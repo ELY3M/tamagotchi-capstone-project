@@ -19,6 +19,7 @@ import com.tamaproject.adt.messages.client.ClientMessageFlags;
 import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
 import com.tamaproject.adt.messages.server.ServerMessageFlags;
 import com.tamaproject.util.TamaBattleConstants;
+import com.tamaproject.util.TextUtil;
 
 /**
  * This class is for the server to handle incoming messages from the clients.
@@ -35,6 +36,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
     private int mSpriteIDCounter = 0;
     private boolean gameStarted = false;
     final SparseArray<String> playerIps = new SparseArray<String>();
+    private int deathMatchVotes = 0;
 
     public BattleServer(
 	    final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener,
@@ -57,6 +59,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_START_GAME, StartGameServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_RECEIVED_DAMAGE, ReceivedDamageServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_DEATHMATCH, DeathMatchServerMessage.class);
     }
 
     @Override
@@ -90,8 +93,9 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		if (!gameStarted)
 		{
 		    numPlayers++;
-		    String IP = pClientConnector.getConnection().getSocket().getInetAddress().getHostAddress();
+		    String IP = TextUtil.getIpAndPort(pClientConnector);
 		    playerIps.put(numPlayers, IP);
+		    battleServerListener.addPlayerToLobby(IP, numPlayers);
 		    System.out.println("New player IP added: " + numPlayers + ", " + IP);
 
 		    final GetPlayerIdServerMessage sMessage = (GetPlayerIdServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ID_PLAYER);
@@ -99,20 +103,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		    pClientConnector.sendServerMessage(sMessage);
 		    BattleServer.this.mMessagePool.recycleMessage(sMessage);
 
-		    final AddSpriteServerMessage addPlayerMessage = (AddSpriteServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ADD_SPRITE);
-		    addPlayerMessage.set(0, numPlayers, 0, 0, true);
-		    try
-		    {
-			Thread.sleep(500l);
-			BattleServer.this.sendBroadcastServerMessage(addPlayerMessage);
-			BattleServer.this.mMessagePool.recycleMessage(addPlayerMessage);
-		    } catch (IOException e)
-		    {
-			e.printStackTrace();
-		    } catch (InterruptedException e)
-		    {
-			e.printStackTrace();
-		    }
+		    battleServerListener.addPlayerSpriteToServer(numPlayers);
 
 		    battleServerListener.updateAllPlayerSprites();
 		}
@@ -215,6 +206,25 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
 	});
 
+	clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_VOTE_DEATHMATCH, VoteDeathMatchClientMessage.class, new IClientMessageHandler<SocketConnection>()
+	{
+
+	    @Override
+	    public void onHandleMessage(ClientConnector<SocketConnection> pConnector,
+		    IClientMessage clientMessage) throws IOException
+	    {
+		VoteDeathMatchClientMessage msg = (VoteDeathMatchClientMessage) clientMessage;
+		if (msg.voteDeathMatch)
+		    deathMatchVotes++;
+		else
+		    deathMatchVotes--;
+		String ip = TextUtil.getIpAndPort(pConnector);
+		System.out.println("IP: "+ip);
+		battleServerListener.updateSkull(ip, msg.voteDeathMatch);		
+	    }
+
+	});
+
 	return clientConnector;
     }
 
@@ -226,6 +236,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	    message.set(0, playerID, -1, -1, true);
 	    this.sendBroadcastServerMessage(message);
 	    mMessagePool.recycleMessage(message);
+	    playerIps.remove(playerID);
 	} catch (Exception e)
 	{
 	    e.printStackTrace();
@@ -273,7 +284,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	    e.printStackTrace();
 	}
     }
-    
+
     public void sendDamageMessage(int playerID)
     {
 	try
@@ -287,6 +298,25 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	    e.printStackTrace();
 	}
     }
+    
+    public void sendDeathMatchMessage(final boolean isDeathMatch)
+    {
+	try
+	{
+	    final DeathMatchServerMessage msg = (DeathMatchServerMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_DEATHMATCH);
+	    msg.set(isDeathMatch);
+	    this.sendBroadcastServerMessage(msg);
+	    this.mMessagePool.recycleMessage(msg);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
+
+    public int getDeathMatchVotes()
+    {
+	return deathMatchVotes;
+    }
 
     public interface IBattleServerListener
     {
@@ -296,6 +326,17 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
 	public void setPlayerData(final int playerID, final int health, final int maxHealth,
 		final int battleLevel);
+	
+	public void updateSkull(final String ip, final boolean vote);
+	
+	public void addPlayerToLobby(String ip, int playerId);
+	
+	public void addPlayerSpriteToServer(final int playerID);
+    }
+
+    public int getNumPlayers()
+    {
+        return numPlayers;
     }
 
 }

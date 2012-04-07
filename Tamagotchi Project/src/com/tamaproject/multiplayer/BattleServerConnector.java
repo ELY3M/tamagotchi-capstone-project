@@ -136,6 +136,17 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		pBattleServerConnectorListener.handleReceivedDamage(playerID);
 	    }
 	});
+
+	this.registerServerMessage(FLAG_MESSAGE_SERVER_DEATHMATCH, DeathMatchServerMessage.class, new IServerMessageHandler<SocketConnection>()
+	{
+	    @Override
+	    public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector,
+		    final IServerMessage pServerMessage) throws IOException
+	    {
+		DeathMatchServerMessage msg = (DeathMatchServerMessage) pServerMessage;
+		pBattleServerConnectorListener.setDeathMatch(msg.isDeathMatch);
+	    }
+	});
     }
 
     private void initMessagePool()
@@ -144,7 +155,9 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_FIRE_BULLET, FireBulletClientMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_VOTE_DEATHMATCH, VoteDeathMatchClientMessage.class);
     }
+    
 
     public void sendMoveSpriteMessage(int playerID, int id, float x, float y, boolean isPlayer)
     {
@@ -189,6 +202,20 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	    e.printStackTrace();
 	}
     }
+    
+    public void sendVoteDeathMatch(boolean vote)
+    {
+	try
+	{
+	    final VoteDeathMatchClientMessage message = (VoteDeathMatchClientMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_VOTE_DEATHMATCH);
+	    message.set(vote);
+	    this.sendClientMessage(message);
+	    this.mMessagePool.recycleMessage(message);
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
 
     public static interface IBattleServerConnectorListener
     {
@@ -212,5 +239,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	public void endGame();
 
 	public void handleReceivedDamage(final int playerID);
+	
+	public void setDeathMatch(final boolean isDeathMatch);
     }
 }
