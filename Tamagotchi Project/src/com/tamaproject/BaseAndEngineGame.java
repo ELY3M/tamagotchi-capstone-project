@@ -15,7 +15,7 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
     // Fields
     // ===========================================================
 
-    protected boolean vibrateOn = false, soundOn = false;
+    protected boolean vibrateOn = false, soundOn = true;
 
     // ===========================================================
     // Constructors
@@ -55,6 +55,10 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
 	    return true;
 	case SOUND:
 	    soundOn = soundOn ? false : true;
+	    if(soundOn)
+		resumeSound();
+	    else
+		pauseSound();
 	    return true;
 	default:
 	    return super.onMenuItemSelected(pFeatureId, pItem);
@@ -64,6 +68,10 @@ public abstract class BaseAndEngineGame extends BaseGameActivity
     // ===========================================================
     // Methods
     // ===========================================================
+    
+    public abstract void pauseSound();
+    
+    public abstract void resumeSound();
 
     // ===========================================================
     // Inner and Anonymous Classes

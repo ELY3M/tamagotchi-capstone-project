@@ -8,6 +8,9 @@ import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import org.anddev.andengine.audio.music.Music;
+import org.anddev.andengine.audio.music.MusicFactory;
+import org.anddev.andengine.audio.sound.SoundFactory;
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
@@ -98,6 +101,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private Camera mCamera;
 
+    private Music backgroundMusic;
     private BitmapTextureAtlas mBitmapTextureAtlas, mFontTexture;
     private TextureRegion mSpriteTextureRegion, mCrossHairTextureRegion, mArrowTextureRegion;
     private Font mFont;
@@ -161,7 +165,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 
 	this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
-	final Engine engine = new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera));
+	final Engine engine = new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera).setNeedsMusic(true));
 
 	/**
 	 * Activate multitouch
@@ -195,6 +199,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public void onLoadResources()
     {
+	// Load textures
 	this.mBitmapTextureAtlas = new BitmapTextureAtlas(64, 128, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
 	this.mSpriteTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "particle_point.png", 0, 0);
@@ -220,6 +225,32 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.mEngine.getFontManager().loadFont(this.mFont);
 
 	this.mEngine.getTextureManager().loadTextures(this.mTamaBitmapTextureAtlas, this.mOnScreenControlTexture);
+
+	// Load sounds
+	SoundFactory.setAssetBasePath("mfx/");
+	MusicFactory.setAssetBasePath("mfx/");
+	try
+	{
+	    this.backgroundMusic = MusicFactory.createMusicFromAsset(this.mEngine.getMusicManager(), this, "bionic_belly_button.mp3");
+	    this.backgroundMusic.setLooping(true);
+	} catch (final IOException e)
+	{
+	    Debug.e(e);
+	}
+    }
+
+    @Override
+    public void pauseSound()
+    {
+	if (this.backgroundMusic.isPlaying())
+	    this.backgroundMusic.pause();
+    }
+
+    @Override
+    public void resumeSound()
+    {
+	if (!mEngine.getScene().equals(lobbyScene))
+	    this.backgroundMusic.resume();
     }
 
     private void waitTime(long time)
@@ -450,6 +481,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void startGame()
     {
 	this.mEngine.setScene(scene);
+	this.backgroundMusic.play();
     }
 
     @Override

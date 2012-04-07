@@ -732,6 +732,17 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // ===========================================================
     // Methods
     // ===========================================================
+    @Override
+    public void pauseSound()
+    {
+	
+    }
+    
+    @Override
+    public void resumeSound()
+    {
+	
+    }
 
     /**
      * Loads the tamagotchi at the given coordinates. If first run, an egg hatches, otherwise the existing tamagotchi is loaded from the database.

@@ -380,4 +380,18 @@ public class TamaShooter extends BaseAndEngineGame implements IAccelerometerList
 
 	}
     };
+
+    @Override
+    public void pauseSound()
+    {
+	// TODO Auto-generated method stub
+	
+    }
+
+    @Override
+    public void resumeSound()
+    {
+	// TODO Auto-generated method stub
+	
+    }
 }
