@@ -15,16 +15,6 @@ import org.anddev.andengine.util.Debug;
 import com.tamaproject.adt.messages.client.ClientMessageFlags;
 import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
 import com.tamaproject.adt.messages.server.ServerMessageFlags;
-import com.tamaproject.multiplayer.BattleMessages.AddSpriteClientMessage;
-import com.tamaproject.multiplayer.BattleMessages.AddSpriteServerMessage;
-import com.tamaproject.multiplayer.BattleMessages.FireBulletClientMessage;
-import com.tamaproject.multiplayer.BattleMessages.FireBulletServerMessage;
-import com.tamaproject.multiplayer.BattleMessages.GetPlayerIdServerMessage;
-import com.tamaproject.multiplayer.BattleMessages.ModifyPlayerStatsServerMessage;
-import com.tamaproject.multiplayer.BattleMessages.MoveSpriteClientMessage;
-import com.tamaproject.multiplayer.BattleMessages.MoveSpriteServerMessage;
-import com.tamaproject.multiplayer.BattleMessages.SendPlayerStatsClientMessage;
-import com.tamaproject.multiplayer.BattleMessages.SendPlayerStatsServerMessage;
 import com.tamaproject.util.TamaBattleConstants;
 
 /**
@@ -51,7 +41,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	    public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector,
 		    final IServerMessage pServerMessage) throws IOException
 	    {
-		((TamaBattle) pBattleServerConnectorListener).finish();
+		pBattleServerConnectorListener.endGame();
 	    }
 	});
 
@@ -67,12 +57,12 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		    if (addSpriteServerMessage.mX >= 0 && addSpriteServerMessage.mY >= 0)
 		    {
 			pBattleServerConnectorListener.addPlayerSprite(addSpriteServerMessage.mID, addSpriteServerMessage.mX, addSpriteServerMessage.mY);
-			Debug.d("Adding player " + addSpriteServerMessage.mID);
+			Debug.d("[SERVER] Adding player " + addSpriteServerMessage.mID);
 		    }
 		    else
 		    {
 			pBattleServerConnectorListener.removePlayer(addSpriteServerMessage.mID);
-			Debug.d("Removing player " + addSpriteServerMessage.mID);
+			Debug.d("[SERVER] Removing player " + addSpriteServerMessage.mID);
 		    }
 		}
 	    }
@@ -207,5 +197,7 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 	public void startGame();
 
 	public void removePlayer(final int pID);
+	
+	public void endGame();
     }
 }

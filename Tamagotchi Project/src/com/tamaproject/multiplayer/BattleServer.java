@@ -15,9 +15,9 @@ import org.anddev.andengine.extension.multiplayer.protocol.util.MessagePool;
 
 import android.util.SparseArray;
 
-import com.tamaproject.multiplayer.BattleMessages.AddSpriteServerMessage;
-import com.tamaproject.multiplayer.BattleMessages.SendPlayerStatsServerMessage;
-import com.tamaproject.multiplayer.BattleMessages.StartGameServerMessage;
+import com.tamaproject.adt.messages.client.ClientMessageFlags;
+import com.tamaproject.adt.messages.server.ConnectionCloseServerMessage;
+import com.tamaproject.adt.messages.server.ServerMessageFlags;
 import com.tamaproject.util.TamaBattleConstants;
 
 /**
@@ -27,12 +27,13 @@ import com.tamaproject.util.TamaBattleConstants;
  * 
  */
 public class BattleServer extends SocketServer<SocketConnectionClientConnector> implements
-	IUpdateHandler, TamaBattleConstants, BattleMessages
+	IUpdateHandler, TamaBattleConstants, BattleMessages, ServerMessageFlags, ClientMessageFlags
 {
     private int numPlayers = 0;
     final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
     private IBattleServerListener battleServerListener;
     private int mSpriteIDCounter = 0;
+    private boolean gameStarted = false;
     final SparseArray<String> playerIps = new SparseArray<String>();
 
     public BattleServer(
@@ -54,6 +55,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_SEND_PLAYER, SendPlayerStatsServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_MODIFY_PLAYER, ModifyPlayerStatsServerMessage.class);
 	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_START_GAME, StartGameServerMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
     }
 
     @Override
@@ -83,32 +85,49 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	    public void onHandleMessage(ClientConnector<SocketConnection> pClientConnector,
 		    IClientMessage pClientMessage) throws IOException
 	    {
-		numPlayers++;
-		String IP = pClientConnector.getConnection().getSocket().getInetAddress().getHostAddress();
-		playerIps.put(numPlayers, IP);
-		System.out.println("New player IP added: " + numPlayers + ", " + IP);
+		System.out.println("Incoming client request...");
+		if (!gameStarted)
+		{
+		    numPlayers++;
+		    String IP = pClientConnector.getConnection().getSocket().getInetAddress().getHostAddress();
+		    playerIps.put(numPlayers, IP);
+		    System.out.println("New player IP added: " + numPlayers + ", " + IP);
 
-		final GetPlayerIdServerMessage sMessage = (GetPlayerIdServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ID_PLAYER);
-		sMessage.playerNumber = numPlayers;
-		pClientConnector.sendServerMessage(sMessage);
-		BattleServer.this.mMessagePool.recycleMessage(sMessage);
+		    final GetPlayerIdServerMessage sMessage = (GetPlayerIdServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ID_PLAYER);
+		    sMessage.playerNumber = numPlayers;
+		    pClientConnector.sendServerMessage(sMessage);
+		    BattleServer.this.mMessagePool.recycleMessage(sMessage);
 
-		final AddSpriteServerMessage addPlayerMessage = (AddSpriteServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ADD_SPRITE);
-		addPlayerMessage.set(0, numPlayers, 0, 0, true);
-		try
-		{
-		    Thread.sleep(500l);
-		    BattleServer.this.sendBroadcastServerMessage(addPlayerMessage);
-		    BattleServer.this.mMessagePool.recycleMessage(addPlayerMessage);
-		} catch (IOException e)
-		{
-		    e.printStackTrace();
-		} catch (InterruptedException e)
-		{
-		    e.printStackTrace();
+		    final AddSpriteServerMessage addPlayerMessage = (AddSpriteServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ADD_SPRITE);
+		    addPlayerMessage.set(0, numPlayers, 0, 0, true);
+		    try
+		    {
+			Thread.sleep(500l);
+			BattleServer.this.sendBroadcastServerMessage(addPlayerMessage);
+			BattleServer.this.mMessagePool.recycleMessage(addPlayerMessage);
+		    } catch (IOException e)
+		    {
+			e.printStackTrace();
+		    } catch (InterruptedException e)
+		    {
+			e.printStackTrace();
+		    }
+
+		    battleServerListener.updateAllPlayerSprites();
 		}
+		else
+		{
+		    try
+		    {
+			final ConnectionCloseServerMessage closeMessage = (ConnectionCloseServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE);
+			pClientConnector.sendServerMessage(closeMessage);
+			BattleServer.this.mMessagePool.recycleMessage(closeMessage);
+		    } catch (Exception e)
+		    {
+			e.printStackTrace();
+		    }
 
-		battleServerListener.updateAllPlayerSprites();
+		}
 	    }
 	});
 
@@ -214,6 +233,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
     public void sendStartMessage()
     {
+	this.gameStarted = true;
 	try
 	{
 	    StartGameServerMessage startMessage = (StartGameServerMessage) this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_START_GAME);

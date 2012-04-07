@@ -652,6 +652,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	super.onPause();
 	this.mEngine.stop();
+	this.stopGPS();
 	totalPlayTime += System.currentTimeMillis() - startPlayTime;
 
 	if (dbHelper != null)
