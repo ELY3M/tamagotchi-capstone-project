@@ -34,6 +34,7 @@ import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.background.ColorBackground;
 import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
+import org.anddev.andengine.entity.scene.background.SpriteBackground;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
@@ -68,6 +69,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.text.style.BackgroundColorSpan;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.widget.EditText;
@@ -116,6 +118,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private BitmapTextureAtlas mFontTexture;
     public Hashtable<String, TextureRegion> listTR;
     private RepeatingSpriteBackground mBackground;
+    private SpriteBackground orangeBackground;
     private Font mFont;
     private final SparseArray<Sprite> mSprites = new SparseArray<Sprite>();
     private final SparseArray<AnimatedSprite> mPlayerSprites = new SparseArray<AnimatedSprite>();
@@ -242,6 +245,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.mEngine.getTextureManager().loadTextures(this.mTamaBitmapTextureAtlas, this.mOnScreenControlTexture);
 
 	this.mBackground = new RepeatingSpriteBackground(CAMERA_WIDTH, CAMERA_HEIGHT, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass_inverted.png"));
+	this.orangeBackground = new SpriteBackground(new Sprite(0, 0, listTR.get("orange.png")));
 
 	// Load sounds
 	SoundFactory.setAssetBasePath("mfx/");
@@ -308,7 +312,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	Debug.d("Creating lobby...");
 	final int padding = 40;
 	lobbyScene = new Scene();
-	lobbyScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	//lobbyScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	lobbyScene.setBackground(orangeBackground);
 	lobbyScene.setBackgroundEnabled(true);
 	ipText = new Text(15, 15, mFont, "Multiplayer Battle Mode - Server IP: " + IP);
 	lobbyScene.attachChild(ipText);
@@ -438,7 +443,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.loadLobbyScene();
 
 	endScene = new Scene();
-	endScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	endScene.setBackground(orangeBackground);
 	winText = new Text(0, 0, mFont, "You win!");
 	winText.setScale(1.5f);
 	winText.setVisible(false);

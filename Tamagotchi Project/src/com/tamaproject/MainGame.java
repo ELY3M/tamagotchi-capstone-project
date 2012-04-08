@@ -465,7 +465,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public void onLoadComplete()
     {
-
+	loadOptions();
     }
 
     /**
