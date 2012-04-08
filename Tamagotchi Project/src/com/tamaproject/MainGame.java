@@ -206,6 +206,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private DatabaseHelper dbHelper;
 
+    private float velocity = 100;
+
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -770,7 +772,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		}
 	    }
 	    else
-		firstRun=true;
+		firstRun = true;
 	}
 
 	if (firstRun)
@@ -828,7 +830,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
 	double distance = Math.sqrt(Math.pow(tama.getSprite().getX() - x, 2) + Math.pow(tama.getSprite().getY() - y, 2));
-	float velocity = 100;
+
 	this.tama.getSprite().clearEntityModifiers();
 	this.tama.getSprite().registerEntityModifier(new PathModifier((float) distance / velocity, path, null, new IPathModifierListener()
 	{
@@ -1059,7 +1061,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		if (pSceneTouchEvent.isActionDown())
 		{
-		    //showNotification("Minigames are still in development!");
+		    // showNotification("Minigames are still in development!");
 		    Intent intent = new Intent(MainGame.this.getApplicationContext(), MiniGameListActivity.class);
 		    MainGame.this.startActivity(intent);
 		    return true;
@@ -1604,6 +1606,16 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    ipoToRemove.add((Sprite) e);
 		}
 	    }
+	    else if (matches.contains("hyper mode"))
+	    {
+		velocity = 1000;
+		toast("Hyper mode activated.");
+	    }
+	    else if (matches.contains("normal mode"))
+	    {
+		velocity = 100;
+		toast("Normal mode activated.");
+	    }
 	    super.onActivityResult(requestCode, resultCode, data);
 	    this.mEngine.start();
 	}
@@ -1619,7 +1631,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		Debug.d("Setting current health to " + health);
 		tama.setCurrentHealth(health);
 	    }
-	    // TODO: Update Health and stuff if deathmatch
 	    super.onActivityResult(requestCode, resultCode, data);
 	}
     }
@@ -1790,6 +1801,18 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	return true;
     }
 
+    public void toast(final String pMessage)
+    {
+	this.runOnUiThread(new Runnable()
+	{
+	    @Override
+	    public void run()
+	    {
+		Toast.makeText(MainGame.this, pMessage, Toast.LENGTH_SHORT).show();
+	    }
+	});
+    }
+
     /**
      * Shows the particle effect for the given status of the Tamagotchi.
      * 
@@ -1942,6 +1965,19 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadTamaTimers()
     {
+	/**
+	 * Random movement
+	 */
+	this.mScene.registerUpdateHandler(new TimerHandler(MathUtils.random(0, 10), true, new ITimerCallback()
+	{
+	    @Override
+	    public void onTimePassed(final TimerHandler pTimerHandler)
+	    {
+		moveTama(MathUtils.random(30, cameraWidth - 30), MathUtils.random(pTopBound + 30, pBottomBound - 30));
+		pTimerHandler.setTimerSeconds(MathUtils.random(0, 10));
+	    }
+	}));
+
 	/**
 	 * Timer to generate poop
 	 */
