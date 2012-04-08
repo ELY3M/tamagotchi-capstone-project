@@ -28,6 +28,15 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 {
     private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
+    private void initMessagePool()
+    {
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_ADD_SPRITE, AddSpriteClientMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_FIRE_BULLET, FireBulletClientMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class);
+	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_VOTE_DEATHMATCH, VoteDeathMatchClientMessage.class);
+    }
+
     public BattleServerConnector(
 	    final String pServerIP,
 	    final ISocketConnectionServerConnectorListener pSocketConnectionServerConnectorListener,
@@ -147,15 +156,6 @@ public class BattleServerConnector extends ServerConnector<SocketConnection> imp
 		pBattleServerConnectorListener.client_setDeathMatch(msg.isDeathMatch);
 	    }
 	});
-    }
-
-    private void initMessagePool()
-    {
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_ADD_SPRITE, AddSpriteClientMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_MOVE_SPRITE, MoveSpriteClientMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_FIRE_BULLET, FireBulletClientMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class);
-	this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_VOTE_DEATHMATCH, VoteDeathMatchClientMessage.class);
     }
     
 

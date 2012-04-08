@@ -31,11 +31,11 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	IUpdateHandler, TamaBattleConstants, BattleMessages, ServerMessageFlags, ClientMessageFlags
 {
     private int numPlayers = 0;
-    final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
+    private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
     private IBattleServerListener battleServerListener;
     private int mSpriteIDCounter = 0;
     private boolean gameStarted = false;
-    final SparseArray<String> playerIps = new SparseArray<String>();
+    private final SparseArray<String> playerIps = new SparseArray<String>();
     private int deathMatchVotes = 0;
 
     public BattleServer(

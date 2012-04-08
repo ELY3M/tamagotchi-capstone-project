@@ -26,6 +26,7 @@ import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolic
 import org.anddev.andengine.entity.Entity;
 import org.anddev.andengine.entity.modifier.LoopEntityModifier;
 import org.anddev.andengine.entity.modifier.RotationModifier;
+import org.anddev.andengine.entity.modifier.ScaleModifier;
 import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
 import org.anddev.andengine.entity.primitive.Line;
 import org.anddev.andengine.entity.primitive.Rectangle;
@@ -309,7 +310,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	lobbyScene = new Scene();
 	lobbyScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
 	lobbyScene.setBackgroundEnabled(true);
-	ipText = new Text(15, 15, mFont, "Server IP: " + IP);
+	ipText = new Text(15, 15, mFont, "Multiplayer Battle Mode - Server IP: " + IP);
 	lobbyScene.attachChild(ipText);
 	final Sprite noSprite = new Sprite(0, 0, listTR.get("not_allowed.png"));
 	if (voteDeathMatch)
@@ -351,6 +352,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 	if (isServer)
 	{
+	    final Text waitingText = new Text(0, 0, mFont, "Waiting for players to join...");
+	    waitingText.setPosition(CAMERA_WIDTH - waitingText.getWidth() - 20, CAMERA_HEIGHT - waitingText.getHeight() - 20);
+
 	    final Text startText = new Text(padding / 2, padding / 2, mFont, "Start Game");
 	    final Rectangle startButton = new Rectangle(0, 0, startText.getWidth() + padding, startText.getHeight() + padding)
 	    {
@@ -358,27 +362,55 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
 			final float pTouchAreaLocalX, final float pTouchAreaLocalY)
 		{
-		    if (pSceneTouchEvent.isActionDown())
+		    if (this.isVisible())
 		    {
-			Debug.d("Touched start button...");
-			this.setColor(0, 1, 0);
+			if (pSceneTouchEvent.isActionDown())
+			{
+			    Debug.d("Touched start button...");
+			    this.setColor(0, 1, 0);
+			}
+			else if (pSceneTouchEvent.isActionUp())
+			{
+			    mBattleServer.sendStartMessage();
+			}
+			return true;
 		    }
-		    else if (pSceneTouchEvent.isActionUp())
-		    {
-			mBattleServer.sendStartMessage();
-		    }
-		    return true;
+		    else
+			return false;
 		}
 	    };
+	    startButton.setVisible(false);
+	    startButton.registerUpdateHandler(new IUpdateHandler()
+	    {
+
+		@Override
+		public void reset()
+		{
+
+		}
+
+		@Override
+		public void onUpdate(float arg0)
+		{
+		    if (!startButton.isVisible() && mBattleServer.getNumPlayers() > 1)
+		    {
+			startButton.setVisible(true);
+			waitingText.setVisible(false);
+			startButton.unregisterUpdateHandler(this);
+		    }
+		}
+	    });
 
 	    startButton.setColor(1, 0, 0);
 	    startButton.setPosition(CAMERA_WIDTH - startButton.getWidth() - 20, CAMERA_HEIGHT - startButton.getHeight() - 20);
 	    startButton.attachChild(startText);
+
+	    lobbyScene.attachChild(waitingText);
 	    lobbyScene.registerTouchArea(startButton);
 	    lobbyScene.attachChild(startButton);
 
 	    final Sprite tamaSprite = new Sprite(0, 0, listTR.get("tama.png"));
-	    tamaSprite.setPosition(CAMERA_WIDTH - tamaSprite.getWidth() - 100, 100);
+	    tamaSprite.setPosition(CAMERA_WIDTH - tamaSprite.getWidth() - 60, 60);
 	    tamaSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(4, 0, -360))));
 
 	    lobbyScene.attachChild(tamaSprite);
@@ -844,6 +876,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		{
 		    final Sprite arrowSprite = new Sprite(0, 0, listTR.get("down_arrow.png"));
 		    arrowSprite.setPosition(sprite.getWidth() * 0.5f - arrowSprite.getWidth() * 0.5f, -arrowSprite.getHeight() - 5);
+		    arrowSprite.registerEntityModifier(new LoopEntityModifier(new SequenceEntityModifier(new ScaleModifier(0.2f, 1, 1.2f), new ScaleModifier(0.2f, 1.2f, 1))));
 		    sprite.attachChild(arrowSprite);
 		}
 	    }
@@ -862,7 +895,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     // ===========================================================
     // Client methods
     // ===========================================================
-    
+
     /**
      * 
      * @param pID
@@ -893,7 +926,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 	if (isServer)
 	{
-	    int c = 1000;
+	    int c = 200;
 	    float xDim = pX - bullet.getX();
 	    float yDim = pY - bullet.getY();
 	    float nY = yDim / Math.abs(xDim);
@@ -1295,7 +1328,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     // ===========================================================
     // Server methods
     // ===========================================================
-    
+
     @Override
     /**
      * Sends updated player user data to all the clients.
@@ -1369,7 +1402,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    @Override
 	    public void run()
 	    {
-		final Text pText = new Text(50, 50 + playerId * 50, mFont, "Player " + playerId + ", " + ip + ", Battle Level: " + battleLevel);
+		final Text pText = new Text(50, 50 + playerId * 50, mFont, "Player " + playerId + ", Battle Level: " + battleLevel + ", " + ip);
 		ipArray.put(ip, playerId);
 		textIpArray.put(ip, pText);
 		if (lobbyScene != null)

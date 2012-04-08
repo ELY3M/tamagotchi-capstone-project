@@ -1059,7 +1059,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		if (pSceneTouchEvent.isActionDown())
 		{
-		    showNotification("Minigames are still in development!");
+		    //showNotification("Minigames are still in development!");
+		    Intent intent = new Intent(MainGame.this.getApplicationContext(), MiniGameListActivity.class);
+		    MainGame.this.startActivity(intent);
 		    return true;
 		}
 		return false;
