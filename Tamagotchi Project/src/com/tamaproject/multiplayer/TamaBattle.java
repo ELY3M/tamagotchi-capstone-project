@@ -184,7 +184,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public Engine onLoadEngine()
     {
-	this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+	TamaBattle.this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 
 	this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
 	final Engine engine = new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera).setNeedsMusic(true).setNeedsSound(true));
@@ -482,7 +482,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		}
 		else if (pSceneTouchEvent.isActionUp())
 		{
-		    TamaBattle.this.finish();
+		    finish();
 		}
 		return true;
 	    }
@@ -757,18 +757,6 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    e.printStackTrace();
 	}
 	super.finish();
-    }
-
-    @Override
-    public boolean onKeyUp(final int pKeyCode, final KeyEvent pEvent)
-    {
-	switch (pKeyCode)
-	{
-	case KeyEvent.KEYCODE_BACK:
-	    this.finish();
-	    return true;
-	}
-	return super.onKeyUp(pKeyCode, pEvent);
     }
 
     // ===========================================================
@@ -1365,7 +1353,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void client_endGame()
     {
 	Debug.d("Ending game...");
-	this.finish();
+	TamaBattle.this.finish();
     }
 
     /**

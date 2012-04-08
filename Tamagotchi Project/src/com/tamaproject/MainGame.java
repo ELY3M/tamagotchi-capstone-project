@@ -483,129 +483,135 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     protected Dialog onCreateDialog(int id)
     {
 	AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
-	switch (id)
+	try
 	{
-	case MainGame.CONFIRM_APPLYITEM:
-	    builder2.setTitle("Give Item");
-	    builder2.setIcon(android.R.drawable.btn_star);
-	    builder2.setMessage("Are you sure you want to give " + itemToApply.getName() + " to your Tamagotchi?");
-	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
+	    switch (id)
 	    {
-		@Override
-		public void onClick(DialogInterface dialog, int which)
+	    case MainGame.CONFIRM_APPLYITEM:
+		builder2.setTitle("Give Item");
+		builder2.setIcon(android.R.drawable.btn_star);
+		builder2.setMessage("Are you sure you want to give " + itemToApply.getName() + " to your Tamagotchi?");
+		builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 		{
-		    runOnUpdateThread(new Runnable()
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
 		    {
-			@Override
-			public void run()
+			runOnUpdateThread(new Runnable()
 			{
-			    Debug.d("Applying item");
-			    applyItem(itemToApply);
-			    showNotification(itemToApply.getName() + " has been given to your Tamagotchi!");
-			    itemToApply = null;
-			}
-		    }); // End runOnUpdateThread
-		    return;
-		}
-	    });
-
-	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
-	    {
-		@Override
-		public void onClick(DialogInterface dialog, int which)
-		{
-		    runOnUpdateThread(new Runnable()
-		    {
-			@Override
-			public void run()
-			{
-			    Debug.d("Putting back item");
-			    itemToApply.detachSelf();
-			    backpackBackground.attachChild(itemToApply);
-			    itemToApply = null;
-			}
-		    }); // End runOnUpdateThread
-		    return;
-		}
-	    });
-
-	    return builder2.create();
-
-	case MainGame.CONFIRM_QUITGAME:
-	    builder2.setTitle("Quit Game");
-	    builder2.setIcon(android.R.drawable.btn_star);
-	    builder2.setMessage("Are you sure you want to quit the game?");
-	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
-	    {
-		@Override
-		public void onClick(DialogInterface dialog, int which)
-		{
-		    finish();
-		    return;
-		}
-	    });
-
-	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
-	    {
-		@Override
-		public void onClick(DialogInterface dialog, int which)
-		{
-		    return;
-		}
-	    });
-
-	    return builder2.create();
-
-	case MainGame.CONFIRM_REMOVEITEM:
-	    builder2.setTitle("Throw Away Item");
-	    builder2.setIcon(android.R.drawable.btn_star);
-	    builder2.setMessage("Are you sure you want to throw away " + itemToRemove.getName() + "?");
-	    builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
-	    {
-		@Override
-		public void onClick(DialogInterface dialog, int which)
-		{
-		    runOnUpdateThread(new Runnable()
-		    {
-			@Override
-			public void run()
-			{
-			    if (itemToRemove != null)
+			    @Override
+			    public void run()
 			    {
-				itemToRemove.detachSelf();
-				bp.removeItem(itemToRemove);
-				showNotification(itemToRemove.getName() + " has been removed.");
-				itemToRemove = null;
-				bp.resetPositions(cameraWidth, cameraHeight);
+				Debug.d("Applying item");
+				applyItem(itemToApply);
+				showNotification(itemToApply.getName() + " has been given to your Tamagotchi!");
+				itemToApply = null;
 			    }
-			}
-		    });
-		    return;
-		}
-	    });
+			}); // End runOnUpdateThread
+			return;
+		    }
+		});
 
-	    builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
-	    {
-		@Override
-		public void onClick(DialogInterface dialog, int which)
+		builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
 		{
-		    runOnUpdateThread(new Runnable()
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
 		    {
-			@Override
-			public void run()
+			runOnUpdateThread(new Runnable()
 			{
-			    Debug.d("Putting back item");
-			    itemToRemove.detachSelf();
-			    backpackBackground.attachChild(itemToRemove);
-			    itemToRemove = null;
-			}
-		    }); // End runOnUpdateThread
-		    return;
-		}
-	    });
+			    @Override
+			    public void run()
+			    {
+				Debug.d("Putting back item");
+				itemToApply.detachSelf();
+				backpackBackground.attachChild(itemToApply);
+				itemToApply = null;
+			    }
+			}); // End runOnUpdateThread
+			return;
+		    }
+		});
 
-	    return builder2.create();
+		return builder2.create();
 
+	    case MainGame.CONFIRM_QUITGAME:
+		builder2.setTitle("Quit Game");
+		builder2.setIcon(android.R.drawable.btn_star);
+		builder2.setMessage("Are you sure you want to quit the game?");
+		builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
+		{
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
+		    {
+			finish();
+			return;
+		    }
+		});
+
+		builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
+		{
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
+		    {
+			return;
+		    }
+		});
+
+		return builder2.create();
+
+	    case MainGame.CONFIRM_REMOVEITEM:
+		builder2.setTitle("Throw Away Item");
+		builder2.setIcon(android.R.drawable.btn_star);
+		builder2.setMessage("Are you sure you want to throw away " + itemToRemove.getName() + "?");
+		builder2.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
+		{
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
+		    {
+			runOnUpdateThread(new Runnable()
+			{
+			    @Override
+			    public void run()
+			    {
+				if (itemToRemove != null)
+				{
+				    itemToRemove.detachSelf();
+				    bp.removeItem(itemToRemove);
+				    showNotification(itemToRemove.getName() + " has been removed.");
+				    itemToRemove = null;
+				    bp.resetPositions(cameraWidth, cameraHeight);
+				}
+			    }
+			});
+			return;
+		    }
+		});
+
+		builder2.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
+		{
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
+		    {
+			runOnUpdateThread(new Runnable()
+			{
+			    @Override
+			    public void run()
+			    {
+				Debug.d("Putting back item");
+				itemToRemove.detachSelf();
+				backpackBackground.attachChild(itemToRemove);
+				itemToRemove = null;
+			    }
+			}); // End runOnUpdateThread
+			return;
+		    }
+		});
+
+		return builder2.create();
+
+	    }
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
 	}
 
 	return null;
