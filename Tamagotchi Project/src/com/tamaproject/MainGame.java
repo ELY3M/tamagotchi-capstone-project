@@ -207,6 +207,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private DatabaseHelper dbHelper;
 
     private float velocity = 100;
+    private boolean manualMove = false;
+    private boolean stayStill = false;
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -346,8 +348,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    /**
 		     * Remove queued in play objects
 		     */
+
 		    if (ipoToRemove.size() > 0)
 		    {
+			Debug.d("IPOs to remove: " + ipoToRemove.size());
 			for (BaseSprite s : ipoToRemove)
 			{
 			    s.detachSelf();
@@ -355,6 +359,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 			    inPlayObjects.remove(s);
 			}
 			ipoToRemove.clear();
+			Debug.d("IPOs to remove: " + ipoToRemove.size());
 		    }
 
 		    /**
@@ -720,7 +725,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		float x = pSceneTouchEvent.getX();
 		float y = pSceneTouchEvent.getY();
-
+		if (y < pTopBound || y > pBottomBound - tama.getSprite().getHeight())
+		    return false;
 		moveTama(x, y);
 	    }
 	}
@@ -825,7 +831,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void moveTama(final float x, final float y)
     {
-	if (!tama.getSprite().hasParent())
+	if (!tama.getSprite().hasParent() || stayStill)
 	    return;
 
 	final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
@@ -838,6 +844,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public void onPathStarted(final PathModifier pPathModifier, final IEntity pEntity)
 	    {
 		Debug.d("onPathStarted");
+		manualMove = true;
 	    }
 
 	    @Override
@@ -886,6 +893,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		Debug.d("onPathFinished");
 		((AnimatedSprite) tama.getSprite()).stopAnimation();
+		manualMove = false;
 	    }
 	}));
     }
@@ -1616,6 +1624,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		velocity = 100;
 		toast("Normal mode activated.");
 	    }
+	    else if (matches.contains("stay"))
+	    {
+		stayStill = true;
+	    }
+	    else if (matches.contains("move"))
+	    {
+		stayStill = false;
+	    }
 	    super.onActivityResult(requestCode, resultCode, data);
 	    this.mEngine.start();
 	}
@@ -1973,8 +1989,11 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    @Override
 	    public void onTimePassed(final TimerHandler pTimerHandler)
 	    {
-		moveTama(MathUtils.random(30, cameraWidth - 30), MathUtils.random(pTopBound + 30, pBottomBound - 30));
-		pTimerHandler.setTimerSeconds(MathUtils.random(0, 10));
+		if (!manualMove)
+		{
+		    moveTama(MathUtils.random(30, cameraWidth - 30), MathUtils.random(pTopBound + 30, pBottomBound - 30));
+		    pTimerHandler.setTimerSeconds(MathUtils.random(0, 10));
+		}
 	    }
 	}));
 
