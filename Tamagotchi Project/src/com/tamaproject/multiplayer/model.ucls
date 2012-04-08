@@ -1,0 +1,138 @@
+<class-diagram version="1.0.7" icons="true" automaticImage="PNG" always-add-relationships="false" generalizations="true" 
+  realizations="true" associations="true" dependencies="false" nesting-relationships="true">  
+  <class id="1" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.multiplayer.TamaBattle.ServerStateListener" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/multiplayer/TamaBattle.java" 
+    binary="false">    
+    <position height="-1" width="-1" x="435" y="1290"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <class id="2" corner="BOTTOM_RIGHT" language="java" 
+    name="com.tamaproject.multiplayer.TamaBattle.ServerConnectorListener" project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/multiplayer/TamaBattle.java" binary="false">    
+    <position height="-1" width="-1" x="150" y="1001"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <class id="3" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.multiplayer.TamaBattle" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/multiplayer/TamaBattle.java" 
+    binary="false">    
+    <position height="1507" width="283" x="329" y="-311"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <class id="4" corner="BOTTOM_RIGHT" language="java" 
+    name="com.tamaproject.multiplayer.TamaBattle.ClientConnectorListener" project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/multiplayer/TamaBattle.java" binary="false">    
+    <position height="-1" width="-1" x="800" y="913"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <interface id="5" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.adt.messages.client.ClientMessageFlags" 
+    project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/adt/messages/client/ClientMessageFlags.java" binary="false">    
+    <position height="-1" width="-1" x="123" y="-97"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </interface>  
+  <interface id="6" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.adt.messages.server.ServerMessageFlags" 
+    project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/adt/messages/server/ServerMessageFlags.java" binary="false">    
+    <position height="-1" width="-1" x="90" y="85"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </interface>  
+  <interface id="7" corner="BOTTOM_RIGHT" language="java" 
+    name="com.tamaproject.multiplayer.BattleServer.IBattleServerListener" project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/multiplayer/BattleServer.java" binary="false">    
+    <position height="-1" width="-1" x="79" y="324"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </interface>  
+  <interface id="8" corner="BOTTOM_RIGHT" language="java" 
+    name="com.tamaproject.multiplayer.BattleServerConnector.IBattleServerConnectorListener" project="Tamagotchi Project" 
+    file="/Tamagotchi Project/src/com/tamaproject/multiplayer/BattleServerConnector.java" binary="false">    
+    <position height="-1" width="-1" x="57" y="650"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </interface>  
+  <interface id="9" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.util.TamaBattleConstants" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/util/TamaBattleConstants.java" 
+    binary="false">    
+    <position height="-1" width="-1" x="801" y="-82"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </interface>  
+  <interface id="10" corner="BOTTOM_RIGHT" language="java" name="com.tamaproject.multiplayer.BattleMessages" 
+    project="Tamagotchi Project" file="/Tamagotchi Project/src/com/tamaproject/multiplayer/BattleMessages.java" 
+    binary="false">    
+    <position height="-1" width="-1" x="800" y="311"/>    
+    <display autosize="true" package="true" initial-value="false" signature="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </interface>  
+  <realization id="11">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="8"/>  
+  </realization>  
+  <realization id="12">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="5"/>  
+  </realization>  
+  <nesting id="13">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="1"/>  
+  </nesting>  
+  <generalization id="14">    
+    <end type="SOURCE" refId="10"/>    
+    <end type="TARGET" refId="9"/>  
+  </generalization>  
+  <realization id="15">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="9"/>  
+  </realization>  
+  <nesting id="16">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="4"/>  
+  </nesting>  
+  <realization id="17">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="10"/>  
+  </realization>  
+  <realization id="18">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="7"/>  
+  </realization>  
+  <realization id="19">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="6"/>  
+  </realization>  
+  <nesting id="20">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="2"/>  
+  </nesting>  
+  <classifier-display autosize="true" package="true" initial-value="false" signature="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true"/>    
+    <operations public="true" package="true" protected="true" private="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>
