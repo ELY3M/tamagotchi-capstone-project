@@ -440,7 +440,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
 	else
 	{
-	    final Text waitingText = new Text(0, 0, mFont, "You are player " + playerNumber + "\nWaiting for host to start game...");
+	    int team = (playerNumber % 2 == 0) ? 2 : 1;
+	    final Text waitingText = new Text(0, 0, mFont, "You are player " + playerNumber + ", Team " + team + "\nWaiting for host to start game...");
 	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2 - waitingText.getHeight() / 2);
 
 	    final Sprite tamaSprite = new Sprite(0, 0, listTR.get("tama.png"));
@@ -1202,8 +1203,17 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 	    /* Velocity control (left). */
 	    final int spacing = 40;
-	    final int x1 = spacing;
-	    final int y1 = CAMERA_HEIGHT - mOnScreenControlBaseTextureRegion.getHeight() - spacing;
+	    int x1 = 0, y1 = 0;
+	    if (playerNumber % 2 != 0)
+	    {
+		x1 = spacing;
+		y1 = CAMERA_HEIGHT - mOnScreenControlBaseTextureRegion.getHeight() - spacing;
+	    }
+	    else
+	    {
+		x1 = CAMERA_WIDTH - mOnScreenControlBaseTextureRegion.getWidth() - spacing;
+		y1 = CAMERA_HEIGHT - mOnScreenControlBaseTextureRegion.getHeight() - spacing;
+	    }
 	    final AnalogOnScreenControl velocityOnScreenControl = new AnalogOnScreenControl(x1, y1, mCamera, mOnScreenControlBaseTextureRegion, mOnScreenControlKnobTextureRegion, 0.1f, new IAnalogOnScreenControlListener()
 	    {
 		@Override
