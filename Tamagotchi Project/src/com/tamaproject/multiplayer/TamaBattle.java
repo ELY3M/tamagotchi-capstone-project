@@ -1107,9 +1107,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    {
 		try
 		{
-		    if(!mEngine.getScene().equals(lobbyScene))
+		    if (!mEngine.getScene().equals(lobbyScene))
 		    {
-			final Sprite tombSprite = new Sprite(mPlayerSprites.get(pID).getX(),mPlayerSprites.get(pID).getY(),listTR.get("tombstone.png"));
+			final Sprite tombSprite = new Sprite(mPlayerSprites.get(pID).getX(), mPlayerSprites.get(pID).getY(), listTR.get("tombstone.png"));
 			bottomLayer.attachChild(tombSprite);
 			bottomLayer.swapChildren(tombSprite, mPlayerSprites.get(pID));
 		    }
@@ -1284,8 +1284,17 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    });
 	}
 	bottomLayer.attachChild(player);
-	if (pID != playerNumber)
-	    bottomLayer.swapChildren(player, me);
+	try
+	{
+	    if (pID != playerNumber)
+		bottomLayer.swapChildren(player, me);
+	} catch (NullPointerException e)
+	{
+	    // Haven't added my sprite yet.
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
     }
 
     /**
@@ -1365,7 +1374,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	if (id == playerNumber && vibrateOn)
 	    this.mEngine.vibrate(100l);
 
-	this.mPlayerSprites.get(id).registerEntityModifier(new SequenceEntityModifier(new ColorModifier(0.2f,1,1,1,0,1,0), new ColorModifier(0.2f, 1, 1, 0, 1, 0, 1)));
+	this.mPlayerSprites.get(id).registerEntityModifier(new SequenceEntityModifier(new ColorModifier(0.2f, 1, 1, 1, 0, 1, 0), new ColorModifier(0.2f, 1, 1, 0, 1, 0, 1)));
     }
 
     /**
