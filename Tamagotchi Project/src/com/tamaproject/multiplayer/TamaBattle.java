@@ -24,6 +24,7 @@ import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
+import org.anddev.andengine.entity.modifier.ColorModifier;
 import org.anddev.andengine.entity.modifier.LoopEntityModifier;
 import org.anddev.andengine.entity.modifier.RotationModifier;
 import org.anddev.andengine.entity.modifier.ScaleModifier;
@@ -952,6 +953,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     // ===========================================================
 
     /**
+     * On the server: Adds a bullet sprite and then sends location updates of the bullets location to clients. On the clients: Adds a bullet sprite. The location is updated by client_moveSprite()
      * 
      * @param pID
      *            ID of the new bullet sprite.
@@ -1063,10 +1065,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    bottomLayer.attachChild(bullet);
     }
 
-    @Override
     /**
      * Sets the playerNumber, which identifies the player
      */
+    @Override
     public void client_setPlayerNumber(final int playerNumber)
     {
 	this.playerNumber = playerNumber;
@@ -1085,6 +1087,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	});
     }
 
+    /**
+     * Removes the player sprite from play
+     */
     public void client_removePlayer(final int pID)
     {
 	if (mPlayerSprites.get(pID) == null)
@@ -1114,6 +1119,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    {
 		try
 		{
+		    if(!mEngine.getScene().equals(lobbyScene))
+		    {
+			final Sprite tombSprite = new Sprite(mPlayerSprites.get(pID).getX(),mPlayerSprites.get(pID).getY(),listTR.get("tombstone.png"));
+			bottomLayer.attachChild(tombSprite);
+			bottomLayer.swapChildren(tombSprite, mPlayerSprites.get(pID));
+		    }
 		    mPlayerSprites.get(pID).detachSelf();
 		    mPlayerSprites.remove(pID);
 		} catch (Exception e)
@@ -1365,6 +1376,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     {
 	if (id == playerNumber && vibrateOn)
 	    this.mEngine.vibrate(100l);
+
+	this.mPlayerSprites.get(id).registerEntityModifier(new SequenceEntityModifier(new ColorModifier(0.2f,1,1,1,0,1,0), new ColorModifier(0.2f, 1, 1, 0, 1, 0, 1)));
     }
 
     /**
@@ -1380,6 +1393,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	ipText.attachChild(dmIcon);
     }
 
+    /**
+     * Start the game
+     */
     @Override
     public void client_startGame()
     {
@@ -1403,10 +1419,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     // Server methods
     // ===========================================================
 
-    @Override
     /**
      * Sends updated player user data to all the clients.
      */
+    @Override
     public void server_updateAllPlayerInfo()
     {
 	Debug.d("Sending updated player info to clients...");
@@ -1444,6 +1460,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
     }
 
+    /**
+     * Displays a skull next to anyone who votes for death match
+     */
     @Override
     public void server_updateSkull(final String ip, final boolean vote)
     {
@@ -1468,6 +1487,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
     }
 
+    /**
+     * Adds the player to the lobby and displays their information
+     */
     @Override
     public void server_addPlayerToLobby(final String ip, final int playerId, final int battleLevel)
     {
@@ -1491,16 +1513,19 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	});
     }
 
+    /**
+     * Adds the player sprite to the server. This method is followed up by running updateAllPlayerSprites()
+     */
     @Override
     public void server_addPlayerSpriteToServer(final int playerID)
     {
 	client_addPlayerSprite(playerID, 0, 0);
     }
 
-    @Override
     /**
-     * Sends a message to all clients to add new player sprites onto the screen.
+     * Sends a message to all clients to add new player sprites onto the screen. This syncs the player sprites on the clients with the ones that exist on the server.
      */
+    @Override
     public void server_updateAllPlayerSprites()
     {
 	synchronized (mPlayerSprites)
