@@ -1,6 +1,7 @@
 package com.tamaproject.multiplayer;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 import org.anddev.andengine.engine.handler.IUpdateHandler;
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.IMessage;
@@ -37,6 +38,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
     private boolean gameStarted = false;
     private final SparseArray<String> playerIps = new SparseArray<String>();
     private int deathMatchVotes = 0;
+    private LinkedList<Integer> playerNumbers = new LinkedList<Integer>();
 
     public BattleServer(
 	    final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener,
@@ -92,17 +94,34 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 		System.out.println("Incoming client request...");
 		if (!gameStarted)
 		{
+		    // Increment number of players
 		    numPlayers++;
 		    String IP = TextUtil.getIpAndPort(pClientConnector);
-		    playerIps.put(numPlayers, IP);
-		    System.out.println("New player IP added: " + numPlayers + ", " + IP);
 
+		    // Find an open player number between 1 and the number of players
+		    int newPlayerNumber = 0;
+		    for (int i = 1; i <= numPlayers; i++)
+		    {
+			if (!playerNumbers.contains(i))
+			{
+			    newPlayerNumber = i;
+			    break;
+			}
+		    }
+
+		    // Add new player number
+		    playerIps.put(newPlayerNumber, IP);
+		    playerNumbers.add(newPlayerNumber);
+		    System.out.println("New player IP added: " + newPlayerNumber + ", " + IP);
+
+		    // Send player number to player
 		    final GetPlayerIdServerMessage sMessage = (GetPlayerIdServerMessage) BattleServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_ID_PLAYER);
-		    sMessage.playerNumber = numPlayers;
+		    sMessage.playerNumber = newPlayerNumber;
 		    pClientConnector.sendServerMessage(sMessage);
 		    BattleServer.this.mMessagePool.recycleMessage(sMessage);
 
-		    battleServerListener.server_addPlayerSpriteToServer(numPlayers);
+		    // Notify everyone else that there is a new player
+		    battleServerListener.server_addPlayerSpriteToServer(newPlayerNumber);
 		    battleServerListener.server_updateAllPlayerSprites();
 		}
 		else
@@ -190,6 +209,9 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
 	});
 
+	/**
+	 * Receives message from client containing player info about the client. Then it forwards the information to the other players.
+	 */
 	clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_SEND_PLAYER, SendPlayerStatsClientMessage.class, new IClientMessageHandler<SocketConnection>()
 	{
 
@@ -236,6 +258,7 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	    this.sendBroadcastServerMessage(message);
 	    mMessagePool.recycleMessage(message);
 	    playerIps.remove(playerID);
+	    playerNumbers.remove((Integer) playerID);
 	} catch (Exception e)
 	{
 	    e.printStackTrace();
@@ -317,6 +340,22 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 	return deathMatchVotes;
     }
 
+    public int getLowestTeamCount()
+    {
+	int team1 = 0, team2 = 0;
+	for (int i : playerNumbers)
+	{
+	    if (i % 2 == 0)
+		team2++;
+	    else
+		team1++;
+	}
+	if (team1 < team2)
+	    return team1;
+	else
+	    return team2;
+    }
+
     public interface IBattleServerListener
     {
 	public void server_updateAllPlayerSprites();
@@ -335,7 +374,12 @@ public class BattleServer extends SocketServer<SocketConnectionClientConnector> 
 
     public int getNumPlayers()
     {
-	return numPlayers;
+	return playerNumbers.size();
+    }
+
+    public boolean isGameStarted()
+    {
+	return gameStarted;
     }
 
 }

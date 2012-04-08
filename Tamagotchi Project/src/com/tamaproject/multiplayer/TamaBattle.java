@@ -411,11 +411,15 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		@Override
 		public void onUpdate(float arg0)
 		{
-		    if (!startButton.isVisible() && mBattleServer.getNumPlayers() > 1)
+		    if (!startButton.isVisible() && mBattleServer.getLowestTeamCount() >= 1)
 		    {
 			startButton.setVisible(true);
 			waitingText.setVisible(false);
-			startButton.unregisterUpdateHandler(this);
+		    }
+		    else if (startButton.isVisible() && mBattleServer.getLowestTeamCount() < 1)
+		    {
+			startButton.setVisible(false);
+			waitingText.setVisible(true);
 		    }
 		}
 	    });
@@ -436,8 +440,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
 	else
 	{
-	    final Text waitingText = new Text(0, 0, mFont, "Waiting for host to start game...");
-	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2 - 10);
+	    final Text waitingText = new Text(0, 0, mFont, "You are player " + playerNumber + "\nWaiting for host to start game...");
+	    waitingText.setPosition(CAMERA_WIDTH * 0.5f - waitingText.getWidth() * 0.5f, CAMERA_HEIGHT / 2 - waitingText.getHeight() / 2);
 
 	    final Sprite tamaSprite = new Sprite(0, 0, listTR.get("tama.png"));
 	    tamaSprite.setPosition(CAMERA_WIDTH / 2 - tamaSprite.getWidth() / 2, waitingText.getY() + waitingText.getHeight() + 50);
@@ -448,15 +452,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	lobbyScene.setTouchAreaBindingEnabled(true);
     }
 
-    @Override
-    public Scene onLoadScene()
+    private void loadEndScene()
     {
-	// this.mEngine.registerUpdateHandler(new FPSLogger());
-
-	this.enableVibrator();
-	this.loadLobbyScene();
-	this.loadDeathMatchWarningScene();
-
 	endScene = new Scene();
 	endScene.setBackground(orangeBackground);
 	winText = new Text(0, 0, mFont, "You win!");
@@ -518,6 +515,17 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    endScene.attachChild(continueButton);
 	endScene.registerTouchArea(continueButton);
 	endScene.setTouchAreaBindingEnabled(true);
+    }
+
+    @Override
+    public Scene onLoadScene()
+    {
+	// this.mEngine.registerUpdateHandler(new FPSLogger());
+
+	this.enableVibrator();
+	this.loadLobbyScene();
+	this.loadDeathMatchWarningScene();
+	this.loadEndScene();
 
 	scene = new Scene();
 	// scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
@@ -657,7 +665,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		    TamaBattle.this.mServerIP = ipEditText.getText().toString();
 		    TamaBattle.this.savePreferences("BATTLEIP", ipEditText.getText().toString());
 		    IP = ipEditText.getText().toString();
-		    TamaBattle.this.initClient();
+		    if (ipEditText.getText().length() == 0)
+			TamaBattle.this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+		    else
+			TamaBattle.this.initClient();
 		}
 	    }).setNegativeButton(android.R.string.cancel, new OnClickListener()
 	    {
@@ -718,20 +729,31 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void finish()
     {
 	Debug.d("Running finish()...");
-	Intent returnIntent = new Intent();
-	if (winText.isVisible() && numPlayers > 1)
+	try
 	{
-	    Debug.d("Winner rewarded xp");
-	    returnIntent.putExtra(MultiplayerConstants.XP_GAIN, 5 * lowestBattleLevel);
-	}
+	    Intent returnIntent = new Intent();
+	    if (winText.isVisible() && numPlayers > 1)
+	    {
+		Debug.d("Winner rewarded xp");
+		returnIntent.putExtra(MultiplayerConstants.XP_GAIN, 10 * lowestBattleLevel);
+	    }
+	    else if (loseText.isVisible() && numPlayers > 1)
+	    {
+		Debug.d("Loser rewarded xp");
+		returnIntent.putExtra(MultiplayerConstants.XP_GAIN, 1 * lowestBattleLevel);
+	    }
 
-	if (isDeathMatch)
+	    if (isDeathMatch)
+	    {
+		Debug.d("Deathmatch enabled, setting health to " + health + "...");
+		returnIntent.putExtra(MultiplayerConstants.HEALTH, this.health);
+		returnIntent.putExtra(MultiplayerConstants.DEATHMATCH, true);
+	    }
+	    setResult(RESULT_OK, returnIntent);
+	} catch (Exception e)
 	{
-	    Debug.d("Deathmatch enabled, setting health to " + health + "...");
-	    returnIntent.putExtra(MultiplayerConstants.HEALTH, this.health);
-	    returnIntent.putExtra(MultiplayerConstants.DEATHMATCH, true);
+	    e.printStackTrace();
 	}
-	setResult(RESULT_OK, returnIntent);
 	super.finish();
     }
 
@@ -1444,7 +1466,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    @Override
 	    public void run()
 	    {
-		final Text pText = new Text(50, 50 + playerId * 50, mFont, "Player " + playerId + ", Battle Level: " + battleLevel + ", " + ip);
+		String team;
+		if (playerId % 2 == 0)
+		    team = "[2] ";
+		else
+		    team = "[1] ";
+		final Text pText = new Text(50, 50 + playerId * 50, mFont, team + "Player " + playerId + ", Battle Level: " + battleLevel + ", " + ip);
 		ipArray.put(ip, playerId);
 		textIpArray.put(ip, pText);
 		if (lobbyScene != null)
