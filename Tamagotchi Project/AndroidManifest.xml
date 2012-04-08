@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
          <activity
-            android:name=".MiniGameListActivity"
+            android:name=".minigames.MiniGameListActivity"
             android:configChanges="orientation" />
         <activity
             android:name=".minigames.TamaShooter"

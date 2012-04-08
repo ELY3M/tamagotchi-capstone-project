@@ -32,7 +32,6 @@ import org.anddev.andengine.entity.primitive.Line;
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
-import org.anddev.andengine.entity.scene.background.ColorBackground;
 import org.anddev.andengine.entity.scene.background.RepeatingSpriteBackground;
 import org.anddev.andengine.entity.scene.background.SpriteBackground;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
@@ -61,6 +60,7 @@ import org.anddev.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextur
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.Debug;
+import org.anddev.andengine.util.HorizontalAlign;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -69,7 +69,6 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.text.style.BackgroundColorSpan;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.widget.EditText;
@@ -146,7 +145,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private Sprite crosshairSprite;
 
     private Scene scene;
-    private Scene lobbyScene, endScene;
+    private Scene lobbyScene, endScene, deathMatchWarningScene;
 
     private boolean isServer = false;
 
@@ -307,12 +306,24 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
     }
 
+    private void loadDeathMatchWarningScene()
+    {
+	deathMatchWarningScene = new Scene();
+	deathMatchWarningScene.setBackground(orangeBackground);
+	final Text warningText = new Text(0, 0, mFont, "Warning, death match is enabled!\nIf your Tamagotchi dies the matrix, it dies in real life.", HorizontalAlign.CENTER);
+	warningText.setPosition(CAMERA_WIDTH / 2 - warningText.getWidth() / 2, CAMERA_HEIGHT / 2 - warningText.getHeight() / 2);
+	final Sprite dmIcon = new Sprite(0, 0, listTR.get("skull.png"));
+	dmIcon.setPosition(CAMERA_WIDTH / 2 - dmIcon.getWidth() / 2, warningText.getY() + warningText.getHeight() + 30);
+	deathMatchWarningScene.attachChild(dmIcon);
+	deathMatchWarningScene.attachChild(warningText);
+    }
+
     private void loadLobbyScene()
     {
 	Debug.d("Creating lobby...");
 	final int padding = 40;
 	lobbyScene = new Scene();
-	//lobbyScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+	// lobbyScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
 	lobbyScene.setBackground(orangeBackground);
 	lobbyScene.setBackgroundEnabled(true);
 	ipText = new Text(15, 15, mFont, "Multiplayer Battle Mode - Server IP: " + IP);
@@ -376,7 +387,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 			}
 			else if (pSceneTouchEvent.isActionUp())
 			{
+			    if (mBattleServer.getNumPlayers() == mBattleServer.getDeathMatchVotes())
+				mBattleServer.sendDeathMatchMessage(true);
 			    mBattleServer.sendStartMessage();
+
 			}
 			return true;
 		    }
@@ -441,6 +455,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
 	this.enableVibrator();
 	this.loadLobbyScene();
+	this.loadDeathMatchWarningScene();
 
 	endScene = new Scene();
 	endScene.setBackground(orangeBackground);
@@ -714,6 +729,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	{
 	    Debug.d("Deathmatch enabled, setting health to " + health + "...");
 	    returnIntent.putExtra(MultiplayerConstants.HEALTH, this.health);
+	    returnIntent.putExtra(MultiplayerConstants.DEATHMATCH, true);
 	}
 	setResult(RESULT_OK, returnIntent);
 	super.finish();
@@ -809,6 +825,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
     }
 
+    /**
+     * Shows the win screen
+     * 
+     * @param win
+     *            True if win, false if lose
+     */
     public void showWinScreen(final boolean win)
     {
 	if (this.mEngine.getScene().equals(endScene))
@@ -826,6 +848,11 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	Debug.d(pMessage);
     }
 
+    /**
+     * Simple function to display toast message
+     * 
+     * @param pMessage
+     */
     public void toast(final String pMessage)
     {
 	this.log(pMessage);
@@ -1279,22 +1306,28 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     }
 
-    @Override
     /**
      * Sends your own player information to the server, so that it can let the other clients know.
      */
+    @Override
     public void client_sendPlayerInfoToServer()
     {
 	Debug.d("Sending player info to server...");
 	mServerConnector.sendPlayerStatsMessage(this.health, this.maxHealth, this.battleLevel, playerNumber);
     }
 
+    /**
+     * Ends the game activity
+     */
     public void client_endGame()
     {
 	Debug.d("Ending game...");
 	this.finish();
     }
 
+    /**
+     * Handles when a player is damaged
+     */
     @Override
     public void client_handleReceivedDamage(final int id)
     {
@@ -1302,6 +1335,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    this.mEngine.vibrate(100l);
     }
 
+    /**
+     * Sets the mode to deathmatch (Tama dies for real)
+     */
     @Override
     public void client_setDeathMatch(final boolean isDeathMatch)
     {
@@ -1315,10 +1351,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public void client_startGame()
     {
-	if (isServer)
+	if (isDeathMatch)
 	{
-	    if (mBattleServer.getNumPlayers() == mBattleServer.getDeathMatchVotes())
-		mBattleServer.sendDeathMatchMessage(true);
+	    this.mEngine.setScene(deathMatchWarningScene);
+	    waitTime(2000l);
 	}
 	this.mEngine.setScene(scene);
 	if (soundOn)
@@ -1328,6 +1364,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	    this.fightSound.play();
 	    this.backgroundMusic.play();
 	}
+
     }
 
     // ===========================================================

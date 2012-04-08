@@ -1,4 +1,4 @@
-package com.tamaproject;
+package com.tamaproject.minigames;
 
 import android.app.ListActivity;
 import android.os.Bundle;
@@ -10,9 +10,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tamaproject.R;
+
 public class MiniGameListActivity extends ListActivity
 {
-    static final String[] COUNTRIES = new String[] { "Afghanistan", "Albania", "Algeria",
+    static final String[] MINIGAMES = new String[] { "Afghanistan", "Albania", "Algeria",
 	    "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda",
 	    "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahrain",
 	    "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan",
@@ -60,7 +62,7 @@ public class MiniGameListActivity extends ListActivity
     {
 	super.onCreate(savedInstanceState);
 
-	setListAdapter(new ArrayAdapter<String>(this, R.layout.list, COUNTRIES));
+	setListAdapter(new ArrayAdapter<String>(this, R.layout.list, MINIGAMES));
 
 	ListView lv = getListView();
 	lv.setTextFilterEnabled(true);

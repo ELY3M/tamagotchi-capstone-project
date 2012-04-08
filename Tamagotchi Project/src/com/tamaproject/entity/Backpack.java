@@ -12,7 +12,6 @@ public class Backpack
 {
     private ArrayList<Item> items;
     private final int MAX_SIZE = 30; // max number of items backpack can hold
-    private final int DISP_ITEMS = 10; // number of items to display on main screen
     private boolean backpackOpen = false;
 
     public Backpack(ArrayList<Item> items)

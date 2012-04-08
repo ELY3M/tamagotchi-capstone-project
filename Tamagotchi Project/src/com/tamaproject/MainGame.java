@@ -85,6 +85,7 @@ import com.tamaproject.entity.Backpack;
 import com.tamaproject.entity.Item;
 import com.tamaproject.entity.Protection;
 import com.tamaproject.entity.Tamagotchi;
+import com.tamaproject.minigames.MiniGameListActivity;
 import com.tamaproject.multiplayer.TamaBattle;
 import com.tamaproject.util.MultiplayerConstants;
 import com.tamaproject.util.TextUtil;
@@ -1638,9 +1639,15 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	else if (requestCode == TAMA_BATTLE_CODE && resultCode == RESULT_OK)
 	{
 	    int xpGain = data.getIntExtra(MultiplayerConstants.XP_GAIN, 0);
+	    boolean isDeathMatch = data.getBooleanExtra(MultiplayerConstants.DEATHMATCH, false);
+	    if (isDeathMatch)
+		xpGain *= 2;
 	    Debug.d("[TamaBattle] XP GAIN: " + xpGain);
 	    if (xpGain != 0)
+	    {
+		tama.setCurrentXP(tama.getCurrentXP() + xpGain);
 		showNotification("Your tama has gained " + xpGain + " XP!");
+	    }
 	    int health = data.getIntExtra(MultiplayerConstants.HEALTH, -1000);
 	    if (health != -1000)
 	    {
