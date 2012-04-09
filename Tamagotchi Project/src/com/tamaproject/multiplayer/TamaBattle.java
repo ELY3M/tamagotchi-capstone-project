@@ -328,6 +328,17 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	lobbyScene.setBackground(orangeBackground);
 	lobbyScene.setBackgroundEnabled(true);
 	ipText = new Text(15, 15, mFont, "Multiplayer Battle Mode - Server IP: " + IP);
+	if (!isServer)
+	{
+	    try
+	    {
+		final Text myIpText = new Text(ipText.getX(), ipText.getY() + ipText.getHeight() + 10, mFont, "My IP: "+WifiUtils.getWifiIPv4Address(this));
+		lobbyScene.attachChild(myIpText);
+	    } catch (Exception e)
+	    {
+		e.printStackTrace();
+	    }
+	}
 	lobbyScene.attachChild(ipText);
 	final Sprite noSprite = new Sprite(0, 0, listTR.get("not_allowed.png"));
 	if (voteDeathMatch)

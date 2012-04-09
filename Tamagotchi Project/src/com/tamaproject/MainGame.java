@@ -112,7 +112,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private static final int CONFIRM_APPLYITEM = 0;
     private static final int CONFIRM_QUITGAME = 1;
-    private static final int CONFIRM_REMOVEITEM = 2;
+    private static final int CONFIRM_REMOVEITEM = 2, CONFIRM_RESTART = 3;
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
     private static final int TAMA_BATTLE_CODE = 1337;
     private static final boolean FULLSCREEN = true;
@@ -156,7 +156,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private List<BaseSprite> inPlayObjects = new ArrayList<BaseSprite>(); // list of objects that are in the environment
     private Tamagotchi tama; // Tamagotchi
-    private Sprite trashCan;
+    private Sprite trashCan, eggSprite;
     private ParticleSystem particleSystem;
     private int weather = Weather.NONE;
     private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
@@ -289,7 +289,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	final int centerX = (cameraWidth - this.listTR.get("tama.png").getWidth()) / 2;
 	final int centerY = (cameraHeight - this.listTR.get("tama.png").getHeight()) / 2;
 
-	this.loadTama(centerX, centerY);
+	this.loadTama(centerX, centerY, false);
 
 	this.thoughtBubble = new Sprite(tama.getSprite().getWidth(), -tama.getSprite().getHeight(), listTR.get("thought_bubble.png"));
 	this.tama.getSprite().attachChild(this.thoughtBubble);
@@ -558,6 +558,37 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		return builder2.create();
 
+	    case MainGame.CONFIRM_RESTART:
+		builder2.setTitle("Rehatch?");
+		builder2.setIcon(android.R.drawable.btn_star);
+		builder2.setMessage("Would you like to rehatch your Tamagotchi?");
+		builder2.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+		{
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
+		    {
+			if (eggSprite != null)
+			{
+			    loadTama(eggSprite.getX(), eggSprite.getY(), true);
+			}
+			else
+			    loadTama(0, 0, true);
+			tamaDeadParticles = false;
+			showNotification("Tamagotchi has been reborn!");
+		    }
+		});
+
+		builder2.setNegativeButton("No", new DialogInterface.OnClickListener()
+		{
+		    @Override
+		    public void onClick(DialogInterface dialog, int which)
+		    {
+			finish();
+		    }
+		});
+
+		return builder2.create();
+
 	    case MainGame.CONFIRM_REMOVEITEM:
 		builder2.setTitle("Throw Away Item");
 		builder2.setIcon(android.R.drawable.btn_star);
@@ -764,32 +795,36 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      * @param centerY
      *            y-coordinate
      */
-    private void loadTama(final int centerX, final int centerY)
+    private void loadTama(final float centerX, final float centerY, final boolean reborn)
     {
-	Tamagotchi tempTama = dbHelper.loadTama(1, listTR);
-	if (tempTama != null)
+	if (!reborn)
 	{
-	    if (tempTama.checkStats() != Tamagotchi.DEAD)
+	    Tamagotchi tempTama = dbHelper.loadTama(1, listTR);
+	    if (tempTama != null)
 	    {
-		Debug.d("Tama loaded from database!");
-		firstRun = false;
-		this.tama = tempTama;
-		this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-		((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
-		this.tama.getSprite().setScale(1.00f);
-		if (this.tama.getEquippedItem() != null)
+		if (tempTama.checkStats() != Tamagotchi.DEAD)
 		{
-		    this.tama.setEquippedItem(new GameItem(this.tama.getEquippedItem()));
-		    this.tama.getEquippedItem().setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
-		    tama.getSprite().attachChild(this.tama.getEquippedItem());
+		    Debug.d("Tama loaded from database!");
+		    firstRun = false;
+		    this.tama = tempTama;
+		    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
+		    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
+		    this.tama.getSprite().setScale(1.00f);
+		    if (this.tama.getEquippedItem() != null)
+		    {
+			this.tama.setEquippedItem(new GameItem(this.tama.getEquippedItem()));
+			this.tama.getEquippedItem().setPosition(tama.getSprite().getBaseWidth() - 25, tama.getSprite().getBaseHeight() - 25);
+			tama.getSprite().attachChild(this.tama.getEquippedItem());
+		    }
 		}
+		else
+		    firstRun = true;
 	    }
-	    else
-		firstRun = true;
 	}
 
-	if (firstRun)
+	if (firstRun || reborn)
 	{
+	    Debug.d("[loadTama] First Run!");
 	    this.tama = new Tamagotchi();
 	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
 	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
@@ -797,7 +832,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	    topLayer.setVisible(false);
 	    midLayer.setVisible(false);
-	    final Sprite eggSprite = new Sprite(centerX, centerY, listTR.get("wing-egg.png"));
+	    if (eggSprite == null)
+		eggSprite = new Sprite(centerX, centerY, listTR.get("wing-egg.png"));
+
 	    IEntityModifierListener modListener = new IEntityModifierListener()
 	    {
 		@Override
@@ -820,7 +857,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    final LoopEntityModifier loopEntityModifier = new LoopEntityModifier(new SequenceEntityModifier(new RotationModifier(time, 0, degree), new RotationModifier(time, degree, 0), new RotationModifier(time, 0, -degree), new RotationModifier(time, -degree, 0)), 5);
 	    final SequenceEntityModifier seqEntityModifier = new SequenceEntityModifier(modListener, loopEntityModifier, new org.anddev.andengine.entity.modifier.ScaleModifier(0.1f, 1, 2));
 	    eggSprite.registerEntityModifier(seqEntityModifier);
-	    mainLayer.attachChild(eggSprite);
+	    if (!eggSprite.hasParent())
+		mainLayer.attachChild(eggSprite);
 	}
 	else
 	{
@@ -838,7 +876,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void moveTama(final float x, final float y)
     {
-	if (!tama.getSprite().hasParent() || stayStill)
+	if (!tama.getSprite().hasParent() || stayStill || tama.getStatus() == Tamagotchi.DEAD)
 	    return;
 
 	final Path path = new Path(2).to(tama.getSprite().getX(), tama.getSprite().getY()).to(x - tama.getSprite().getWidth() / 2, y - tama.getSprite().getHeight() / 2);
@@ -1639,6 +1677,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		stayStill = false;
 	    }
+	    else if (matches.contains("die"))
+	    {
+		tama.setStatus(Tamagotchi.DEAD);
+	    }
 	    super.onActivityResult(requestCode, resultCode, data);
 	    this.mEngine.start();
 	}
@@ -1933,7 +1975,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		{
 		    tamaParticleSystem.setParticlesSpawnEnabled(false);
 		    particleSystem.setParticlesSpawnEnabled(false);
-		    final Sprite eggSprite = new Sprite(tama.getSprite().getX(), tama.getSprite().getY(), listTR.get("wing-egg.png"));
+		    eggSprite = new Sprite(tama.getSprite().getX(), tama.getSprite().getY(), listTR.get("wing-egg.png"));
 		    eggSprite.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		    eggSprite.registerEntityModifier(new org.anddev.andengine.entity.modifier.AlphaModifier(5, 0, 1));
 		    mainLayer.attachChild(eggSprite);
@@ -1951,12 +1993,21 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    particleSystem.detachSelf();
 		    tama.getSprite().detachSelf();
 		    // tama.getSprite().detachSelf();
-		    showSplashScreen();
+		    // showSplashScreen();
+		    runOnUiThread(new Runnable()
+		    {
+
+			@Override
+			public void run()
+			{
+			    showDialog(MainGame.CONFIRM_RESTART);
+			}
+		    });
 		    mScene.unregisterUpdateHandler(pTimerHandler);
 		}
 	    }));
 
-	    showNotification("Tamagotchi has passed away!");
+	    // showNotification("Tamagotchi has passed away!");
 	}
     }
 
