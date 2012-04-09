@@ -164,6 +164,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private AnimatedSprite me;
 
+    private Sound hitSound;
+
     // ===========================================================
     // Constructors
     // ===========================================================
@@ -251,7 +253,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	SoundFactory.setAssetBasePath("mfx/");
 	try
 	{
-	    this.pewSound = SoundFactory.createSoundFromAsset(this.mEngine.getSoundManager(), this, "pew.mp3");
+	    this.pewSound = SoundFactory.createSoundFromAsset(this.mEngine.getSoundManager(), this, "laser.ogg");
+	    this.hitSound = SoundFactory.createSoundFromAsset(this.mEngine.getSoundManager(), this, "hit.ogg");
 	    this.fightSound = SoundFactory.createSoundFromAsset(this.mEngine.getSoundManager(), this, "fight.mp3");
 	} catch (final IOException e)
 	{
@@ -332,7 +335,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	{
 	    try
 	    {
-		final Text myIpText = new Text(ipText.getX(), ipText.getY() + ipText.getHeight() + 10, mFont, "My IP: "+WifiUtils.getWifiIPv4Address(this));
+		final Text myIpText = new Text(ipText.getX(), ipText.getY() + ipText.getHeight() + 10, mFont, "My IP: " + WifiUtils.getWifiIPv4Address(this));
 		lobbyScene.attachChild(myIpText);
 	    } catch (Exception e)
 	    {
@@ -1382,8 +1385,13 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public void client_handleReceivedDamage(final int id)
     {
-	if (id == playerNumber && vibrateOn)
-	    this.mEngine.vibrate(100l);
+	if (id == playerNumber)
+	{
+	    if (vibrateOn)
+		this.mEngine.vibrate(100l);
+	    if (soundOn)
+		this.hitSound.play();
+	}
 
 	this.mPlayerSprites.get(id).registerEntityModifier(new SequenceEntityModifier(new ColorModifier(0.2f, 1, 1, 1, 0, 1, 0), new ColorModifier(0.2f, 1, 1, 0, 1, 0, 1)));
     }
