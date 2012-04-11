@@ -79,7 +79,7 @@ import android.graphics.Color;
 import android.util.Log;
 import android.widget.Toast;
 
-public abstract class MiniGame extends BaseAndEngineGame implements
+public class MiniGame extends BaseAndEngineGame implements
 		IOnSceneTouchListener, IOnAreaTouchListener {
 
 	// ===========================================================
@@ -363,6 +363,34 @@ public abstract class MiniGame extends BaseAndEngineGame implements
  		this.mSceneMG.attachChild(leftInner);
  		this.mSceneMG.attachChild(rightInner);
  	}
+
+	@Override
+	public boolean onAreaTouched(TouchEvent arg0, ITouchArea arg1, float arg2, float arg3)
+	{
+	    // TODO Auto-generated method stub
+	    return false;
+	}
+
+	@Override
+	public boolean onSceneTouchEvent(Scene arg0, TouchEvent arg1)
+	{
+	    // TODO Auto-generated method stub
+	    return false;
+	}
+
+	@Override
+	public void pauseSound()
+	{
+	    // TODO Auto-generated method stub
+	    
+	}
+
+	@Override
+	public void resumeSound()
+	{
+	    // TODO Auto-generated method stub
+	    
+	}
     
 }
 

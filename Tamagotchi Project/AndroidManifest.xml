@@ -3,7 +3,7 @@
     android:installLocation="preferExternal"
     package="com.tamaproject"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.1" >
 
     <uses-sdk android:minSdkVersion="8" />
 
@@ -26,11 +26,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-         <activity
+        <activity
             android:name=".minigames.MiniGameListActivity"
             android:configChanges="orientation" />
         <activity
-            android:name=".minigames.TamaShooter"
+            android:name=".minigames.MiniGame"
             android:configChanges="orientation" />
         <activity
             android:name=".multiplayer.TamaBattle"
