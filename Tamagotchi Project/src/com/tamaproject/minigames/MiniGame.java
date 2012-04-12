@@ -30,6 +30,7 @@ import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouch;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouchController;
 import org.anddev.andengine.extension.input.touch.exception.MultiTouchException;
+import org.anddev.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.anddev.andengine.extension.physics.box2d.PhysicsConnector;
 import org.anddev.andengine.extension.physics.box2d.PhysicsFactory;
 import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
@@ -108,9 +109,11 @@ public class MiniGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public Engine onLoadEngine()
     { // Change camera dimensions to fit in custom controls?
-	this.mCameraMG = new Camera(0, 0, cameraWidthMG, cameraHeightMG);
-	final Engine engine = new Engine(new EngineOptions(FULLSCREEN, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidthMG, cameraHeightMG), this.mCameraMG));
+    	this.mCameraMG = new Camera(0, 0, cameraWidthMG, cameraHeightMG);
+		return new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(cameraWidthMG, cameraHeightMG), this.mCameraMG));
+    	//final Engine engine = new Engine(new EngineOptions(FULLSCREEN, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidthMG, cameraHeightMG), this.mCameraMG));
 
+	/*
 	try
 	{
 	    if (MultiTouch.isSupported(this))
@@ -134,8 +137,8 @@ public class MiniGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	{
 	    Toast.makeText(this, "Android Version does NOT support MultiTouch", Toast.LENGTH_LONG).show();
 	}
-
-	return engine;
+	*/
+	//return engine;
     }
 
     @Override
@@ -164,13 +167,12 @@ public class MiniGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public Scene onLoadScene()
     {
-	// For Analog control
 	this.mEngine.registerUpdateHandler(new FPSLogger());
 
 	this.mSceneMG = new Scene();
 	this.mSceneMG.setBackground(this.mGrassBackgroundMG);
 
-	this.mPhysicsWorld = new PhysicsWorld(new Vector2(0, 0), false);
+	this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
 
 	this.initRacetrack();
 	this.initRacetrackBorders();
