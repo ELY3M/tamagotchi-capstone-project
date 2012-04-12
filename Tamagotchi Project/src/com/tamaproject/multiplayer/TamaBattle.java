@@ -71,7 +71,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.util.SparseArray;
-import android.view.KeyEvent;
 import android.widget.EditText;
 import android.widget.Toast;
 
