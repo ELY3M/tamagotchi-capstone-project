@@ -1,10 +1,6 @@
 package com.tamaproject.minigames;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -14,15 +10,10 @@ import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
 import org.anddev.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.anddev.andengine.engine.camera.hud.controls.AnalogOnScreenControl.IAnalogOnScreenControlListener;
-import org.anddev.andengine.engine.handler.physics.PhysicsHandler;
 import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.Entity;
-import org.anddev.andengine.entity.IEntity;
-import org.anddev.andengine.entity.modifier.LoopEntityModifier;
-import org.anddev.andengine.entity.modifier.SequenceEntityModifier;
-import org.anddev.andengine.entity.modifier.IEntityModifier.IEntityModifierListener;
 import org.anddev.andengine.entity.particle.ParticleSystem;
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
@@ -34,9 +25,7 @@ import org.anddev.andengine.entity.shape.Shape;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
-import org.anddev.andengine.entity.sprite.TiledSprite;
 import org.anddev.andengine.entity.util.FPSLogger;
-//import org.anddev.andengine.examples.game.racer.RacerGameActivity;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouch;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouchController;
 import org.anddev.andengine.extension.input.touch.exception.MultiTouchException;
@@ -46,37 +35,18 @@ import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
 import org.anddev.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.font.Font;
-import org.anddev.andengine.opengl.font.FontFactory;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
-import org.anddev.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextureAtlasSource;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
-import org.anddev.andengine.util.Debug;
 import org.anddev.andengine.util.MathUtils;
-import org.anddev.andengine.util.modifier.IModifier;
-import org.json.JSONObject;
-
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.tamaproject.BaseAndEngineGame;
-import com.tamaproject.MainGame;
-import com.tamaproject.database.DatabaseHelper;
-import com.tamaproject.entity.Item;
-import com.tamaproject.entity.Tamagotchi;
 
-//import android.graphics.Camera;
-import android.content.Context;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.util.Log;
 import android.widget.Toast;
 
 public class MiniGame extends BaseAndEngineGame implements
@@ -92,7 +62,6 @@ public class MiniGame extends BaseAndEngineGame implements
 	private static final int TAMA_SIZE = 16;
 	
 	private static final int cameraWidthMG = RACETRACK_WIDTH * 5, cameraHeightMG = RACETRACK_WIDTH * 3;
-	private static final int pTopBoundMG = 115, pBottomBoundMG = cameraHeightMG - 70;
 	private static final boolean FULLSCREEN = true;
 	
 	// ===========================================================
@@ -112,20 +81,11 @@ public class MiniGame extends BaseAndEngineGame implements
 	
 	//physics
 	private PhysicsWorld mPhysicsWorld;
-	private float mGravityX;
-	private float mGravityY;
 	
 	// Layers
-	private Entity racingLayer = new Entity();
-	private List<Entity> mainLayers = new ArrayList<Entity>();
-	
-	private List<BaseSprite> inPlayObjectsMG = new ArrayList<BaseSprite>();
-	private Tamagotchi tamaMG;
-	private ParticleSystem particleSystemMG;
-	private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
 	private BitmapTextureAtlas mTamaBitmapTextureAtlas;
 	private TiledTextureRegion mTamaTextureRegion;
-	private Font mFont, mSmallFont;
+
 	
 	private BitmapTextureAtlas mTamaTexture;
 	private BitmapTextureAtlas mBallTexture;
@@ -135,8 +95,6 @@ public class MiniGame extends BaseAndEngineGame implements
 	private TextureRegion mRacetrackStraightTextureRegion;
 	private TextureRegion mRacetrackCurveTextureRegion;
 	
-
-	private boolean firstRun = true;
 	private Body mTamaBody;
 	private AnimatedSprite mTama;
 	
@@ -181,13 +139,13 @@ public class MiniGame extends BaseAndEngineGame implements
 		this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaTexture, this, "animated_gfx/animate_test.png", 0, 0, 3, 4);
 		
 		this.mRacetrackTexture = new BitmapTextureAtlas(128, 256, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
-		this.mRacetrackStraightTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mRacetrackTexture, this, "racetrack_straight.png", 0, 0);
-		this.mRacetrackCurveTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mRacetrackTexture, this, "racetrack_curve.png", 0, 128);
+		this.mRacetrackStraightTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mRacetrackTexture, this, "gfx/racetrack_straight.png", 0, 0);
+		this.mRacetrackCurveTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mRacetrackTexture, this, "gfx/racetrack_curve.png", 0, 128);
 		
 		// Load Analog Stick
 		this.mOnScreenControlTexture = new BitmapTextureAtlas(256, 128, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-		this.mOnScreenControlBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_base.png", 0, 0);
-		this.mOnScreenControlKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "onscreen_control_knob.png", 128, 0);
+		this.mOnScreenControlBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "gfx/onscreen_control_base.png", 0, 0);
+		this.mOnScreenControlKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mOnScreenControlTexture, this, "gfx/onscreen_control_knob.png", 128, 0);
 
 		this.mEngine.getTextureManager().loadTextures(this.mTamaBitmapTextureAtlas, this.mOnScreenControlTexture);
 	}
@@ -250,6 +208,7 @@ public class MiniGame extends BaseAndEngineGame implements
  		this.mSceneMG.setChildScene(analogOnScreenControl);
  	}
 
+ 	// Place Tama on screen
  	private void initTama() {
  		this.mTama = new AnimatedSprite(20, 20, TAMA_SIZE, TAMA_SIZE, this.mTamaTextureRegion);
  		this.mTama.setCurrentTileIndex(0);
@@ -262,6 +221,7 @@ public class MiniGame extends BaseAndEngineGame implements
  		this.mSceneMG.attachChild(this.mTama);
  	}
 
+ 	// Add balls to the racetrack, serve as obstacles
  	private void initObstacles() {
  		this.addObstacle(cameraWidthMG / 2, RACETRACK_WIDTH / 2);
  		this.addObstacle(cameraWidthMG / 2, RACETRACK_WIDTH / 2);
@@ -330,7 +290,7 @@ public class MiniGame extends BaseAndEngineGame implements
  		}
  	}
 
-
+/* Set up Race Track Borders */
  	private void initRacetrackBorders() {
  		final Shape bottomOuter = new Rectangle(0, cameraHeightMG - 2, cameraWidthMG, 2);
  		final Shape topOuter = new Rectangle(0, 0, cameraWidthMG, 2);
