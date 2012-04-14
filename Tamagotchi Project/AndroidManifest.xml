@@ -35,6 +35,9 @@
         <activity
             android:name=".multiplayer.TamaBattle"
             android:configChanges="orientation" />
+        <activity
+            android:name=".itemstore.ItemStore"
+            android:configChanges="orientation" />
     </application>
 
 </manifest>

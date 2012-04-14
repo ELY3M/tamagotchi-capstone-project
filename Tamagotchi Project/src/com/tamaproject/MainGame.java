@@ -85,6 +85,7 @@ import com.tamaproject.entity.Backpack;
 import com.tamaproject.entity.Item;
 import com.tamaproject.entity.Protection;
 import com.tamaproject.entity.Tamagotchi;
+import com.tamaproject.itemstore.ItemStore;
 import com.tamaproject.minigames.MiniGameListActivity;
 import com.tamaproject.multiplayer.TamaBattle;
 import com.tamaproject.util.MultiplayerConstants;
@@ -114,7 +115,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private static final int CONFIRM_QUITGAME = 1;
     private static final int CONFIRM_REMOVEITEM = 2, CONFIRM_RESTART = 3;
     private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
-    private static final int TAMA_BATTLE_CODE = 1337;
+    private static final int TAMA_BATTLE_CODE = 1337, TAMA_ITEM_STORE_CODE = 1000;
     private static final boolean FULLSCREEN = true;
     private static final int MAX_NOTIFICATIONS = 5; // max notifications to display
 
@@ -1171,8 +1172,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		if (pSceneTouchEvent.isActionDown())
 		{
-		    showNotification("Item store is still in development!");
-		    loadItemStore();
+		    Intent intent = new Intent(MainGame.this.getApplicationContext(), ItemStore.class);
+		    intent.putExtra("money", tama.getMoney());
+		    Toast.makeText(MainGame.this.getApplicationContext(), "Starting item store!", Toast.LENGTH_SHORT).show();
+		    MainGame.this.startActivityForResult(intent, TAMA_ITEM_STORE_CODE);
 		    return true;
 		}
 		return false;
@@ -2182,49 +2185,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mSplashScene.attachChild(splashSprite);
 	this.mScene.setChildScene(mSplashScene);
 	// this.tama.setDefault();
-    }
-
-    private void loadItemStore()
-    {
-	mItemStoreScene = new Scene();
-	ArrayList<Item> allItems = dbHelper.getAllItems(listTR);
-	LinkedList<Rectangle> itemBoxes = new LinkedList<Rectangle>();
-	for (Item item : allItems)
-	{
-	    final Rectangle itemBox = new Rectangle(5, 0, cameraWidth - 10, item.getHeight() + 4)
-	    {
-		@Override
-		public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
-			final float pTouchAreaLocalX, final float pTouchAreaLocalY)
-		{
-		    if (pSceneTouchEvent.isActionDown())
-		    {
-			return true;
-		    }
-		    return false;
-		}
-	    };
-	    item.setPosition(2, 2);
-	    itemBox.attachChild(item);
-	    itemBox.setColor(1, 0, 0);
-
-	    final Text itemText = new Text(0, 0, mSmallFont, item.getName() + ": $" + item.getPrice());
-	    itemText.setPosition(item.getWidth() + 5, item.getHeight() / 2 - itemText.getHeight() / 2);
-	    item.attachChild(itemText);
-
-	    final Text buyText = new Text(0, 0, mSmallFont, "Buy");
-	    final Rectangle buyButton = new Rectangle(0, 0, buyText.getWidth() + 10, itemBox.getHeight() - 4);
-	    buyButton.setColor(0, 1, 0);
-	    buyText.setPosition(5, buyButton.getHeight() / 2 - buyText.getHeight() / 2);
-	    buyButton.attachChild(buyText);
-	    buyButton.setPosition(itemBox.getWidth() - buyButton.getWidth() - 5, 2);
-	    itemBox.attachChild(buyButton);
-	    if (!itemBoxes.isEmpty())
-		itemBox.setPosition(5, itemBoxes.getLast().getY() + itemBoxes.getLast().getHeight() + 5);
-	    itemBoxes.add(itemBox);
-	    mItemStoreScene.attachChild(itemBox);
-	}
-	mEngine.setScene(mItemStoreScene);
     }
 
     // ===========================================================

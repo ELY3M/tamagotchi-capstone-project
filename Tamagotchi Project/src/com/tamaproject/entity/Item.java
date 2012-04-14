@@ -62,7 +62,7 @@ public class Item extends Sprite
 	this.type = type;
 	this.protection = protection;
     }
-    
+
     public Item(float pX, float pY, TextureRegion pTextureRegion, String name, String description,
 	    int health, int hunger, int sickness, int xp, int type, int protection, int price)
     {
@@ -174,6 +174,11 @@ public class Item extends Sprite
     public String getInfo()
     {
 	return "Item name: " + name + "\nType: " + getStringType() + "\nDescription: " + description + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp + "\nProtection: " + Protection.getString(protection);
+    }
+
+    public String getInfoWithPrice()
+    {
+	return "Item name: " + name + "\nType: " + getStringType() + "\nDescription: " + description + "\nHealth: " + health + "\nHunger: " + hunger + "\nSickness: " + sickness + "\nExperience: " + xp + "\nProtection: " + Protection.getString(protection) + "\nPrice: $" + price;
     }
 
     public int getProtection()

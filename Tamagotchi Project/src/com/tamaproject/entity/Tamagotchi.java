@@ -20,6 +20,7 @@ public class Tamagotchi
     private long age;
     private int id;
     private Item equippedItem;
+    private int money;
 
     private BaseSprite sprite;
     private DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
@@ -35,7 +36,7 @@ public class Tamagotchi
 
     public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
 	    int currentXP, int maxXP, int currentSickness, int maxSickness,
-	    int battleLevel, int status, long birthday, Item equippedItem, long age, int id)
+	    int battleLevel, int status, long birthday, Item equippedItem, long age, int id, int money)
     {
 	this.currentHealth = currentHealth;
 	this.maxHealth = maxHealth;
@@ -52,6 +53,7 @@ public class Tamagotchi
 	this.calendar.setTimeInMillis(birthday);
 	this.age = age;
 	this.id = id;
+	this.setMoney(money);
     }
 
     /**
@@ -390,5 +392,15 @@ public class Tamagotchi
     public void setStatus(int status)
     {
 	this.status = status;
+    }
+
+    public int getMoney()
+    {
+	return money;
+    }
+
+    public void setMoney(int money)
+    {
+	this.money = money;
     }
 }
