@@ -145,7 +145,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     private Sprite crosshairSprite;
 
     private Scene scene;
-    private Scene lobbyScene, endScene, deathMatchWarningScene;
+    private Scene lobbyScene, endScene, deathMatchWarningScene, waitingScene;
 
     private boolean isServer = false;
 
@@ -230,8 +230,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	BULLET_POOL = new BulletPool(listTR.get("particle_point.png"));
 
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("animated_gfx/");
-	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
-	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animate_test.png", 0, 0, 3, 4);
+	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(128, 1024, TextureOptions.BILINEAR);
+	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "snorlax.png", 0, 0, 1, 8);
 
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
 	this.mOnScreenControlTexture = new BitmapTextureAtlas(256, 128, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
@@ -532,6 +532,15 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	endScene.setTouchAreaBindingEnabled(true);
     }
 
+    private void loadWaitingScene()
+    {
+	waitingScene = new Scene();
+	waitingScene.setBackground(orangeBackground);
+	final Text waitingText = new Text(0, 0, mFont, "Waiting for connection...");
+	waitingText.setPosition(CAMERA_WIDTH / 2 - waitingText.getWidth() / 2, CAMERA_HEIGHT / 2 - waitingText.getHeight());
+	waitingScene.attachChild(waitingText);
+    }
+
     @Override
     public Scene onLoadScene()
     {
@@ -541,6 +550,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.loadLobbyScene();
 	this.loadDeathMatchWarningScene();
 	this.loadEndScene();
+	this.loadWaitingScene();
 
 	scene = new Scene();
 	// scene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
@@ -641,7 +651,10 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     public void onLoadComplete()
     {
 	this.loadComplete = true;
-	this.mEngine.setScene(lobbyScene);
+	if (playerNumber < 0)
+	    this.mEngine.setScene(waitingScene);
+	else
+	    this.mEngine.setScene(lobbyScene);
 	if (soundOn)
 	    lobbyMusic.play();
     }
@@ -1084,6 +1097,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 		final Text playerNumText = new Text(0, 0, mFont, "Player " + playerNumber);
 		playerNumText.setPosition(CAMERA_WIDTH - playerNumText.getWidth() - 15, 15);
 		topLayer.attachChild(playerNumText);
+		mEngine.setScene(lobbyScene);
 	    }
 	});
     }
@@ -1194,9 +1208,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	}
 
 	if (pID % 2 == 0)
-	    player.animate(new long[] { 300, 300, 300 }, 3, 5, true); // make player face left
+	    player.animate(new long[] { 300, 300 }, 0, 1, true); // make player face left
 	else
-	    player.animate(new long[] { 300, 300, 300 }, 6, 8, true); // make player face right
+	    player.animate(new long[] { 300, 300 }, 2, 3, true); // make player face right
 
 	synchronized (mPlayerSprites)
 	{

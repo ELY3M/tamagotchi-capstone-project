@@ -17,6 +17,7 @@ public class Item extends Sprite
     private int health, hunger, sickness, xp;
     private int type = NORMAL;
     private int protection = Protection.NONE;
+    private int price = 0;
 
     public Item(float x, float y, TextureRegion textureRegion)
     {
@@ -60,6 +61,21 @@ public class Item extends Sprite
 	this.xp = xp;
 	this.type = type;
 	this.protection = protection;
+    }
+    
+    public Item(float pX, float pY, TextureRegion pTextureRegion, String name, String description,
+	    int health, int hunger, int sickness, int xp, int type, int protection, int price)
+    {
+	super(pX, pY, pTextureRegion);
+	this.name = name;
+	this.description = description;
+	this.health = health;
+	this.hunger = hunger;
+	this.sickness = sickness;
+	this.xp = xp;
+	this.type = type;
+	this.protection = protection;
+	this.setPrice(price);
     }
 
     private void setDefault()
@@ -168,5 +184,21 @@ public class Item extends Sprite
     public void setProtection(int protection)
     {
 	this.protection = protection;
+    }
+
+    public int getPrice()
+    {
+	return price;
+    }
+
+    public void setPrice(int price)
+    {
+	this.price = price;
+    }
+
+    @Override
+    public String toString()
+    {
+	return "Item [name=" + name + ", description=" + description + ", health=" + health + ", hunger=" + hunger + ", sickness=" + sickness + ", xp=" + xp + ", type=" + type + ", protection=" + protection + ", price=" + price + "]";
     }
 }

@@ -134,7 +134,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private Camera mCamera;
     private RepeatingSpriteBackground mGrassBackground;
-    private Scene mScene;
+    private Scene mScene, mItemStoreScene;
     private Backpack bp;
 
     // Layers
@@ -244,8 +244,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	// Load animated textures
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("animated_gfx/");
-	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
-	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animate_test.png", 0, 0, 3, 4);
+	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(128, 1024, TextureOptions.BILINEAR);
+	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "snorlax.png", 0, 0, 1, 8);
 	this.mEngine.getTextureManager().loadTexture(this.mTamaBitmapTextureAtlas);
     }
 
@@ -797,7 +797,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    firstRun = false;
 		    this.tama = tempTama;
 		    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-		    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
+		    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300 }, 6, 7, true);
 		    this.tama.getSprite().setScale(1.00f);
 		    if (this.tama.getEquippedItem() != null)
 		    {
@@ -816,7 +816,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    Debug.d("[loadTama] First Run!");
 	    this.tama = new Tamagotchi();
 	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300, 300 }, 0, 2, true);
+	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300 }, 6, 7, true);
 	    this.tama.getSprite().setScale(1.00f);
 
 	    topLayer.setVisible(false);
@@ -894,19 +894,19 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		if (deltaX > 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving left
 		{
-		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 3, 5, true);
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200 }, 0, 1, true);
 		}
 		else if (deltaX < 0 && Math.abs(deltaX) > Math.abs(deltaY)) // moving right
 		{
-		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 6, 8, true);
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200 }, 2, 3, true);
 		}
 		else if (deltaY > 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving up
 		{
-		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 9, 11, true);
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200 }, 4, 5, true);
 		}
 		else if (deltaY < 0 && Math.abs(deltaY) > Math.abs(deltaX)) // moving down
 		{
-		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200, 200 }, 0, 2, true);
+		    ((AnimatedSprite) tama.getSprite()).animate(new long[] { 200, 200 }, 6, 7, true);
 		}
 		else
 		{
@@ -1172,6 +1172,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    showNotification("Item store is still in development!");
+		    loadItemStore();
 		    return true;
 		}
 		return false;
@@ -2183,6 +2184,49 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	// this.tama.setDefault();
     }
 
+    private void loadItemStore()
+    {
+	mItemStoreScene = new Scene();
+	ArrayList<Item> allItems = dbHelper.getAllItems(listTR);
+	LinkedList<Rectangle> itemBoxes = new LinkedList<Rectangle>();
+	for (Item item : allItems)
+	{
+	    final Rectangle itemBox = new Rectangle(5, 0, cameraWidth - 10, item.getHeight() + 4)
+	    {
+		@Override
+		public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+			final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+		{
+		    if (pSceneTouchEvent.isActionDown())
+		    {
+			return true;
+		    }
+		    return false;
+		}
+	    };
+	    item.setPosition(2, 2);
+	    itemBox.attachChild(item);
+	    itemBox.setColor(1, 0, 0);
+
+	    final Text itemText = new Text(0, 0, mSmallFont, item.getName() + ": $" + item.getPrice());
+	    itemText.setPosition(item.getWidth() + 5, item.getHeight() / 2 - itemText.getHeight() / 2);
+	    item.attachChild(itemText);
+
+	    final Text buyText = new Text(0, 0, mSmallFont, "Buy");
+	    final Rectangle buyButton = new Rectangle(0, 0, buyText.getWidth() + 10, itemBox.getHeight() - 4);
+	    buyButton.setColor(0, 1, 0);
+	    buyText.setPosition(5, buyButton.getHeight() / 2 - buyText.getHeight() / 2);
+	    buyButton.attachChild(buyText);
+	    buyButton.setPosition(itemBox.getWidth() - buyButton.getWidth() - 5, 2);
+	    itemBox.attachChild(buyButton);
+	    if (!itemBoxes.isEmpty())
+		itemBox.setPosition(5, itemBoxes.getLast().getY() + itemBoxes.getLast().getHeight() + 5);
+	    itemBoxes.add(itemBox);
+	    mItemStoreScene.attachChild(itemBox);
+	}
+	mEngine.setScene(mItemStoreScene);
+    }
+
     // ===========================================================
     // Inner and Anonymous Classes
     // ===========================================================
@@ -2197,7 +2241,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	public GameItem(Item item)
 	{
-	    super(item.getX(), item.getY(), item.getTextureRegion(), item.getName(), item.getDescription(), item.getHealth(), item.getHunger(), item.getSickness(), item.getXp(), item.getType(), item.getProtection());
+	    super(item.getX(), item.getY(), item.getTextureRegion(), item.getName(), item.getDescription(), item.getHealth(), item.getHunger(), item.getSickness(), item.getXp(), item.getType(), item.getProtection(), item.getPrice());
 	}
 
 	public GameItem(float x, float y, TextureRegion textureRegion)
