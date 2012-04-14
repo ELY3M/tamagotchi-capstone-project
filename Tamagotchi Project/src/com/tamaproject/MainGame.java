@@ -367,18 +367,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		     * Update the stats page with current stats when stats page is opened
 		     */
 		    if (statsLayer.isVisible())
-		    {
 			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), stats.getWidth()));
-			if (tama.getEquippedItem() != null)
-			{
-			    unequipItemButton.setPosition(stats.getX(), stats.getY() + stats.getHeight() + 25);
-			    unequipItemButton.setVisible(true);
-			}
-			else
-			{
-			    unequipItemButton.setVisible(false);
-			}
-		    }
 		    /**
 		     * Update the status bars when main layer is visible
 		     */
@@ -1036,7 +1025,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!backpackLayer.isVisible())
+		    {
+			backpackLabel.setText("Backpack (" + bp.numItems() + "/" + bp.maxSize() + ")");
 			openBackpack();
+		    }
 		    else
 			closeBackpack();
 		    return true;
@@ -1088,7 +1080,19 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		if (pSceneTouchEvent.isActionDown())
 		{
 		    if (!statsLayer.isVisible())
+		    {
+			stats.setText(TextUtil.getNormalizedText(mSmallFont, tama.getStats(), stats.getWidth()));
+			if (tama.getEquippedItem() != null)
+			{
+			    unequipItemButton.setPosition(stats.getX(), stats.getY() + stats.getHeight() + 25);
+			    unequipItemButton.setVisible(true);
+			}
+			else
+			{
+			    unequipItemButton.setVisible(false);
+			}
 			openLayer(statsLayer);
+		    }
 		    else
 			closeSubLayers();
 
