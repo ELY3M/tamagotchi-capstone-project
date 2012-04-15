@@ -6,7 +6,6 @@ import java.util.Calendar;
 
 import org.anddev.andengine.entity.sprite.BaseSprite;
 
-
 public class Tamagotchi
 {
     public static final int MAX_BATTLE_LEVEL = 100;
@@ -35,8 +34,8 @@ public class Tamagotchi
     }
 
     public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
-	    int currentXP, int maxXP, int currentSickness, int maxSickness,
-	    int battleLevel, int status, long birthday, Item equippedItem, long age, int id, int money)
+	    int currentXP, int maxXP, int currentSickness, int maxSickness, int battleLevel,
+	    int status, long birthday, Item equippedItem, long age, int id, int money)
     {
 	this.currentHealth = currentHealth;
 	this.maxHealth = maxHealth;
@@ -57,7 +56,7 @@ public class Tamagotchi
     }
 
     /**
-     * For testing purposes. Sets the Tamagotchi to a default state if none has been specified.
+     * Default stats for when Tamagotchi is first born
      */
     public void setDefault()
     {
@@ -74,6 +73,7 @@ public class Tamagotchi
 	this.birthday = System.currentTimeMillis();
 	this.age = 0;
 	this.id = 1;
+	this.money = 100;
     }
 
     public Tamagotchi(int currentHealth, int maxHealth, int currentHunger, int maxHunger,
@@ -263,9 +263,10 @@ public class Tamagotchi
     {
 	this.birthday = birthday;
     }
-    
-    public int getID() {
-    	return id;
+
+    public int getID()
+    {
+	return id;
     }
 
     public Item getEquippedItem()
@@ -378,7 +379,7 @@ public class Tamagotchi
 
     public String getStats()
     {
-	String s = "Age: " + getAge() + "\nHealth: " + currentHealth + "/" + maxHealth + "\nSickness: " + currentSickness + "/" + maxSickness + "\nHunger: " + currentHunger + "/" + maxHunger + "\nExperience: " + currentXP + "/" + maxXP + "\nBattle Level: " + battleLevel + "\nBirthday: " + getFormattedBirthday();
+	String s = "Age: " + getAge() + "\nHealth: " + currentHealth + "/" + maxHealth + "\nSickness: " + currentSickness + "/" + maxSickness + "\nHunger: " + currentHunger + "/" + maxHunger + "\nExperience: " + currentXP + "/" + maxXP + "\nBattle Level: " + battleLevel + "\nBirthday: " + getFormattedBirthday() + "\nMoney: $" + money;
 	if (equippedItem != null)
 	    s += "\n \nEquipped Item: \n" + equippedItem.getInfo();
 	return s;

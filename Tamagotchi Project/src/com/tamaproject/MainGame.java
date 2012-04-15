@@ -314,7 +314,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.backpackLayer.setVisible(false);
 	this.statsLayer.setVisible(false);
 
-	this.bp = new Backpack();
+	// Load interface
+	this.loadInterface();
+
 	this.loadItems();
 
 	this.mScene.registerTouchArea(tama.getSprite());
@@ -322,15 +324,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	// Add trashcan to main layer
 	this.trashCan = new Sprite(cameraWidth - listTR.get("trash.png").getWidth(), pBottomBound - listTR.get("trash.png").getHeight(), listTR.get("trash.png"));
 	this.mainLayer.attachChild(trashCan);
-
-	// Load interface
-	this.loadInterface();
-
-	for (Item item : bp.getItems())
-	{
-	    this.backpackBackground.attachChild(item);
-	    this.mScene.registerTouchArea(item);
-	}
 
 	this.mScene.setTouchAreaBindingEnabled(true);
 	this.mScene.setOnSceneTouchListener(this);
@@ -787,9 +780,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadTama(final float centerX, final float centerY, final boolean reborn)
     {
+	Tamagotchi tempTama = dbHelper.loadTama(1, listTR);
 	if (!reborn)
 	{
-	    Tamagotchi tempTama = dbHelper.loadTama(1, listTR);
 	    if (tempTama != null)
 	    {
 		if (tempTama.checkStats() != Tamagotchi.DEAD)
@@ -816,6 +809,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	{
 	    Debug.d("[loadTama] First Run!");
 	    this.tama = new Tamagotchi();
+	    if (tempTama != null)
+		this.tama.setMoney(tempTama.getMoney());
 	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
 	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300 }, 6, 7, true);
 	    this.tama.getSprite().setScale(1.00f);
@@ -940,16 +935,6 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 
 	final float mid = (cameraHeight - pBottomBound) / 2;
-
-	/**
-	 * Load backpack background
-	 */
-	backpackBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
-	backpackBackground.setColor(87 / 255f, 57 / 255f, 20 / 255f);
-	backpackLayer.attachChild(backpackBackground);
-
-	backpackLabel = new ChangeableText(15, 15, mFont, "Backpack (" + bp.numItems() + "/" + bp.maxSize() + ")", HorizontalAlign.LEFT, 30);
-	backpackBackground.attachChild(backpackLabel);
 
 	/**
 	 * Load stats background
@@ -1424,6 +1409,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void loadItems()
     {
+
+	bp = new Backpack();
 	ArrayList<Item> backpackItems = dbHelper.getBackpack(listTR);
 	if (backpackItems.isEmpty())
 	{
@@ -1457,6 +1444,22 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		bp.addItem(new GameItem(item));
 	    }
 	    bp.resetPositions(cameraWidth, cameraHeight);
+	}
+
+	/**
+	 * Load backpack background
+	 */
+	backpackBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
+	backpackBackground.setColor(87 / 255f, 57 / 255f, 20 / 255f);
+	backpackLayer.attachChild(backpackBackground);
+
+	backpackLabel = new ChangeableText(15, 15, mFont, "Backpack (" + bp.numItems() + "/" + bp.maxSize() + ")", HorizontalAlign.LEFT, 30);
+	backpackBackground.attachChild(backpackLabel);
+
+	for (Item item : bp.getItems())
+	{
+	    this.backpackBackground.attachChild(item);
+	    this.mScene.registerTouchArea(item);
 	}
     }
 
@@ -1710,6 +1713,16 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		Debug.d("Setting current health to " + health);
 		tama.setCurrentHealth(health);
 	    }
+	    super.onActivityResult(requestCode, resultCode, data);
+	}
+	else if (requestCode == TAMA_ITEM_STORE_CODE && resultCode == RESULT_OK)
+	{
+	    int money = data.getIntExtra("money", -1);
+	    if (money != -1)
+	    {
+		tama.setMoney(money);
+	    }
+	    this.loadItems();
 	    super.onActivityResult(requestCode, resultCode, data);
 	}
     }

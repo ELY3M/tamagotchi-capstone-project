@@ -202,6 +202,14 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	return db.update("Tamagotchi", args, "_id = " + t.getID(), null);
     }
 
+    public int saveMoney(int money)
+    {
+	System.out.println("Save Money");
+	ContentValues args = new ContentValues();
+	args.put("money", money);
+	return db.update("Tamagotchi", args, "_id = 1", null);
+    }
+
     /**
      * loads the tama with its last saved attributes
      * 
