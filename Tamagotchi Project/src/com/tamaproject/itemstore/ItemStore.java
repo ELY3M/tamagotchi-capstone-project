@@ -3,7 +3,6 @@ package com.tamaproject.itemstore;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.LinkedList;
 
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
@@ -37,7 +36,6 @@ import android.graphics.Color;
 import android.widget.Toast;
 
 import com.tamaproject.BaseAndEngineGame;
-import com.tamaproject.MainGame;
 import com.tamaproject.database.DatabaseHelper;
 import com.tamaproject.entity.Backpack;
 import com.tamaproject.entity.Item;
@@ -64,6 +62,7 @@ public class ItemStore extends BaseAndEngineGame
     private static final boolean FULLSCREEN = true;
     private Backpack backpack;
     private int money = 0;
+    private int tamaId = 1;
     private Item itemToPurchase;
     private ArrayList<Entity> itemPages = new ArrayList<Entity>();
     private int currentPage = 0;
@@ -72,7 +71,6 @@ public class ItemStore extends BaseAndEngineGame
     @Override
     public void onLoadComplete()
     {
-	// TODO Auto-generated method stub
 
     }
 
@@ -89,6 +87,12 @@ public class ItemStore extends BaseAndEngineGame
 		Debug.d("Save backpack failed! " + resultBackpackSave);
 	    else
 		Debug.d("Save backpack success! " + resultBackpackSave);
+
+	    long saveMoneyResult = dbHelper.saveMoney(money, tamaId);
+	    if (saveMoneyResult < 0)
+	    {
+		Debug.d("Save money failed! " + saveMoneyResult);
+	    }
 	}
     }
 
@@ -164,6 +168,7 @@ public class ItemStore extends BaseAndEngineGame
 
 	Intent intent = getIntent();
 	this.money = intent.getIntExtra("money", 0);
+	this.tamaId = intent.getIntExtra("tamaId", 1);
 
 	this.mScene = new Scene();
 	this.mScene.setBackground(new ColorBackground(247 / 255f, 233 / 255f, 103 / 255f));
@@ -186,14 +191,12 @@ public class ItemStore extends BaseAndEngineGame
     @Override
     public void pauseSound()
     {
-	// TODO Auto-generated method stub
 
     }
 
     @Override
     public void resumeSound()
     {
-	// TODO Auto-generated method stub
 
     }
 

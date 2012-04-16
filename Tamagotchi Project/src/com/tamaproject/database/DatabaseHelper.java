@@ -202,12 +202,31 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	return db.update("Tamagotchi", args, "_id = " + t.getID(), null);
     }
 
-    public int saveMoney(int money)
+    public int saveMoney(int money, int id)
     {
 	System.out.println("Save Money");
 	ContentValues args = new ContentValues();
 	args.put("money", money);
-	return db.update("Tamagotchi", args, "_id = 1", null);
+	return db.update("Tamagotchi", args, "_id =" + id, null);
+    }
+
+    public int loadMoney(int id)
+    {
+	try
+	{
+	    Cursor c = db.rawQuery("Select money from Tamagotchi where _id = " + id, null);
+
+	    if (c != null)
+	    {
+		c.moveToFirst();
+	    }
+
+	    return c.getInt(c.getColumnIndex("money"));
+	} catch (Exception e)
+	{
+	    e.printStackTrace();
+	    return -1;
+	}
     }
 
     /**

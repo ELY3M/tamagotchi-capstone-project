@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -77,6 +78,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnInitListener;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
@@ -88,6 +91,7 @@ import com.tamaproject.entity.Tamagotchi;
 import com.tamaproject.itemstore.ItemStore;
 import com.tamaproject.minigames.MiniGameListActivity;
 import com.tamaproject.multiplayer.TamaBattle;
+import com.tamaproject.util.FileReaderUtil;
 import com.tamaproject.util.MultiplayerConstants;
 import com.tamaproject.util.TextUtil;
 import com.tamaproject.util.TextureUtil;
@@ -102,7 +106,7 @@ import com.tamaproject.weather.WeatherRetriever;
  * 
  */
 public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener,
-	IOnAreaTouchListener
+	IOnAreaTouchListener, OnInitListener
 {
     // ===========================================================
     // Constants
@@ -135,7 +139,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
     private Camera mCamera;
     private RepeatingSpriteBackground mGrassBackground;
-    private Scene mScene, mItemStoreScene;
+    private Scene mScene;
     private Backpack bp;
 
     // Layers
@@ -211,6 +215,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private float velocity = 100;
     private boolean manualMove = false;
     private boolean stayStill = false;
+    private TextToSpeech talker;
+    private String[] tamaResponses = { "Hello" };
 
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
@@ -283,6 +289,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	// Enable vibration
 	this.enableVibrator();
+
+	this.talker = new TextToSpeech(this, this);
 
 	this.mScene = new Scene();
 	this.mScene.setBackground(this.mGrassBackground);
@@ -702,6 +710,12 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     {
 	super.onDestroy();
 
+	if (talker != null)
+	{
+	    talker.stop();
+	    talker.shutdown();
+	}
+
 	try
 	{
 	    int seconds = (int) (totalPlayTime / 1000) % 60;
@@ -746,7 +760,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    {
 		float x = pSceneTouchEvent.getX();
 		float y = pSceneTouchEvent.getY();
-		if (y < pTopBound || y > pBottomBound - tama.getSprite().getHeight())
+		if (y < pTopBound || y > pBottomBound)
 		    return false;
 		moveTama(x, y);
 	    }
@@ -790,9 +804,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 		    Debug.d("Tama loaded from database!");
 		    firstRun = false;
 		    this.tama = tempTama;
-		    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-		    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300 }, 6, 7, true);
-		    this.tama.getSprite().setScale(1.00f);
+		    this.setTamaSprite(centerX, centerY);
 		    if (this.tama.getEquippedItem() != null)
 		    {
 			this.tama.setEquippedItem(new GameItem(this.tama.getEquippedItem()));
@@ -811,10 +823,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    this.tama = new Tamagotchi();
 	    if (tempTama != null)
 		this.tama.setMoney(tempTama.getMoney());
-	    this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion));
-	    ((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300 }, 6, 7, true);
-	    this.tama.getSprite().setScale(1.00f);
-
+	    this.setTamaSprite(centerX, centerY);
 	    topLayer.setVisible(false);
 	    midLayer.setVisible(false);
 	    if (eggSprite == null)
@@ -849,6 +858,28 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	{
 	    this.mainLayer.attachChild(tama.getSprite());
 	}
+    }
+
+    private void setTamaSprite(final float centerX, final float centerY)
+    {
+	this.tama.setSprite(new AnimatedSprite(centerX, centerY, this.mTamaTextureRegion)
+	{
+	    @Override
+	    public boolean onAreaTouched(final TouchEvent pSceneTouchEvent,
+		    final float pTouchAreaLocalX, final float pTouchAreaLocalY)
+	    {
+		if (!this.getParent().isVisible())
+		    return false;
+
+		if (pSceneTouchEvent.isActionDown())
+		{
+		    say(tamaResponses[MathUtils.random(0, tamaResponses.length - 1)]);
+		}
+		return true;
+	    }
+	});
+	((AnimatedSprite) this.tama.getSprite()).animate(new long[] { 300, 300 }, 6, 7, true);
+	mScene.registerTouchArea(tama.getSprite());
     }
 
     /**
@@ -1129,6 +1160,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		if (pSceneTouchEvent.isActionDown())
 		{
+		    say("Let's battle!");
 		    Intent intent = new Intent(MainGame.this.getApplicationContext(), TamaBattle.class);
 		    intent.putExtra(MultiplayerConstants.BATTLE_LEVEL, tama.getBattleLevel());
 		    intent.putExtra(MultiplayerConstants.HEALTH, tama.getCurrentHealth());
@@ -1157,6 +1189,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 		if (pSceneTouchEvent.isActionDown())
 		{
+		    say("Let's go shopping!");
 		    Intent intent = new Intent(MainGame.this.getApplicationContext(), ItemStore.class);
 		    intent.putExtra("money", tama.getMoney());
 		    Toast.makeText(MainGame.this.getApplicationContext(), "Starting item store!", Toast.LENGTH_SHORT).show();
@@ -2198,6 +2231,22 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mSplashScene.attachChild(splashSprite);
 	this.mScene.setChildScene(mSplashScene);
 	// this.tama.setDefault();
+    }
+
+    public void say(String text2say)
+    {
+	if (soundOn)
+	    talker.speak(text2say, TextToSpeech.QUEUE_FLUSH, null);
+    }
+
+    @Override
+    public void onInit(int status)
+    {
+	talker.setPitch(1000f);
+	String[] loadedResponses = FileReaderUtil.readFile(this, "files/tamaResponses.txt");
+	if (loadedResponses != null)
+	    tamaResponses = loadedResponses;
+	say("Tamagotchi!");
     }
 
     // ===========================================================
