@@ -117,7 +117,7 @@ public class Backpack
 	    {
 		for (int j = 1; j <= 5; j++)
 		{
-		    items.get(count).setPosition((xSpacing * j) - items.get(count).getTextureRegion().getWidth() / 2, (ySpacing * i) - items.get(i).getTextureRegion().getHeight() / 2);
+		    items.get(count).setPosition((xSpacing * j) - items.get(count).getWidth() / 2, (ySpacing * i) - items.get(i).getHeight() / 2);
 		    if (++count > size - 1)
 			return;
 		}

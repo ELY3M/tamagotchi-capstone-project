@@ -410,23 +410,29 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	    {
 		do
 		{
-		    Cursor c3 = db.rawQuery("select filename from Filenames where itemName = '" + c.getString(c.getColumnIndex("itemName")) + "'", null);
-		    c3.moveToFirst();
+		    try
+		    {
+			Cursor c3 = db.rawQuery("select filename from Filenames where itemName = '" + c.getString(c.getColumnIndex("itemName")) + "'", null);
+			c3.moveToFirst();
 
-		    String itemName = c.getString(c.getColumnIndex("itemName"));
-		    int health = c.getInt(c.getColumnIndex("health"));
-		    int hunger = c.getInt(c.getColumnIndex("hunger"));
-		    int sickness = c.getInt(c.getColumnIndex("sickness"));
-		    int xp = c.getInt(c.getColumnIndex("xp"));
-		    int protection = c.getInt(c.getColumnIndex("protection"));
-		    int type = c.getInt(c.getColumnIndex("type"));
-		    String description = c.getString(c.getColumnIndex("description"));
-		    int price = c.getInt(c.getColumnIndex("price"));
+			String itemName = c.getString(c.getColumnIndex("itemName"));
+			int health = c.getInt(c.getColumnIndex("health"));
+			int hunger = c.getInt(c.getColumnIndex("hunger"));
+			int sickness = c.getInt(c.getColumnIndex("sickness"));
+			int xp = c.getInt(c.getColumnIndex("xp"));
+			int protection = c.getInt(c.getColumnIndex("protection"));
+			int type = c.getInt(c.getColumnIndex("type"));
+			String description = c.getString(c.getColumnIndex("description"));
+			int price = c.getInt(c.getColumnIndex("price"));
 
-		    TextureRegion textureRegion = table.get(c3.getString(c3.getColumnIndex("filename")));
+			TextureRegion textureRegion = table.get(c3.getString(c3.getColumnIndex("filename")));
 
-		    Item i = new Item(0, 0, textureRegion, itemName, description, health, hunger, sickness, xp, type, protection, price);
-		    resultSet.add(i);
+			Item i = new Item(0, 0, textureRegion, itemName, description, health, hunger, sickness, xp, type, protection, price);
+			resultSet.add(i);
+		    } catch (Exception e)
+		    {
+			e.printStackTrace();
+		    }
 		} while (c.moveToNext());
 	    }
 	    return resultSet;

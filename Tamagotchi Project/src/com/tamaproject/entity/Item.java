@@ -22,6 +22,7 @@ public class Item extends Sprite
     public Item(float x, float y, TextureRegion textureRegion)
     {
 	super(x, y, textureRegion);
+	this.setSize(48,48);
 	setDefault();
     }
 
@@ -35,6 +36,7 @@ public class Item extends Sprite
 	this.hunger = hunger;
 	this.sickness = sickness;
 	this.xp = xp;
+	this.setSize(48,48);
     }
 
     public Item(float x, float y, TextureRegion textureRegion, String name, int health, int hunger,
@@ -47,6 +49,7 @@ public class Item extends Sprite
 	this.hunger = hunger;
 	this.sickness = sickness;
 	this.xp = xp;
+	this.setSize(48,48);
     }
 
     public Item(float pX, float pY, TextureRegion pTextureRegion, String name, String description,
@@ -61,6 +64,7 @@ public class Item extends Sprite
 	this.xp = xp;
 	this.type = type;
 	this.protection = protection;
+	this.setSize(48,48);
     }
 
     public Item(float pX, float pY, TextureRegion pTextureRegion, String name, String description,
@@ -75,7 +79,8 @@ public class Item extends Sprite
 	this.xp = xp;
 	this.type = type;
 	this.protection = protection;
-	this.setPrice(price);
+	this.price = price;
+	this.setSize(48,48);
     }
 
     private void setDefault()
