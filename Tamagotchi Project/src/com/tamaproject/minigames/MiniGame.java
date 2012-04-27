@@ -43,6 +43,11 @@ import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.util.MathUtils;
 
+import sun.applet.Main;
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.widget.Toast;
 
 import com.badlogic.gdx.math.Vector2;
@@ -105,8 +110,7 @@ public class MiniGame extends BaseAndEngineGame
     private int currentLap = 0;
     private int totalLap = 1;
     
-
-
+    
     @Override
     public Engine onLoadEngine()
     { // Change camera dimensions to fit in custom controls?
@@ -168,6 +172,7 @@ public class MiniGame extends BaseAndEngineGame
     @Override
     public Scene onLoadScene()
     {
+    	
 		this.mEngine.registerUpdateHandler(new FPSLogger());
 	
 		this.mSceneMG = new Scene();
@@ -175,14 +180,15 @@ public class MiniGame extends BaseAndEngineGame
 	
 		this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
 		
+		
 		this.initRacetrack();
 		this.initRacetrackBorders();
 		this.initTama();
 		this.initObstacles();
-		//this.initLap();
+	//	this.initLap();
 		this.initOnScreenControls();
 		this.initClock();
-		this.endCondition();
+	//	this.endCondition();
 	
 		this.mSceneMG.registerUpdateHandler(this.mPhysicsWorld);
 	
@@ -205,7 +211,12 @@ public class MiniGame extends BaseAndEngineGame
 					lapTime = System.currentTimeMillis() - startTime;
 					currentLap += 1;
 					totalTime += lapTime;
-				//	Toast.makeText(this, "Lap: " + currentLap + "Lap Time: " + lapTime, Toast.LENGTH_SHORT).show();
+					// Toast.makeText(this, "Lap: " + currentLap + "Lap Time: " + lapTime, Toast.LENGTH_SHORT).show();
+					//toaster.sendMessage("abc");
+					if (currentLap >= totalLap)
+					{
+						startingLine.setColor(1,1,1);
+					}
 				}
 				else {
 					startingLine.setColor(0,1,0);
@@ -266,7 +277,7 @@ public class MiniGame extends BaseAndEngineGame
     // Place Tama on screen
     private void initTama()
     {
-	this.mTama = new TiledSprite(20, 20, TAMA_SIZE, TAMA_SIZE, this.mTamaTextureRegion);
+	this.mTama = new TiledSprite(20, RACETRACK_WIDTH-10, TAMA_SIZE, TAMA_SIZE, this.mTamaTextureRegion);
 	this.mTama.setCurrentTileIndex(0);
 
 	final FixtureDef TamaFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
@@ -426,7 +437,24 @@ public class MiniGame extends BaseAndEngineGame
   
     }
     
+    /* Enable displayed text in onUpdate */
+    public Handler toaster = new Handler() {
+    	@Override
+    	public void handleMessage (Message msg) {
+    		Toast.makeText(getBaseContext(), msg.getData().getString("msg"), Toast.LENGTH_SHORT).show();	
+    	}
+    };
 
+   
+    public void makeToast(String str) {
+    	Message status = this.toaster.obtainMessage();
+    	Bundle datax = new Bundle();
+    	datax.putString("msg", str);
+    	status.setData(datax);
+    	this.toaster.sendMessage(status);
+  
+    }
+    
     /*
      * @Override public boolean onAreaTouched(TouchEvent arg0, ITouchArea arg1, float arg2, float arg3) { // TODO Auto-generated method stub return false; }
      * 
