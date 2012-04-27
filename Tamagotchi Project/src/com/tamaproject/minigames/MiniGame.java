@@ -26,6 +26,7 @@ import org.anddev.andengine.entity.shape.Shape;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.sprite.TiledSprite;
+import org.anddev.andengine.entity.text.ChangeableText;
 import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouch;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouchController;
@@ -35,6 +36,8 @@ import org.anddev.andengine.extension.physics.box2d.PhysicsConnector;
 import org.anddev.andengine.extension.physics.box2d.PhysicsFactory;
 import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
 import org.anddev.andengine.extension.physics.box2d.util.Vector2Pool;
+import org.anddev.andengine.opengl.font.Font;
+import org.anddev.andengine.opengl.font.FontFactory;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.anddev.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -45,6 +48,7 @@ import org.anddev.andengine.util.MathUtils;
 
 import sun.applet.Main;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -104,11 +108,18 @@ public class MiniGame extends BaseAndEngineGame
     private Body mTamaBody;
     private TiledSprite mTama;
     
+    private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
+    private Font mFont, mSmallFont;
+    
     private long startTime;
     private long lapTime;
     private long totalTime = 0;
     private int currentLap = 0;
-    private int totalLap = 1;
+    private int totalLap = 3;
+    
+    /* flags */
+    public boolean checkpoint_flag = false;
+    public boolean startingline_flag = false;
     
     
     @Override
@@ -153,6 +164,17 @@ public class MiniGame extends BaseAndEngineGame
 	listTR = TextureUtil.loadTextures(this, mEngine, new String[] { new String("gfx/") });
 	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("");
 
+	// Load fonts
+	this.mFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mSmallFontTexture = new BitmapTextureAtlas(256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mFont = FontFactory.createFromAsset(mFontTexture, this, "ITCKRIST.TTF", 24, true, Color.RED);
+	this.mSmallFont = FontFactory.createFromAsset(mSmallFontTexture, this, "ITCKRIST.TTF", 18, true, Color.RED);
+	this.mEngine.getTextureManager().loadTexture(this.mFontTexture);
+	this.mEngine.getTextureManager().loadTexture(this.mSmallFontTexture);
+	this.mEngine.getFontManager().loadFont(this.mFont);
+	this.mEngine.getFontManager().loadFont(this.mSmallFont);
+
+	
 	// Load background
 	this.mGrassBackgroundMG = new RepeatingSpriteBackground(cameraWidthMG, cameraHeightMG, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 
@@ -198,7 +220,13 @@ public class MiniGame extends BaseAndEngineGame
     	this.mSceneMG.attachChild(startingLine);
     	//this.mSceneMG.attachChild(checkpoint);
 		
-		
+    	final Line checkpoint = new Line(0, cameraHeightMG - RACETRACK_WIDTH, RACETRACK_WIDTH, cameraHeightMG - RACETRACK_WIDTH);
+    	this.mSceneMG.attachChild(checkpoint);
+    	
+    	/* Print Text */
+    	final ChangeableText collisionText = new ChangeableText(0, 0, this.mFont, "blank");
+        mSceneMG.attachChild(collisionText);
+    	
 		/* Collision-checking for detecting laps */
 		this.mSceneMG.registerUpdateHandler(new IUpdateHandler() {
 			@Override
@@ -208,20 +236,27 @@ public class MiniGame extends BaseAndEngineGame
 			public void onUpdate(final float pSecondsElapsed) {
 				if(startingLine.collidesWith(mTama)) {
 					startingLine.setColor(1,0,0);
-					lapTime = System.currentTimeMillis() - startTime;
-					currentLap += 1;
-					totalTime += lapTime;
-					// Toast.makeText(this, "Lap: " + currentLap + "Lap Time: " + lapTime, Toast.LENGTH_SHORT).show();
-					//toaster.sendMessage("abc");
-					if (currentLap >= totalLap)
-					{
-						startingLine.setColor(1,1,1);
+					collisionText.setText("L " +currentLap + checkpoint_flag);
+					if(checkpoint_flag == true) {
+						lapTime = System.currentTimeMillis() - startTime;
+						currentLap += 1;
+						totalTime += lapTime;
+				
+						checkpoint_flag = false;
 					}
 				}
 				else {
 					startingLine.setColor(0,1,0);
 				}
-			}
+				if(checkpoint.collidesWith(mTama)) {
+					checkpoint.setColor(1,0,0);
+						checkpoint_flag = true;
+					}
+				else {
+					checkpoint.setColor(0,1,0);
+				}
+				}
+			
 		});
 
 		
@@ -277,7 +312,7 @@ public class MiniGame extends BaseAndEngineGame
     // Place Tama on screen
     private void initTama()
     {
-	this.mTama = new TiledSprite(20, RACETRACK_WIDTH-10, TAMA_SIZE, TAMA_SIZE, this.mTamaTextureRegion);
+	this.mTama = new TiledSprite(20, RACETRACK_WIDTH-20, TAMA_SIZE, TAMA_SIZE, this.mTamaTextureRegion);
 	this.mTama.setCurrentTileIndex(0);
 
 	final FixtureDef TamaFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
@@ -447,11 +482,11 @@ public class MiniGame extends BaseAndEngineGame
 
    
     public void makeToast(String str) {
-    	Message status = this.toaster.obtainMessage();
+    	Message status = MiniGame.this.toaster.obtainMessage();
     	Bundle datax = new Bundle();
     	datax.putString("msg", str);
     	status.setData(datax);
-    	this.toaster.sendMessage(status);
+    	MiniGame.this.toaster.sendMessage(status);
   
     }
     
