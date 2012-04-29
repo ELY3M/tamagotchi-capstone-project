@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -74,6 +73,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -218,6 +218,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     private TextToSpeech talker;
     private String[] tamaResponses = { "Hello" };
 
+    private boolean demoMode = true;
+
     // ===========================================================
     // Methods for/from SuperClass/Interfaces
     // ===========================================================
@@ -226,6 +228,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     public Engine onLoadEngine()
     {
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
+	this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	return new Engine(new EngineOptions(FULLSCREEN, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
     }
 
@@ -456,8 +459,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 
 	this.mScene.setOnAreaTouchTraversalFrontToBack();
 
-	// this.mPhysicsWorld = new PhysicsWorld(new Vector2(0, SensorManager.GRAVITY_EARTH), false);
-	// this.mScene.registerUpdateHandler(this.mPhysicsWorld);
+	if (demoMode)
+	    runDemo();
+
 	return this.mScene;
     }
 
@@ -680,6 +684,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.stop();
 	this.stopGPS();
 	totalPlayTime += System.currentTimeMillis() - startPlayTime;
+	
+	tama.addToAge(totalPlayTime);
 
 	if (dbHelper != null)
 	{
@@ -904,7 +910,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    @Override
 	    public void onPathStarted(final PathModifier pPathModifier, final IEntity pEntity)
 	    {
-		Debug.d("onPathStarted");
+		// Debug.d("onPathStarted");
 		manualMove = true;
 	    }
 
@@ -912,7 +918,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public void onPathWaypointStarted(final PathModifier pPathModifier,
 		    final IEntity pEntity, final int pWaypointIndex)
 	    {
-		Debug.d("onPathWaypointStarted:  " + pWaypointIndex);
+		// Debug.d("onPathWaypointStarted:  " + pWaypointIndex);
 		float[] xCoords = pPathModifier.getPath().getCoordinatesX();
 		float[] yCoords = pPathModifier.getPath().getCoordinatesY();
 
@@ -946,13 +952,13 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	    public void onPathWaypointFinished(final PathModifier pPathModifier,
 		    final IEntity pEntity, final int pWaypointIndex)
 	    {
-		Debug.d("onPathWaypointFinished: " + pWaypointIndex);
+		// Debug.d("onPathWaypointFinished: " + pWaypointIndex);
 	    }
 
 	    @Override
 	    public void onPathFinished(final PathModifier pPathModifier, final IEntity pEntity)
 	    {
-		Debug.d("onPathFinished");
+		// Debug.d("onPathFinished");
 		((AnimatedSprite) tama.getSprite()).stopAnimation();
 		manualMove = false;
 	    }
@@ -971,7 +977,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	 * Load stats background
 	 */
 	final Rectangle statsBackground = new Rectangle(0, 0, cameraWidth, pBottomBound);
-	statsBackground.setColor(0, 0, 0);
+	statsBackground.setColor(88 / 255f, 143 / 255f, 39 / 255f);
 	statsLayer.attachChild(statsBackground);
 
 	final Text statsLabel = new Text(15, 15, mFont, "Tamagotchi Stats", HorizontalAlign.LEFT);
@@ -1342,6 +1348,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	};
 	this.notificationRect.attachChild(notifyCloseButton);
 	this.mScene.registerTouchArea(notifyCloseButton);
+
     }
 
     /**
@@ -1837,8 +1844,9 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void createSelectBox(Entity entity, int index)
     {
-	final Rectangle selectBox = new Rectangle(iconSpacer * index - 25f, 0, 50, bottomRect.getHeight());
-	selectBox.setColor(1, 1, 1);
+	final float boxWidth = 75;
+	final Rectangle selectBox = new Rectangle(iconSpacer * index - boxWidth / 2, 0, boxWidth, bottomRect.getHeight());
+	selectBox.setColor(247 / 255f, 233 / 255f, 103 / 255f);
 	selectBox.setVisible(false);
 	selectBoxes.put(entity, selectBox);
 	bottomRect.attachChild(selectBox);
@@ -2247,6 +2255,42 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	if (loadedResponses != null)
 	    tamaResponses = loadedResponses;
 	say("Tamagotchi!");
+    }
+
+    /**
+     * Demos the weather
+     */
+    private void runDemo()
+    {
+	this.mScene.registerUpdateHandler(new TimerHandler(20, true, new ITimerCallback()
+	{
+	    private int counter = 0;
+
+	    @Override
+	    public void onTimePassed(TimerHandler arg0)
+	    {
+		Debug.d("Demo counter: " + counter);
+		switch (counter)
+		{
+		case 0:
+		    MainGame.this.loadWeather(Weather.SNOW);
+		    counter++;
+		    return;
+		case 1:
+		    MainGame.this.loadWeather(Weather.RAIN);
+		    counter++;
+		    return;
+		case 2:
+		    MainGame.this.loadWeather(Weather.NONE);
+		    counter = 0;
+		    return;
+		default:
+		    counter = 0;
+		    return;
+		}
+
+	    }
+	}));
     }
 
     // ===========================================================

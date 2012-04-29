@@ -70,6 +70,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.util.SparseArray;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -185,6 +186,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public Engine onLoadEngine()
     {
+	this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	TamaBattle.this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 
 	this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
