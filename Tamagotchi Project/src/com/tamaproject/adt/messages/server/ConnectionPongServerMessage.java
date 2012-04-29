@@ -6,12 +6,6 @@ import java.io.IOException;
 
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
-/**
- * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
- * 
- * @author Nicolas Gramlich
- * @since 12:23:20 - 21.05.2011
- */
 public class ConnectionPongServerMessage extends ServerMessage implements ServerMessageFlags
 {
     // ===========================================================

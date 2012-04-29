@@ -6,12 +6,6 @@ import java.io.IOException;
 
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
 
-/**
- * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
- * 
- * @author Nicolas Gramlich
- * @since 12:00:31 - 21.05.2011
- */
 public class ConnectionEstablishClientMessage extends ClientMessage implements ClientMessageFlags
 {
     // ===========================================================

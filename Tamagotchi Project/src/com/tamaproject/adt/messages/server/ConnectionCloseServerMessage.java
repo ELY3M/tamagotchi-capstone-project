@@ -6,12 +6,6 @@ import java.io.IOException;
 
 import org.anddev.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
-/**
- * (c) 2010 Nicolas Gramlich (c) 2011 Zynga Inc.
- * 
- * @author Nicolas Gramlich
- * @since 16:11:40 - 11.03.2011
- */
 public class ConnectionCloseServerMessage extends ServerMessage implements ServerMessageFlags
 {
     // ===========================================================
