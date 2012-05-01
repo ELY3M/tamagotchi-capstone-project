@@ -48,10 +48,14 @@ import org.anddev.andengine.util.MathUtils;
 
 import sun.applet.Main;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Editable;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.badlogic.gdx.math.Vector2;
@@ -111,11 +115,20 @@ public class MiniGame extends BaseAndEngineGame
     private BitmapTextureAtlas mFontTexture, mSmallFontTexture;
     private Font mFont, mSmallFont;
     
-    private long startTime;
-    private long lapTime;
+    private long startTime = 0;
+    private long lapTime = 0;
     private long totalTime = 0;
     private int currentLap = 0;
     private int totalLap = 3;
+    private long lapmiliseconds = 0; 
+    private long lapseconds = 0;
+    private long lapminutes;
+    private long laphours;
+    
+    private int miliseconds;
+	private int seconds;
+    private int minutes;
+    
     
     /* flags */
     public boolean checkpoint_flag = false;
@@ -223,6 +236,26 @@ public class MiniGame extends BaseAndEngineGame
     	final Line checkpoint = new Line(0, cameraHeightMG - RACETRACK_WIDTH, RACETRACK_WIDTH, cameraHeightMG - RACETRACK_WIDTH);
     	this.mSceneMG.attachChild(checkpoint);
     	
+        /* Display Prompt for end game */
+    	final AlertDialog.Builder endgame = new AlertDialog.Builder(this);
+        
+        endgame.setTitle("End Game");
+        endgame.setMessage("Play Again?");
+        
+        
+        endgame.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        	public void onClick(DialogInterface dialog, int whichButton) {
+        		// Restart Game
+        	}
+        });
+        
+        endgame.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        	public void onClick(DialogInterface dialog, int whichButton) {
+        		// Return to MainGame
+        	}
+        });
+			
+    	
     	/* Print Text */
     	final ChangeableText collisionText = new ChangeableText(0, 0, this.mFont, "blank");
         mSceneMG.attachChild(collisionText);
@@ -234,14 +267,51 @@ public class MiniGame extends BaseAndEngineGame
 			
 			@Override
 			public void onUpdate(final float pSecondsElapsed) {
-				if(startingLine.collidesWith(mTama)) {
-					startingLine.setColor(1,0,0);
-					collisionText.setText("L " +currentLap + checkpoint_flag);
-					if(checkpoint_flag == true) {
-						lapTime = System.currentTimeMillis() - startTime;
-						currentLap += 1;
-						totalTime += lapTime;
+				miliseconds = (int) (totalTime / 1000);
+				seconds = (int) (totalTime / 1000) % 60;
+			    minutes = (int) ((totalTime / (1000 * 60)) % 60);
+					
+				if(currentLap > -1 )						  
+				{
+					totalTime = System.currentTimeMillis() - startTime;
+				}
+				int displayLap = currentLap + 1;
+				//collisionText.setText("Lap " + displayLap);
 				
+				collisionText.setText("" + seconds);
+					   			   		    
+				/* End Condition */
+				if (currentLap >= totalLap)
+		    	{
+					//collisionText.setText("Game");
+		    		//endgame.show();
+					makeToast("Total Time: " + minutes + ":" + seconds + ":" + miliseconds);
+		    		System.exit(500000000);
+		    	}
+				
+				
+				if(startingLine.collidesWith(mTama)) {
+					startingLine.setColor(1,0,0);    	
+					
+					if(checkpoint_flag == true) {
+						currentLap += 1;
+						
+					/*	if (currentLap == 0) {
+							lapTime = System.currentTimeMillis() - startTime - lapTime;
+						}
+						else {
+							lapTime = System.currentTimeMillis() - startTime - lapTime;
+						} 
+					*///	lapTime = totalTime - lapTime;
+						//startTime = System.currentTimeMillis();
+						//makeToast("Lap Time: " + lapminutes + ":" + lapseconds + ":" + lapmiliseconds);
+					
+					 //	lapmiliseconds = (int) (lapTime / 1000); 		    
+					    //lapseconds = (int) (lapTime / 1000) % 60;
+						lapseconds = seconds - lapseconds; 
+					//    lapminutes = (int) ((lapTime / (1000 * 60)) % 60);
+					    
+						makeToast("" + lapseconds);
 						checkpoint_flag = false;
 					}
 				}
@@ -249,11 +319,11 @@ public class MiniGame extends BaseAndEngineGame
 					startingLine.setColor(0,1,0);
 				}
 				if(checkpoint.collidesWith(mTama)) {
-					checkpoint.setColor(1,0,0);
+				//	checkpoint.setColor(1,0,0);
 						checkpoint_flag = true;
 					}
 				else {
-					checkpoint.setColor(0,1,0);
+				//	checkpoint.setColor(0,0,0);
 				}
 				}
 			
@@ -489,6 +559,9 @@ public class MiniGame extends BaseAndEngineGame
     	MiniGame.this.toaster.sendMessage(status);
   
     }
+    
+
+    
     
     /*
      * @Override public boolean onAreaTouched(TouchEvent arg0, ITouchArea arg1, float arg2, float arg3) { // TODO Auto-generated method stub return false; }
