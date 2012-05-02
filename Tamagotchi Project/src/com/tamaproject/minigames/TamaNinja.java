@@ -313,7 +313,7 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 		int offRealX = (int) (realX - projectile.getX());
 		int offRealY = (int) (realY - projectile.getY());
 		float length = (float) Math.sqrt((offRealX * offRealX) + (offRealY * offRealY));
-		float velocity = 480.0f / 1.0f;
+		float velocity = 480.0f / 5.0f;
 		float realMoveDuration = length / velocity;
 		
 		/* Defining a move modifier from the projectile's position to the calculated one */
@@ -352,7 +352,7 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 	/* A time handler for spawning the targets, triggers every 1 second */
 	private void createSpriteSpawnTimeHandler() {
 		TimerHandler spriteTimerHandler;
-		float mEffectSpawnDelay = 1f;
+		float mEffectSpawnDelay = 5f;
 		
 		spriteTimerHandler = new TimerHandler(mEffectSpawnDelay, true, new ITimerCallback() {
 			@Override
