@@ -81,7 +81,7 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 	private CameraScene mPauseScene;
 	private CameraScene mResultScene;
 	private int hitCount;
-	private final int maxScore = 20;
+	private final int maxScore = 2;
 	
 	
 	@Override
@@ -112,7 +112,7 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 		
 		/* Loading the image inside the container */
 		mPlayerTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "player.png", 0, 0);
-		mProjectileTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "Projectile2.png", 64, 0);
+		mProjectileTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "Projectile.png", 64, 0);
 		mTargetTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "Target.png", 128, 0);
 		mPausedTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "paused.png", 0, 64);
 		mWinTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "win.png", 0, 128);
@@ -178,7 +178,7 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 		
 		/* Set background color */
 		mMainScene = new Scene();
-		mMainScene.setBackground(new ColorBackground(0.09804f, 0.6274f, 0.8784f));
+		mMainScene.setBackground(new ColorBackground(247 / 255f, 233 / 255f, 103 / 255f));
 		mMainScene.setOnSceneTouchListener(this);
 		
 		/* Set coordinates for the player */
@@ -223,7 +223,7 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 			
 		}
 		@Override
-		public void onUpdate(float pSecondElapsed) {
+		public void onUpdate(float pSecondsElapsed) {
 			Iterator<Sprite> targets = targetLL.iterator();
 			Sprite _target;
 			boolean hit = false;
@@ -269,10 +269,21 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 			if(hitCount >= maxScore) {
 				win();
 			}
+			
+			projectileLL.addAll(projectilesToBeAdded);
+			projectilesToBeAdded.clear();
+			
+			targetLL.addAll(TargetsToBeAdded);
+			TargetsToBeAdded.clear();
 		}
 	};
 	
-	/* Safely detach the sprite from the scene and remove it from the iterator */
+	/** 
+	 * Safely detach the sprite from the scene and remove it from the iterator
+	 * 
+	 * @param _sprite
+	 * @param it
+	 */
 	public void removeSprite(final Sprite _sprite, Iterator<Sprite> it) {
 		runOnUpdateThread(new Runnable() {
 			@Override
@@ -313,7 +324,7 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 		int offRealX = (int) (realX - projectile.getX());
 		int offRealY = (int) (realY - projectile.getY());
 		float length = (float) Math.sqrt((offRealX * offRealX) + (offRealY * offRealY));
-		float velocity = 480.0f / 5.0f;
+		float velocity = 480.0f / 1.0f;
 		float realMoveDuration = length / velocity;
 		
 		/* Defining a move modifier from the projectile's position to the calculated one */
@@ -339,8 +350,8 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 		Sprite target = new Sprite(x, y, mTargetTextureRegion.deepCopy());
 		mMainScene.attachChild(target);
 		
-		int minDuration = 2;
-		int maxDuration = 4;
+		int minDuration = 5;
+		int maxDuration = 10;
 		int rangeDuration = maxDuration - minDuration;
 		int actualDuration = rand.nextInt(rangeDuration) + minDuration;
 		
@@ -384,7 +395,8 @@ public class TamaNinja extends BaseAndEngineGame  implements IOnSceneTouchListen
 	}
 	
 	@Override
-	/* Pauses the music and the game when the game goes to the background */
+	/**
+	 *  Pauses the music and the game when the game goes to the background */
 	protected void onPause() {
 		if(runningFlag) {
 			pauseMusic();
