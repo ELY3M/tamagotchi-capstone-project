@@ -16,7 +16,7 @@ import com.tamaproject.util.MiniGameListConstants;
 
 public class MiniGameListActivity extends ListActivity implements MiniGameListConstants
 {
-    static final String[] MINIGAMES = new String[] { RACING };
+    static final String[] MINIGAMES = new String[] { RACING, TAMANINJA };
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -36,6 +36,10 @@ public class MiniGameListActivity extends ListActivity implements MiniGameListCo
 		if (RACING.equals(s))
 		{
 		    MiniGameListActivity.this.startActivity(new Intent(MiniGameListActivity.this, MiniGame.class));
+		}
+		else if (TAMANINJA.equals(s))
+		{
+		    MiniGameListActivity.this.startActivity(new Intent(MiniGameListActivity.this, TamaNinja.class));
 		}
 		Toast.makeText(getApplicationContext(), ((TextView) view).getText(), Toast.LENGTH_SHORT).show();
 	    }

@@ -33,6 +33,9 @@
             android:name=".minigames.MiniGame"
             android:configChanges="orientation" />
         <activity
+            android:name=".minigames.TamaNinja"
+            android:configChanges="orientation" />        
+        <activity
             android:name=".multiplayer.TamaBattle"
             android:configChanges="orientation" />
         <activity
