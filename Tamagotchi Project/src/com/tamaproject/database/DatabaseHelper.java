@@ -64,12 +64,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	    // Check that we have the latest version of the db
 	    boolean doUpgrade = false;
 
-	    // Insert your own logic here on whether to upgrade the db; I personally
-	    // just store the db version # in a text file, but you can do whatever
-	    // you want. I've tried MD5 hashing the db before, but that takes a while.
-
-	    // If we are doing an upgrade, basically we just delete the db then
-	    // flip the switch to create a new one
+	  
 	    if (doUpgrade)
 	    {
 		dbFile.delete();
