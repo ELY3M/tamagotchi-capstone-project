@@ -1,6 +1,8 @@
 package com.tamaproject.minigames;
 
 import java.util.Hashtable;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -75,7 +77,7 @@ public class MiniGame extends BaseAndEngineGame
     private static final int RACETRACK_WIDTH = 64;
     private static final int OBSTACLE_SIZE = 16;
 
-    private static final int TAMA_SIZE = 16;
+    private static final int TAMA_SIZE = 24;
 
     private static final int cameraWidthMG = RACETRACK_WIDTH * 5,
 	    cameraHeightMG = RACETRACK_WIDTH * 3;
@@ -125,14 +127,24 @@ public class MiniGame extends BaseAndEngineGame
     private long lapminutes;
     private long laphours;
     
-    private int miliseconds;
-	private int seconds;
-    private int minutes;
+    private long miliseconds;
+	private long seconds;
+    private long minutes;
     
+    private long finalseconds;
+    private long finalminutes;
+    
+    private long totalseconds = 0;
+    private long totalminutes = 0;
+   
+    private long finalTime = 0;
+    private long delayexit = 0;
     
     /* flags */
     public boolean checkpoint_flag = false;
     public boolean startingline_flag = false;
+    public boolean endgame_flag = false;
+    public boolean finaltime_flag = false;
     
     
     @Override
@@ -191,9 +203,14 @@ public class MiniGame extends BaseAndEngineGame
 	// Load background
 	this.mGrassBackgroundMG = new RepeatingSpriteBackground(cameraWidthMG, cameraHeightMG, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass.png"));
 
-	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
-	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animated_gfx/animate_test.png", 0, 0, 3, 4);
+	/* Biker Sprite */
+//	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(256, 512, TextureOptions.BILINEAR);
+//	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animated_gfx/animate_test.png", 0, 0, 3, 4);
 
+	this.mTamaBitmapTextureAtlas = new BitmapTextureAtlas(128, 1024, TextureOptions.BILINEAR);
+	this.mTamaTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mTamaBitmapTextureAtlas, this, "animated_gfx/snorlax.png", 0, 0, 1, 8);
+
+	
 	this.mRacetrackTexture = new BitmapTextureAtlas(128, 256, TextureOptions.REPEATING_BILINEAR_PREMULTIPLYALPHA);
 
 	// Load Analog Stick
@@ -224,7 +241,7 @@ public class MiniGame extends BaseAndEngineGame
 		this.initOnScreenControls();
 		this.initClock();
 	//	this.endCondition();
-	
+		
 		this.mSceneMG.registerUpdateHandler(this.mPhysicsWorld);
 	
 		/* Initialize Laps */
@@ -270,25 +287,46 @@ public class MiniGame extends BaseAndEngineGame
 				miliseconds = (int) (totalTime / 1000);
 				seconds = (int) (totalTime / 1000) % 60;
 			    minutes = (int) ((totalTime / (1000 * 60)) % 60);
-					
-				if(currentLap > -1 )						  
+			    
+			    finalseconds = (int) (finalTime / 1000) % 60;
+			    finalminutes = (int) ((finalTime / (1000 * 60)) % 60);
+			    		
+			 /*   if(endgame_flag == true) {
+			    	exitgame(0);
+			      }*/
+			    
+				if(currentLap > -1  & endgame_flag == false)						  
 				{
 					totalTime = System.currentTimeMillis() - startTime;
+					 
 				}
 				int displayLap = currentLap + 1;
 				//collisionText.setText("Lap " + displayLap);
 				
-				collisionText.setText("" + seconds);
+				collisionText.setText(""+ minutes + ":" + seconds);
 					   			   		    
 				/* End Condition */
-				if (currentLap >= totalLap)
+				if (currentLap >= totalLap & endgame_flag == false)
 		    	{
 					//collisionText.setText("Game");
 		    		//endgame.show();
-					makeToast("Total Time: " + minutes + ":" + seconds + ":" + miliseconds);
-		    		System.exit(500000000);
+					if(endgame_flag == true) {
+					 	finalTime = totalTime;
+						endgame_flag = false;
+					}
+					makeToast("Total Time: " + minutes + ":" + seconds);
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.exit(0);
+					endgame_flag = true;
+					
+					
 		    	}
 				
+			
 				
 				if(startingLine.collidesWith(mTama)) {
 					startingLine.setColor(1,0,0);    	
@@ -308,10 +346,16 @@ public class MiniGame extends BaseAndEngineGame
 					
 					 //	lapmiliseconds = (int) (lapTime / 1000); 		    
 					    //lapseconds = (int) (lapTime / 1000) % 60;
-						lapseconds = seconds - lapseconds; 
+						
+						lapseconds = seconds - totalseconds;
+						totalseconds = lapseconds + totalseconds;
+						lapminutes = minutes - totalminutes; 
+						totalminutes = lapminutes + totalminutes;
+						finalTime = System.currentTimeMillis();
+						
 					//    lapminutes = (int) ((lapTime / (1000 * 60)) % 60);
 					    
-						makeToast("" + lapseconds);
+						makeToast("Lap " + displayLap + ": " + lapminutes + ":" + lapseconds);
 						checkpoint_flag = false;
 					}
 				}
@@ -354,7 +398,7 @@ public class MiniGame extends BaseAndEngineGame
 	    {
 		final Body TamaBody = MiniGame.this.mTamaBody;
 
-		final Vector2 velocity = Vector2Pool.obtain(pValueX * 2, pValueY * 2);
+		final Vector2 velocity = Vector2Pool.obtain(pValueX * (3/2), pValueY * (3/2) );
 		TamaBody.setLinearVelocity(velocity);
 		Vector2Pool.recycle(velocity);
 
@@ -382,9 +426,10 @@ public class MiniGame extends BaseAndEngineGame
     // Place Tama on screen
     private void initTama()
     {
-	this.mTama = new TiledSprite(20, RACETRACK_WIDTH-20, TAMA_SIZE, TAMA_SIZE, this.mTamaTextureRegion);
+	this.mTama = new AnimatedSprite(20, RACETRACK_WIDTH-20, TAMA_SIZE, TAMA_SIZE, this.mTamaTextureRegion);
 	this.mTama.setCurrentTileIndex(0);
-
+	((AnimatedSprite) mTama).animate(new long[] {300, 300}, 6, 7, true);
+	
 	final FixtureDef TamaFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 	this.mTamaBody = PhysicsFactory.createCircleBody(this.mPhysicsWorld, this.mTama, BodyType.DynamicBody, TamaFixtureDef);
 
@@ -560,6 +605,15 @@ public class MiniGame extends BaseAndEngineGame
   
     }
     
+    public static void wait(int delay) {
+    	long currentTime, endTime;
+    	currentTime = System.currentTimeMillis();
+    	do{
+    		endTime = System.currentTimeMillis();
+    	} while (endTime - currentTime < (delay*1000));
+    }
+    
+   
 
     
     
