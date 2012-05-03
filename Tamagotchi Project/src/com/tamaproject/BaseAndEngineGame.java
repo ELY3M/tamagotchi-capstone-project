@@ -6,6 +6,12 @@ import android.content.SharedPreferences;
 import android.view.Menu;
 import android.view.MenuItem;
 
+/**
+ * Abstract class that creates the menu when the menu button is pressed. It controls the sound and vibration.
+ * 
+ * @author Jonathan
+ * 
+ */
 public abstract class BaseAndEngineGame extends BaseGameActivity
 {
     // ===========================================================

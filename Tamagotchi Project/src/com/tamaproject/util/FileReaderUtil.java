@@ -7,6 +7,12 @@ import java.io.InputStream;
 import android.content.Context;
 import android.content.res.AssetManager;
 
+/**
+ * Utility for reading file
+ * 
+ * @author Jonathan
+ * 
+ */
 public class FileReaderUtil
 {
 
@@ -14,7 +20,7 @@ public class FileReaderUtil
     {
 	try
 	{
-	    
+
 	    AssetManager am = context.getAssets();
 	    InputStream is = am.open(filename);
 	    String text = readFileToString(is);

@@ -4,6 +4,12 @@ import org.anddev.andengine.extension.multiplayer.protocol.server.connector.Clie
 import org.anddev.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.anddev.andengine.opengl.font.Font;
 
+/**
+ * Used for formatting text
+ * 
+ * @author Jonathan
+ * 
+ */
 public class TextUtil
 {
     public static String getNormalizedText(Font font, String ptext, float textWidth)

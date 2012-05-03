@@ -1,5 +1,11 @@
 package com.tamaproject.util;
 
+/**
+ * Different weather types
+ * 
+ * @author Jonathan
+ * 
+ */
 public class Weather
 {
     public static final int SNOW = 0;

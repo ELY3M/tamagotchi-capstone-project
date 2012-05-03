@@ -6,6 +6,12 @@ import java.util.Calendar;
 
 import org.anddev.andengine.entity.sprite.BaseSprite;
 
+/**
+ * Tamagotchi class. Holds all of the stats for Tamagotchi.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class Tamagotchi
 {
     public static final int MAX_BATTLE_LEVEL = 100;

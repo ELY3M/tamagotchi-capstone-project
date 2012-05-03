@@ -1,5 +1,11 @@
 package com.tamaproject.multiplayer;
 
+/**
+ * Information about bullet.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class BulletInfo
 {
     private int playerID;

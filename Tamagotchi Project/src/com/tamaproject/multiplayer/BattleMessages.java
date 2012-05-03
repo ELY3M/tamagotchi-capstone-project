@@ -9,6 +9,12 @@ import org.anddev.andengine.extension.multiplayer.protocol.adt.message.server.Se
 
 import com.tamaproject.util.TamaBattleConstants;
 
+/**
+ * Messages used my multiplayer game
+ * 
+ * @author Jonathan
+ * 
+ */
 public interface BattleMessages extends TamaBattleConstants
 {
     /**
@@ -53,12 +59,12 @@ public interface BattleMessages extends TamaBattleConstants
 	{
 	    this.voteDeathMatch = vote;
 	}
-	
+
 	public void set(final boolean vote)
 	{
 	    this.voteDeathMatch = vote;
 	}
-	
+
 	@Override
 	public short getFlag()
 	{
@@ -80,7 +86,7 @@ public interface BattleMessages extends TamaBattleConstants
 	}
 
     }
-    
+
     public static class DeathMatchServerMessage extends ServerMessage
     {
 	boolean isDeathMatch;
@@ -94,12 +100,12 @@ public interface BattleMessages extends TamaBattleConstants
 	{
 	    this.isDeathMatch = vote;
 	}
-	
+
 	public void set(final boolean vote)
 	{
 	    this.isDeathMatch = vote;
 	}
-	
+
 	@Override
 	public short getFlag()
 	{

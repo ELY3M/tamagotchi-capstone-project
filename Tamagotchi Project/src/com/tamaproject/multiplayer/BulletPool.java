@@ -4,6 +4,12 @@ import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.util.pool.GenericPool;
 
+/**
+ * Object pool for bullets
+ * 
+ * @author Jonathan
+ * 
+ */
 public class BulletPool extends GenericPool<Sprite>
 {
     private TextureRegion mTextureRegion;

@@ -1,5 +1,11 @@
 package com.tamaproject.util;
 
+/**
+ * Constants used for passing data between activities
+ * 
+ * @author Jonathan
+ * 
+ */
 public class MultiplayerConstants
 {
     public static final String XP_GAIN = "Experience Gained";

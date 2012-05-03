@@ -1,5 +1,11 @@
 package com.tamaproject.util;
 
+/**
+ * Constants used for multiplayer
+ * 
+ * @author Jonathan
+ * 
+ */
 public interface TamaBattleConstants
 {
     static final int SERVER_PORT = 4444;

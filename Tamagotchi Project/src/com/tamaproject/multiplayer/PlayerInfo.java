@@ -1,5 +1,11 @@
 package com.tamaproject.multiplayer;
 
+/**
+ * Player information.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class PlayerInfo
 {
     private int health, maxHealth, battleLevel, playerID;
@@ -15,41 +21,41 @@ public class PlayerInfo
 
     public int getHealth()
     {
-        return health;
+	return health;
     }
 
     public int getMaxHealth()
     {
-        return maxHealth;
+	return maxHealth;
     }
 
     public int getBattleLevel()
     {
-        return battleLevel;
+	return battleLevel;
     }
 
     public int getPlayerID()
     {
-        return playerID;
+	return playerID;
     }
 
     public void setHealth(int health)
     {
-        this.health = health;
+	this.health = health;
     }
 
     public void setMaxHealth(int maxHealth)
     {
-        this.maxHealth = maxHealth;
+	this.maxHealth = maxHealth;
     }
 
     public void setBattleLevel(int battleLevel)
     {
-        this.battleLevel = battleLevel;
+	this.battleLevel = battleLevel;
     }
 
     public void setPlayerID(int playerID)
     {
-        this.playerID = playerID;
+	this.playerID = playerID;
     }
 }

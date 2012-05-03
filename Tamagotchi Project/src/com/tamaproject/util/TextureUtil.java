@@ -17,6 +17,12 @@ import org.anddev.andengine.util.MathUtils;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 
+/**
+ * Used for loading textures
+ * 
+ * @author Jonathan
+ * 
+ */
 public class TextureUtil
 {
     /**

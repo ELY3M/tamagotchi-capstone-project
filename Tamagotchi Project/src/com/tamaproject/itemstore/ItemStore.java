@@ -42,6 +42,12 @@ import com.tamaproject.entity.Item;
 import com.tamaproject.util.TextUtil;
 import com.tamaproject.util.TextureUtil;
 
+/**
+ * Item store. Loads all available items from database and allows user to purchase them.
+ * 
+ * @author Jonathan
+ * 
+ */
 public class ItemStore extends BaseAndEngineGame
 {
     private final static int CONFIRM_PURCHASE = 0;
