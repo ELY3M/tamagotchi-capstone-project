@@ -33,9 +33,11 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.view.Display;
 import android.widget.Toast;
 
 import com.tamaproject.BaseAndEngineGame;
+import com.tamaproject.MainGame;
 import com.tamaproject.database.DatabaseHelper;
 import com.tamaproject.entity.Backpack;
 import com.tamaproject.entity.Item;
@@ -63,8 +65,8 @@ public class ItemStore extends BaseAndEngineGame
     private ChangeableText itemDesctiptionText;
     private Entity topLayer;
     private Entity bottomLayer;
-    private static final int cameraWidth = 480, cameraHeight = 800;
-    private static final int pTopBound = 115, pBottomBound = cameraHeight - 70; // top and bottom bounds of play area
+    private static int cameraWidth = 480, cameraHeight = 800;
+    private static int pTopBound = 115, pBottomBound = cameraHeight - 70; // top and bottom bounds of play area
     private static final boolean FULLSCREEN = true;
     private Backpack backpack;
     private int money = 0;
@@ -122,6 +124,13 @@ public class ItemStore extends BaseAndEngineGame
     @Override
     public Engine onLoadEngine()
     {
+	Display display = this.getWindowManager().getDefaultDisplay();
+	int width = display.getWidth();
+	int height = display.getHeight();
+	float ratio = (float) width / height;
+	this.cameraHeight = Math.round(this.cameraWidth / ratio);
+	this.pBottomBound = this.cameraHeight - 70;
+	
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
 	return new Engine(new EngineOptions(FULLSCREEN, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
     }

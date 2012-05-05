@@ -72,6 +72,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.util.SparseArray;
+import android.view.Display;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -104,8 +105,8 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 
     private static BulletPool BULLET_POOL;
 
-    private static final int CAMERA_WIDTH = 800;
-    private static final int CAMERA_HEIGHT = 480;
+    private static int CAMERA_WIDTH = 800;
+    private static int CAMERA_HEIGHT = 480;
 
     // ===========================================================
     // Fields
@@ -186,6 +187,12 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public Engine onLoadEngine()
     {
+	Display display = this.getWindowManager().getDefaultDisplay();
+	int width = display.getWidth();
+	int height = display.getHeight();
+	float ratio = (float) width / height;
+	this.CAMERA_HEIGHT = Math.round(this.CAMERA_WIDTH * ratio);
+	
 	this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	TamaBattle.this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 
@@ -248,7 +255,9 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
 	this.mEngine.getTextureManager().loadTextures(this.mTamaBitmapTextureAtlas, this.mOnScreenControlTexture);
 
 	this.mBackground = new RepeatingSpriteBackground(CAMERA_WIDTH, CAMERA_HEIGHT, this.mEngine.getTextureManager(), new AssetBitmapTextureAtlasSource(this, "gfx/background_grass_inverted.png"));
-	this.orangeBackground = new SpriteBackground(new Sprite(0, 0, listTR.get("orange.png")));
+	Sprite orange = new Sprite(0, 0, listTR.get("orange.png"));
+	orange.setSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+	this.orangeBackground = new SpriteBackground(orange);
 
 	// Load sounds
 	SoundFactory.setAssetBasePath("mfx/");

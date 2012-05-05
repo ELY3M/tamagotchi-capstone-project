@@ -80,6 +80,7 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
@@ -112,8 +113,10 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     // Constants
     // ===========================================================
 
-    private static final int cameraWidth = 480, cameraHeight = 800;
-    private static final int pTopBound = 115, pBottomBound = cameraHeight - 70; // top and bottom bounds of play area
+    private static int cameraWidth = 480;
+    private static int cameraHeight = 800;
+    private static final int pTopBound = 115;
+    private static int pBottomBound = cameraHeight - 70; // top and bottom bounds of play area
 
     private static final int CONFIRM_APPLYITEM = 0;
     private static final int CONFIRM_QUITGAME = 1;
@@ -227,6 +230,14 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
     @Override
     public Engine onLoadEngine()
     {
+	Display display = this.getWindowManager().getDefaultDisplay();
+	int width = display.getWidth();
+	int height = display.getHeight();
+	float ratio = (float) width / height;
+	this.cameraHeight = Math.round(MainGame.cameraWidth / ratio);
+	this.pBottomBound = this.cameraHeight - 70;
+	System.out.println("Height: " + this.cameraHeight + ", Width: " + this.cameraWidth);
+
 	this.mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
 	this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	return new Engine(new EngineOptions(FULLSCREEN, ScreenOrientation.PORTRAIT, new RatioResolutionPolicy(cameraWidth, cameraHeight), this.mCamera));
@@ -684,7 +695,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	this.mEngine.stop();
 	this.stopGPS();
 	totalPlayTime += System.currentTimeMillis() - startPlayTime;
-	
+
 	tama.addToAge(totalPlayTime);
 
 	if (dbHelper != null)
