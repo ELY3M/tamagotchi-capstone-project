@@ -39,6 +39,7 @@ import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.text.Text;
+import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouch;
 import org.anddev.andengine.extension.input.touch.controller.MultiTouchController;
 import org.anddev.andengine.extension.input.touch.exception.MultiTouchException;
@@ -72,7 +73,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.util.SparseArray;
-import android.view.Display;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -187,11 +187,13 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public Engine onLoadEngine()
     {
+	/*
 	Display display = this.getWindowManager().getDefaultDisplay();
 	int width = display.getWidth();
 	int height = display.getHeight();
 	float ratio = (float) width / height;
 	this.CAMERA_HEIGHT = Math.round(this.CAMERA_WIDTH * ratio);
+	*/
 	
 	this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	TamaBattle.this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
@@ -555,7 +557,7 @@ public class TamaBattle extends BaseAndEngineGame implements ClientMessageFlags,
     @Override
     public Scene onLoadScene()
     {
-	// this.mEngine.registerUpdateHandler(new FPSLogger());
+	this.mEngine.registerUpdateHandler(new FPSLogger());
 
 	this.enableVibrator();
 	this.loadLobbyScene();

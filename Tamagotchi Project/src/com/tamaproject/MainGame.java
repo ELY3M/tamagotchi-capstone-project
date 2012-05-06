@@ -50,6 +50,7 @@ import org.anddev.andengine.entity.sprite.BaseSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.text.ChangeableText;
 import org.anddev.andengine.entity.text.Text;
+import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.input.touch.TouchEvent;
 import org.anddev.andengine.opengl.font.Font;
 import org.anddev.andengine.opengl.font.FontFactory;
@@ -298,8 +299,8 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
 	{
 	    e.printStackTrace();
 	}
-
-	// this.mEngine.registerUpdateHandler(new FPSLogger());
+	
+	this.mEngine.registerUpdateHandler(new FPSLogger());
 
 	// Enable vibration
 	this.enableVibrator();
@@ -2273,35 +2274,7 @@ public class MainGame extends BaseAndEngineGame implements IOnSceneTouchListener
      */
     private void runDemo()
     {
-	this.mScene.registerUpdateHandler(new TimerHandler(20, true, new ITimerCallback()
-	{
-	    private int counter = 0;
-
-	    @Override
-	    public void onTimePassed(TimerHandler arg0)
-	    {
-		Debug.d("Demo counter: " + counter);
-		switch (counter)
-		{
-		case 0:
-		    MainGame.this.loadWeather(Weather.SNOW);
-		    counter++;
-		    return;
-		case 1:
-		    MainGame.this.loadWeather(Weather.RAIN);
-		    counter++;
-		    return;
-		case 2:
-		    MainGame.this.loadWeather(Weather.NONE);
-		    counter = 0;
-		    return;
-		default:
-		    counter = 0;
-		    return;
-		}
-
-	    }
-	}));
+	loadWeather(Weather.SNOW);
     }
 
     // ===========================================================
