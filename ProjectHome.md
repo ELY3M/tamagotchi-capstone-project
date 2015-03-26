@@ -1,0 +1,1 @@
+We will be creating an app for Android that resembles the Tamagotchi.  There will be a virtual pet that the user must take care of.
